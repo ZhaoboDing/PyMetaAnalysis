@@ -1,0 +1,33 @@
+"""Pandas-first tools for auditable meta-analysis workflows."""
+
+from .api import meta_analysis
+from .config import MethodConfig
+from .exceptions import (
+    ConvergenceError,
+    InsufficientStudiesError,
+    InvalidStudyDataError,
+    MetaAnalysisError,
+    UnsupportedMethodError,
+)
+from .results import (
+    FitDiagnostics,
+    HeterogeneityResult,
+    MetaAnalysisResult,
+    MetaAnalysisSummary,
+)
+
+__all__ = [
+    "ConvergenceError",
+    "FitDiagnostics",
+    "HeterogeneityResult",
+    "InsufficientStudiesError",
+    "InvalidStudyDataError",
+    "MetaAnalysisError",
+    "MetaAnalysisResult",
+    "MetaAnalysisSummary",
+    "MethodConfig",
+    "UnsupportedMethodError",
+    "meta_analysis",
+]
+
+__version__ = "0.1.0.dev0"

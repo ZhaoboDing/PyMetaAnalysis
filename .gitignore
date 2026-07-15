@@ -1,0 +1,16 @@
+# Local design notes are intentionally not part of the published project.
+/DESIGN.md
+
+# Python environments and generated files
+/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/.pytest_cache/
+/.hypothesis/
+/.mypy_cache/
+/.ruff_cache/
+/.coverage
+/htmlcov/
+/build/
+/dist/
