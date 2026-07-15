@@ -19,6 +19,8 @@ class MethodConfig:
     confidence_level: float
     prediction_interval_method: str | None
     missing: str
+    atol: float
+    max_iter: int
     options: tuple[tuple[str, MethodOptionValue], ...]
 
 

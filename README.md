@@ -130,6 +130,52 @@ estimate, optional prediction intervals, overall study weights, and the formal
 test for subgroup differences. It follows the same optional-Matplotlib and
 display-scale behavior as ordinary forest plots.
 
+## Sensitivity and cumulative analysis
+
+Every fitted result can be refitted while omitting one included study at a
+time. The returned table reports the omitted row and study labels together with
+the pooled estimate, confidence interval, tau-squared, Q, I-squared, and
+H-squared from each refit:
+
+```python
+influence = result.leave_one_out()
+print(influence.to_dataframe())
+```
+
+The original model, pooling method, confidence-interval method, continuity
+corrections, tau-squared estimator, confidence level, and numerical controls
+are reused for every fit. Originally excluded studies are not treated as
+leave-one-out candidates. A common-effect leave-one-out analysis needs at least
+two included studies; a random-effects analysis needs at least three so that
+every refit retains the two studies required to estimate tau-squared.
+
+Cumulative analysis adds included studies in the original input order by
+default. A DataFrame column name or one-dimensional array-like can define a
+different stable order:
+
+```python
+cumulative = result.cumulative(order="publication_year")
+print(cumulative.to_dataframe())
+```
+
+Use `ascending=False` to reverse the order. With an explicit order,
+`collapse=True` adds studies sharing the same order value simultaneously.
+Missing order values are rejected for included studies but ignored for rows
+that the original analysis already excluded. Random-effects cumulative
+analysis starts with the first estimable `k=2` prefix and records this boundary
+in `cumulative.warnings`; it never silently substitutes a common-effect model
+for the single-study prefix.
+
+For a `SubgroupMetaAnalysisResult`, the same methods return dedicated composite
+objects with `.groups` and `.overall` sensitivity results. These paths describe
+the accumulation or omission behavior within each fitted subgroup and within
+the overall model; they do not reinterpret different-length paths as a new
+sequence of subgroup-differences tests.
+
+These workflows follow the repeated-refitting semantics documented for
+[`metafor::leave1out()`](https://wviechtb.github.io/metafor/reference/leave1out.html)
+and [`metafor::cumul()`](https://wviechtb.github.io/metafor/reference/cumul.html).
+
 ## Forest plots
 
 Plotting support is optional:
