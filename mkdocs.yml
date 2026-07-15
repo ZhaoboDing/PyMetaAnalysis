@@ -1,0 +1,44 @@
+site_name: PyMetaAnalysis
+site_description: Pandas-first, auditable meta-analysis workflows for Python
+repo_url: https://github.com/ZhaoboDing/PyMetaAnalysis
+repo_name: ZhaoboDing/PyMetaAnalysis
+strict: true
+
+theme:
+  name: mkdocs
+  locale: en
+  highlightjs: true
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Guides:
+      - Generic effects: guides/generic-effects.md
+      - Binary outcomes: guides/binary-outcomes.md
+      - Continuous outcomes: guides/continuous-outcomes.md
+      - Choosing methods: guides/method-selection.md
+      - Zero-event studies: guides/zero-events.md
+      - Sensitivity analysis: guides/sensitivity-analysis.md
+      - Provenance and reporting: guides/provenance-reporting.md
+  - Reference:
+      - Public API: reference/api.md
+      - Result objects: reference/results.md
+  - Decisions:
+      - Optional Matplotlib: adr/0001-optional-matplotlib.md

@@ -3,6 +3,11 @@
 PyMetaAnalysis is an early-stage, pandas-first Python library for auditable
 meta-analysis workflows.
 
+The documentation includes a
+[five-minute introduction](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/docs/getting-started.md),
+outcome-specific guides, method-selection guidance, and an API reference.
+Build it locally with `pip install ".[docs]"` followed by `mkdocs serve`.
+
 The library currently supports generic inverse-variance meta-analysis from
 study-level effects and sampling variances:
 
