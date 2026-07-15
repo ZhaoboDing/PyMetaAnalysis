@@ -26,7 +26,9 @@ Rscript tests/reference/generate_generic_metafor.R regenerated.json
 Every fixture records the R, `metafor`, and `jsonlite` versions used to produce
 it. Generated values are stored at high precision and compared in Python with
 method-specific tolerances. R is intentionally not installed in routine CI;
-regeneration is a separate statistical-review action.
+regeneration is a separate statistical-review action. The user-facing
+validation matrix and its limitations are documented in
+[`docs/validation.md`](../../docs/validation.md).
 
 The scripts use only documented `metafor` interfaces. They are retained as
 provenance and are not runtime library code.

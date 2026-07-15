@@ -463,6 +463,9 @@ def meta_binary(
 ) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
     """Pool binary outcomes, optionally fitting independent study subgroups.
 
+    Event and total arguments accept DataFrame column names or one-dimensional
+    array-like values. The default is common-effect Mantel-Haenszel risk-ratio
+    pooling. Use inverse-variance pooling for random effects or risk differences.
     For risk differences, ``rd_zero_variance="correct"`` retains boundary
     studies with their raw effect and corrected sampling variance. Use
     ``rd_zero_variance="exclude"`` to remove them before all synthesis

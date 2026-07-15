@@ -1,0 +1,22 @@
+/* Keep wide reference tables usable without making the whole page overflow. */
+@media (max-width: 767.98px) {
+  table.table {
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  pre,
+  pre code.hljs {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  :not(pre) > code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}

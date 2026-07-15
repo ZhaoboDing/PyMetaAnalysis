@@ -4,6 +4,10 @@ Use `meta_analysis()` when each study already has an effect estimate and its
 sampling variance. This is the generic inverse-variance workflow; it does not
 calculate an outcome-specific effect size.
 
+The pooling, tau-squared, confidence-interval, prediction-interval, and
+heterogeneity equations are specified under
+[statistical methods](../methods/statistical-methods.md).
+
 ## DataFrame input
 
 ```python
@@ -59,7 +63,7 @@ have first been converted to the sampling variance of the effect estimate.
 
 ## Missing values
 
-The default `missing="raise"` rejects missing effects, variances, or labels. To
+The default `missing="raise"` rejects missing effects or variances. To
 retain incomplete rows as structured exclusions:
 
 ```python
@@ -92,3 +96,6 @@ subgroups = ma.meta_analysis(
 
 See [result objects](../reference/results.md#subgroup-results) for the returned
 structure.
+
+For shared DataFrame/array, row identity, and exclusion rules, see
+[input data and row decisions](input-data.md).
