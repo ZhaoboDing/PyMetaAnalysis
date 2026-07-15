@@ -9,40 +9,12 @@ from numpy.typing import NDArray
 from scipy.stats import norm
 
 from ..results import MetaAnalysisResult
+from ._utils import configure_log_axis, default_effect_label, to_display_scale
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 else:
     Axes = Any
-
-
-def _to_display_scale(
-    values: NDArray[np.float64], *, display_scale: str
-) -> NDArray[np.float64]:
-    if display_scale == "identity":
-        displayed = values.copy()
-    elif display_scale == "exp":
-        with np.errstate(over="ignore"):
-            displayed = np.exp(values)
-    else:
-        raise ValueError(f"Unknown display scale {display_scale!r}.")
-    if not np.all(np.isfinite(displayed)):
-        raise ValueError(
-            "Forest plot values are non-finite after display-scale transformation."
-        )
-    return displayed
-
-
-def _default_effect_label(result: MetaAnalysisResult) -> str:
-    labels = {
-        "OR": "Odds ratio",
-        "RR": "Risk ratio",
-        "RD": "Risk difference",
-        "MD": "Mean difference",
-        "SMD": "Standardized mean difference",
-        "GENERIC": "Effect",
-    }
-    return labels.get(result.measure, result.measure)
 
 
 def _default_pooled_label(result: MetaAnalysisResult) -> str:
@@ -93,10 +65,10 @@ def forest_plot(
     weights = included["normalized_weight"].to_numpy(dtype=np.float64, copy=True)
     critical_value = float(norm.ppf(0.5 + result.method.confidence_level / 2.0))
     margin = critical_value * np.sqrt(variance)
-    study_low = _to_display_scale(effect - margin, display_scale=result.display_scale)
-    study_estimate = _to_display_scale(effect, display_scale=result.display_scale)
-    study_high = _to_display_scale(effect + margin, display_scale=result.display_scale)
-    pooled_low, pooled_estimate, pooled_high = _to_display_scale(
+    study_low = to_display_scale(effect - margin, display_scale=result.display_scale)
+    study_estimate = to_display_scale(effect, display_scale=result.display_scale)
+    study_high = to_display_scale(effect + margin, display_scale=result.display_scale)
+    pooled_low, pooled_estimate, pooled_high = to_display_scale(
         np.asarray([result.ci_low, result.estimate, result.ci_high]),
         display_scale=result.display_scale,
     )
@@ -118,6 +90,7 @@ def forest_plot(
         _, ax = plt.subplots(figsize=(8.0, height))
     if use_log_scale:
         ax.set_xscale("log")
+        configure_log_axis(ax)
 
     y_studies = np.arange(len(included), 0, -1, dtype=np.float64)
     pooled_y = 0.0
@@ -148,7 +121,7 @@ def forest_plot(
     )
 
     if show_prediction_interval and result.prediction_interval is not None:
-        prediction_low, prediction_high = _to_display_scale(
+        prediction_low, prediction_high = to_display_scale(
             np.asarray(result.prediction_interval, dtype=np.float64),
             display_scale=result.display_scale,
         )
@@ -187,7 +160,7 @@ def forest_plot(
     labels.append(pooled_label or _default_pooled_label(result))
     ax.set_yticks(np.concatenate([y_studies, [pooled_y]]), labels=labels)
     ax.set_ylim(-0.65, len(included) + 0.75)
-    ax.set_xlabel(effect_label or _default_effect_label(result))
+    ax.set_xlabel(effect_label or default_effect_label(result))
     ax.tick_params(axis="y", length=0)
     ax.grid(axis="x", color="#dddddd", linewidth=0.7, alpha=0.8)
     ax.set_axisbelow(True)
