@@ -45,8 +45,15 @@ def _confidence_interval(
         critical_value = float(norm.ppf(1.0 - alpha / 2.0))
     else:
         df = len(effect) - 1
-        residual = effect - estimate
-        scale = float(np.dot(weights, residual * residual) / df)
+        if bool(np.all(effect == effect[0])):
+            # Weighted means can differ from an identical input value by one ULP,
+            # depending on the platform's floating-point reduction. The residual
+            # variation is mathematically zero in this case, so preserve that
+            # invariant explicitly instead of squaring the rounding error.
+            scale = 0.0
+        else:
+            residual = effect - estimate
+            scale = float(np.dot(weights, residual * residual) / df)
         hk_variance = scale / float(np.sum(weights))
         if ci_method == "hartung_knapp_adhoc":
             variance = max(classic_variance, hk_variance)
