@@ -116,14 +116,17 @@ def fit_inverse_variance(
         )
         tau2_value = tau2.value
 
-    weights = 1.0 / (variance + tau2_value)
-    weight_sum = float(np.sum(weights))
-    normalized_weights = weights / weight_sum
-    estimate = weighted_mean(effect, weights)
-    classic_variance = 1.0 / weight_sum
+    denominator = variance + tau2_value
+    weights = 1.0 / denominator
+    variance_scale = float(np.min(denominator))
+    relative_weights = variance_scale / denominator
+    relative_weight_sum = float(np.sum(relative_weights))
+    normalized_weights = relative_weights / relative_weight_sum
+    estimate = weighted_mean(effect, relative_weights)
+    classic_variance = variance_scale / relative_weight_sum
     ci_low, ci_high, standard_error, interval_warnings = _confidence_interval(
         effect=effect,
-        weights=weights,
+        weights=normalized_weights,
         estimate=estimate,
         classic_variance=classic_variance,
         ci_method=ci_method,

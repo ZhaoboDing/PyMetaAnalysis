@@ -13,6 +13,7 @@ repository root:
 Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
+Rscript tests/reference/generate_workflow_metafor.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
@@ -29,3 +30,9 @@ regeneration is a separate statistical-review action.
 
 The scripts use only documented `metafor` interfaces. They are retained as
 provenance and are not runtime library code.
+
+`workflow_metafor.json` covers common-effect subgroup differences plus
+common- and random-effects leave-one-out and cumulative workflows. The random
+cumulative Python comparison begins at `k=2`, the minimum prefix for which the
+library fits a random-effects model; the committed R artifact retains its
+single-study row so that this difference remains explicit and auditable.

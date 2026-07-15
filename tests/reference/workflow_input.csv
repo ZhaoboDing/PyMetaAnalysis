@@ -1,0 +1,7 @@
+study,effect,variance,subgroup,year
+A,-0.4,0.04,early,2001
+B,0.1,0.09,early,2003
+C,0.5,0.05,early,2005
+D,0.2,0.16,late,2002
+E,1.2,0.08,late,2004
+F,1.8,0.06,late,2006
