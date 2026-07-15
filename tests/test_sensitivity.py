@@ -81,6 +81,25 @@ def test_mantel_haenszel_leave_one_out_matches_direct_refits() -> None:
         assert refit.method.pooling_method == "mantel_haenszel"
 
 
+def test_risk_difference_leave_one_out_preserves_zero_variance_policy() -> None:
+    result = ma.meta_binary(
+        event_treat=[0, 4, 6, 8],
+        n_treat=[20, 20, 20, 20],
+        event_control=[0, 5, 4, 7],
+        n_control=[20, 20, 20, 20],
+        measure="RD",
+        method="IV",
+        model="common",
+        rd_zero_variance="exclude",
+    )
+
+    assert result.k == 3
+    influence = result.leave_one_out()
+    assert len(influence) == 3
+    for refit in influence.results:
+        assert dict(refit.method.options)["rd_zero_variance"] == "exclude"
+
+
 def test_smd_leave_one_out_recomputes_effects_from_raw_inputs() -> None:
     inputs = {
         "mean_treat": np.array([4.0, 5.0, 6.2]),

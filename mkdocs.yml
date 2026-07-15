@@ -42,3 +42,4 @@ nav:
       - Result objects: reference/results.md
   - Decisions:
       - Optional Matplotlib: adr/0001-optional-matplotlib.md
+      - Statistical defaults and boundary policies: adr/0002-statistical-policy.md

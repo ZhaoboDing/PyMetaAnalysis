@@ -20,11 +20,16 @@ from .effect_sizes.binary import (
     calculate_binary_effects,
     normalize_binary_studies,
     normalize_correction_scope,
+    normalize_rd_zero_variance,
     validate_correction,
 )
 from .estimators import fit_inverse_variance, fit_mantel_haenszel
 from .exceptions import UnsupportedMethodError
-from .heterogeneity import classical_heterogeneity, heterogeneity_at_estimate
+from .heterogeneity import (
+    classical_heterogeneity,
+    heterogeneity_at_estimate,
+    tau2_inconsistency,
+)
 from .provenance import (
     TransformationRecord,
     add_input_field,
@@ -66,6 +71,7 @@ def _fit_meta_binary_single(
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
     correction_scope: str = "only_zero_studies",
+    rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
     mh_correction_scope: str = "only_zero_studies",
     missing: MissingPolicy = "raise",
@@ -97,7 +103,13 @@ def _fit_meta_binary_single(
         mh_continuity_correction, name="mh_continuity_correction"
     )
     scope = normalize_correction_scope(correction_scope)
+    rd_policy = normalize_rd_zero_variance(rd_zero_variance)
     mh_scope = normalize_correction_scope(mh_correction_scope)
+
+    if normalized_measure != "RD" and rd_policy != "correct":
+        raise UnsupportedMethodError(
+            "rd_zero_variance is only configurable when measure='RD'."
+        )
 
     if normalized_method == "mantel_haenszel":
         if normalized_model != "common":
@@ -129,6 +141,7 @@ def _fit_meta_binary_single(
         measure=normalized_measure,
         continuity_correction=correction,
         correction_scope=scope,
+        rd_zero_variance=rd_policy,
     )
     included = effects.studies.included
     included_effect = effects.included_effect
@@ -190,7 +203,11 @@ def _fit_meta_binary_single(
         )
 
     q, q_df, q_pvalue, i2, h2 = q_values
-    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2)
+    i2_method = "q_based"
+    if normalized_model == "random":
+        i2, h2 = tau2_inconsistency(included_variance, tau2)
+        i2_method = "tau2_typical_variance"
+    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2, i2_method)
     row_count = len(included)
     raw_weights = np.full(row_count, np.nan, dtype=np.float64)
     result_weights = np.full(row_count, np.nan, dtype=np.float64)
@@ -217,6 +234,7 @@ def _fit_meta_binary_single(
                 effects.studies.exclusion_reason, dtype=object, copy=True
             ),
             "continuity_corrected": effects.corrected,
+            "rd_zero_variance": effects.rd_zero_variance,
             "mh_continuity_corrected": mh_corrected,
             "weight": raw_weights,
             "normalized_weight": result_weights,
@@ -262,6 +280,7 @@ def _fit_meta_binary_single(
         options=(
             ("continuity_correction", correction),
             ("correction_scope", scope),
+            *((("rd_zero_variance", rd_policy),) if normalized_measure == "RD" else ()),
             ("mh_continuity_correction", mh_correction),
             ("mh_correction_scope", mh_scope),
         ),
@@ -286,6 +305,19 @@ def _fit_meta_binary_single(
             affected_rows=tuple(int(row) for row in np.flatnonzero(effects.corrected)),
         ),
     ]
+    if normalized_measure == "RD":
+        transformations.append(
+            TransformationRecord(
+                name="rd_zero_variance_policy",
+                parameters=(
+                    ("policy", rd_policy),
+                    ("variance_correction", correction),
+                ),
+                affected_rows=tuple(
+                    int(row) for row in np.flatnonzero(effects.rd_zero_variance)
+                ),
+            )
+        )
     relative_exclusions = np.flatnonzero(
         (~included)
         & np.isin(
@@ -369,6 +401,7 @@ def meta_binary(
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
     correction_scope: str = "only_zero_studies",
+    rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
     mh_correction_scope: str = "only_zero_studies",
     missing: MissingPolicy = "raise",
@@ -395,6 +428,7 @@ def meta_binary(
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
     correction_scope: str = "only_zero_studies",
+    rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
     mh_correction_scope: str = "only_zero_studies",
     missing: MissingPolicy = "raise",
@@ -420,13 +454,20 @@ def meta_binary(
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
     correction_scope: str = "only_zero_studies",
+    rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
     mh_correction_scope: str = "only_zero_studies",
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
 ) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
-    """Pool binary outcomes, optionally fitting independent study subgroups."""
+    """Pool binary outcomes, optionally fitting independent study subgroups.
+
+    For risk differences, ``rd_zero_variance="correct"`` retains boundary
+    studies with their raw effect and corrected sampling variance. Use
+    ``rd_zero_variance="exclude"`` to remove them before all synthesis
+    calculations.
+    """
 
     overall = _fit_meta_binary_single(
         data,
@@ -443,6 +484,7 @@ def meta_binary(
         confidence_level=confidence_level,
         continuity_correction=continuity_correction,
         correction_scope=correction_scope,
+        rd_zero_variance=rd_zero_variance,
         mh_continuity_correction=mh_continuity_correction,
         mh_correction_scope=mh_correction_scope,
         missing=missing,
@@ -478,6 +520,7 @@ def meta_binary(
             confidence_level=confidence_level,
             continuity_correction=continuity_correction,
             correction_scope=correction_scope,
+            rd_zero_variance=rd_zero_variance,
             mh_continuity_correction=mh_continuity_correction,
             mh_correction_scope=mh_correction_scope,
             missing=missing,

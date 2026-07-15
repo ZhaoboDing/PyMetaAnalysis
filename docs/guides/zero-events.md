@@ -36,9 +36,27 @@ excluded before effect pooling, heterogeneity statistics, and weights are
 calculated. They remain visible in `result.study_results` with
 `included=False` and a structured `exclusion_reason`.
 
-RD has a different estimand. A double-zero RD study remains included with an
-uncorrected effect of zero; corrected counts are used only when needed to form
-a positive sampling variance.
+RD has a different estimand. Any study in which both arms are at a boundary
+(zero events or events in every participant) has zero uncorrected RD sampling
+variance. This includes double-zero, double-all, and opposite-boundary tables.
+
+The default policy retains these studies:
+
+```python
+rd_zero_variance="correct"
+```
+
+The RD itself remains the raw treatment risk minus control risk. Corrected
+counts are used only to form a positive sampling variance. To exclude all such
+studies before pooling, Q, tau-squared, and weight calculations, use:
+
+```python
+rd_zero_variance="exclude"
+```
+
+Excluded rows remain in `result.study_results` with
+`exclusion_reason="zero uncorrected risk-difference variance"`. The policy is
+RD-specific; setting `exclude` for OR or RR is rejected.
 
 ## Mantel-Haenszel correction is separate
 
@@ -62,6 +80,7 @@ columns = [
     "included",
     "exclusion_reason",
     "continuity_corrected",
+    "rd_zero_variance",
     "mh_continuity_corrected",
     "normalized_weight",
 ]
@@ -70,5 +89,7 @@ result.study_results[columns]
 ```
 
 Resolved correction values and scopes also appear in
-`dict(result.method.options)`. This makes it possible to distinguish a
-corrected analysis from an exact one after fitting.
+`dict(result.method.options)`. RD analyses additionally record the resolved
+zero-variance policy and affected row IDs in provenance. This makes it possible
+to distinguish a corrected analysis from an exact or exclusion-based one after
+fitting.

@@ -12,7 +12,7 @@ from .config import MethodConfig
 from .data import ColumnOrArray, MissingPolicy, normalize_studies
 from .estimators import fit_inverse_variance
 from .exceptions import InvalidStudyDataError, UnsupportedMethodError
-from .heterogeneity import classical_heterogeneity
+from .heterogeneity import classical_heterogeneity, tau2_inconsistency
 from .provenance import add_input_field, build_analysis_provenance
 from .results import (
     FitDiagnostics,
@@ -138,7 +138,12 @@ def _fit_meta_analysis_single(
     q, q_df, q_pvalue, i2, h2 = classical_heterogeneity(
         included_effect, included_variance
     )
-    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2)
+    tau2_value = 0.0 if fit.tau2 is None else fit.tau2.value
+    i2_method = "q_based"
+    if normalized_model == "random":
+        i2, h2 = tau2_inconsistency(included_variance, tau2_value)
+        i2_method = "tau2_typical_variance"
+    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2, i2_method)
 
     row_count = len(studies.row_id)
     raw_weights = np.full(row_count, np.nan, dtype=np.float64)
@@ -168,7 +173,6 @@ def _fit_meta_analysis_single(
             f"Excluded {excluded_count} study row(s) under missing={missing!r}."
         )
 
-    tau2_value = 0.0 if fit.tau2 is None else fit.tau2.value
     diagnostics = FitDiagnostics(
         converged=True if fit.tau2 is None else fit.tau2.converged,
         iterations=0 if fit.tau2 is None else fit.tau2.iterations,

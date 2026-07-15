@@ -16,7 +16,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
-REPORT_SCHEMA_VERSION = "1.0"
+REPORT_SCHEMA_VERSION = "1.1"
 
 
 def _json_safe(value: Any) -> Any:
@@ -124,7 +124,16 @@ def method_details(result: MetaAnalysisResult) -> str:
         f"The {100.0 * method.confidence_level:g}% confidence interval used "
         f"{ci_description}."
     )
-    sentences.append("Heterogeneity was summarized with Cochran's Q, I², and H².")
+    if result.i2_method == "tau2_typical_variance":
+        sentences.append(
+            "Cochran's Q used common-effect inverse-variance weights; I² and H² "
+            "used tau-squared and the typical within-study variance, where the "
+            "latter was derived from those common-effect weights."
+        )
+    else:
+        sentences.append(
+            "Cochran's Q, I², and H² used the classical Q-based definition."
+        )
 
     if method.prediction_interval_method is not None:
         sentences.append(
@@ -141,6 +150,22 @@ def method_details(result: MetaAnalysisResult) -> str:
             f"{correction:g} with scope {scope!r}; it affected "
             f"{len(affected)} row(s)."
         )
+        if result.measure == "RD":
+            rd_policy = str(options.get("rd_zero_variance", "correct"))
+            rd_affected = _transformation_rows(result, "rd_zero_variance_policy")
+            if rd_policy == "correct":
+                sentences.append(
+                    "Risk-difference studies with zero uncorrected sampling "
+                    "variance were retained with their raw effect; corrected "
+                    "counts were used only for sampling variance. This affected "
+                    f"{len(rd_affected)} row(s)."
+                )
+            else:
+                sentences.append(
+                    "Risk-difference studies with zero uncorrected sampling "
+                    "variance were excluded before pooling and heterogeneity "
+                    f"calculations. This affected {len(rd_affected)} row(s)."
+                )
         if method.pooling_method == "mantel_haenszel":
             mh_correction = float(options.get("mh_continuity_correction", 0.0) or 0.0)
             mh_scope = str(options.get("mh_correction_scope", "none"))
@@ -230,6 +255,7 @@ def _meta_payload(
             "pvalue": result.q_pvalue,
             "i2": result.i2,
             "h2": result.h2,
+            "i2_method": result.i2_method,
         },
         "method": _method_payload(result),
         "diagnostics": {
@@ -268,7 +294,7 @@ def _meta_markdown(result: MetaAnalysisResult) -> str:
         ),
         f"- Heterogeneity: Q({result.q_df})={_number(result.q)}, "
         f"p={_number(result.q_pvalue)}; I²={_number(100.0 * result.i2)}%; "
-        f"H²={_number(result.h2)}",
+        f"H²={_number(result.h2)} ({result.i2_method})",
     ]
     if result.model == "random":
         lines.append(f"- τ²: {_number(result.tau2)} ({result.method.tau2_method})")

@@ -83,8 +83,14 @@ result = ma.meta_binary(
     measure="RD",
     method="IV",
     model="common",
+    rd_zero_variance="correct",
 )
 ```
+
+`rd_zero_variance="correct"` is the default. It retains boundary studies with
+their raw RD and uses corrected counts only for sampling variance. Use
+`"exclude"` for a protocol that excludes these studies before all synthesis
+calculations. See [zero-event studies](zero-events.md) for details.
 
 ## Input validation
 

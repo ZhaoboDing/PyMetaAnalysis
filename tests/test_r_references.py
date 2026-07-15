@@ -293,8 +293,44 @@ def test_clean_binary_mantel_haenszel_matches_metafor(measure: str) -> None:
         method="MH",
     )
 
-    _assert_fit(result, BINARY["clean"][measure]["mantel_haenszel"])
+    mh_expected = BINARY["clean"][measure]["mantel_haenszel"]
+    _assert_fit(result, mh_expected)
+    expected = mh_expected["heterogeneity"]
+    np.testing.assert_allclose(
+        [result.q, result.q_pvalue, result.i2, result.h2],
+        [expected["q"], expected["pvalue"], expected["i2"], expected["h2"]],
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+    )
+    assert result.q_df == expected["df"]
     assert not result.study_results["mh_continuity_corrected"].any()
+
+
+def test_sparse_risk_difference_variances_match_metafor_boundary_tables() -> None:
+    expected = BINARY["sparse"]["RD"]
+    result = ma.meta_binary(
+        SPARSE_BINARY_DATA,
+        **_binary_columns(),
+        study="study",
+        measure="RD",
+        method="IV",
+        model="common",
+    )
+    studies = result.study_results
+
+    np.testing.assert_allclose(
+        studies["variance"], expected["variance"], rtol=CLOSED_RTOL, atol=CLOSED_ATOL
+    )
+    # Metafor corrects the displayed effect for the single-zero row, while this
+    # package deliberately retains the raw RD. The remaining rows agree.
+    assert studies.loc[0, "effect"] == pytest.approx(-0.08)
+    np.testing.assert_allclose(
+        studies.loc[1:, "effect"],
+        expected["metafor_effect"][1:],
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+    )
+    assert studies["rd_zero_variance"].tolist() == [False, False, True, True, False]
 
 
 @pytest.mark.parametrize("measure", ["OR", "RR"])
@@ -391,13 +427,12 @@ def test_leave_one_out_workflow_matches_metafor(
 
     assert table["omitted_study"].tolist() == expected["study"]
     _assert_workflow_table(table, expected, iterative=iterative)
-    if model == "common":
-        np.testing.assert_allclose(
-            table[["i2", "h2"]],
-            np.column_stack([expected["i2"], expected["h2"]]),
-            rtol=CLOSED_RTOL,
-            atol=CLOSED_ATOL,
-        )
+    np.testing.assert_allclose(
+        table[["i2", "h2"]],
+        np.column_stack([expected["i2"], expected["h2"]]),
+        rtol=ITERATIVE_RTOL if iterative else CLOSED_RTOL,
+        atol=ITERATIVE_ATOL if iterative else CLOSED_ATOL,
+    )
 
 
 @pytest.mark.parametrize(
@@ -435,10 +470,12 @@ def test_cumulative_workflow_matches_metafor(
         expected_slice=selected,
         iterative=iterative,
     )
-    if model == "common":
-        np.testing.assert_allclose(
-            table.loc[1:, ["i2", "h2"]],
-            np.column_stack([expected["i2"][1:], expected["h2"][1:]]),
-            rtol=CLOSED_RTOL,
-            atol=CLOSED_ATOL,
-        )
+    valid = table["q_df"].to_numpy() > 0
+    expected_i2 = np.asarray(expected["i2"], dtype=np.float64)[selected][valid]
+    expected_h2 = np.asarray(expected["h2"], dtype=np.float64)[selected][valid]
+    np.testing.assert_allclose(
+        table.loc[valid, ["i2", "h2"]],
+        np.column_stack([expected_i2, expected_h2]),
+        rtol=ITERATIVE_RTOL if iterative else CLOSED_RTOL,
+        atol=ITERATIVE_ATOL if iterative else CLOSED_ATOL,
+    )

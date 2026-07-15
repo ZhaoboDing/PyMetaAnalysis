@@ -190,15 +190,40 @@ def test_method_details_expand_random_effects_and_hartung_knapp_choices() -> Non
     assert f"PyMetaAnalysis {ma.__version__}" in details
 
 
-def test_random_effects_summary_mentions_hartung_knapp_without_a_warning() -> None:
+def test_random_effects_summary_gives_small_sample_interval_guidance() -> None:
     result = ma.meta_analysis(
         effect=[0.1, 0.2, 0.4],
         variance=[0.01, 0.02, 0.03],
         model="random",
     )
 
-    assert "consider ci_method='hartung_knapp'" in str(result.summary())
+    assert "with three or fewer studies, compare normal and Hartung-Knapp" in str(
+        result.summary()
+    )
     assert not any("hartung" in warning.lower() for warning in result.warnings)
+
+
+def test_random_effects_summary_recommends_hk_sensitivity_when_tau2_is_positive() -> (
+    None
+):
+    result = ma.meta_analysis(
+        effect=[-0.5, 0.1, 0.9, 1.6],
+        variance=[0.02, 0.03, 0.04, 0.05],
+        model="random",
+    )
+
+    assert "consider ci_method='hartung_knapp'" in str(result.summary())
+
+
+def test_random_effects_summary_does_not_recommend_hk_at_tau2_boundary() -> None:
+    result = ma.meta_analysis(
+        effect=[0.2, 0.2, 0.2, 0.2],
+        variance=[0.02, 0.03, 0.04, 0.05],
+        model="random",
+    )
+
+    assert result.tau2 == 0.0
+    assert "consider ci_method='hartung_knapp'" not in str(result.summary())
 
 
 def test_binary_method_details_distinguish_effect_and_mh_corrections() -> None:
@@ -217,7 +242,7 @@ def test_report_payload_contains_resolved_methods_diagnostics_and_studies() -> N
     payload = report.to_dict()
 
     assert isinstance(report, ma.ResultReport)
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert payload["report_type"] == "meta_analysis"
     assert payload["analysis"] == {
         "model": "common",
@@ -229,10 +254,32 @@ def test_report_payload_contains_resolved_methods_diagnostics_and_studies() -> N
     }
     assert payload["method"]["pooling_method"] == "inverse_variance"
     assert payload["method"]["confidence_level"] == 0.95
+    assert payload["heterogeneity"]["i2_method"] == "q_based"
     assert payload["diagnostics"]["converged"] is True
     assert payload["provenance"]["excluded_rows"] == [1]
     assert len(payload["studies"]) == 3
     assert payload["method_details"] == result.method_details()
+
+
+@pytest.mark.parametrize("policy", ["correct", "exclude"])
+def test_risk_difference_report_records_zero_variance_policy(policy: str) -> None:
+    result = ma.meta_binary(
+        event_treat=[0, 4],
+        n_treat=[20, 20],
+        event_control=[0, 5],
+        n_control=[20, 20],
+        measure="RD",
+        method="IV",
+        model="common",
+        rd_zero_variance=policy,
+    )
+
+    details = result.method_details()
+    assert dict(result.method.options)["rd_zero_variance"] == policy
+    if policy == "correct":
+        assert "retained with their raw effect" in details
+    else:
+        assert "excluded before pooling and heterogeneity" in details
 
 
 def test_report_json_is_strict_and_converts_unavailable_values_to_null() -> None:

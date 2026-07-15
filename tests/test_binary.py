@@ -220,6 +220,80 @@ def test_double_zero_is_included_for_risk_difference_with_variance_correction() 
     assert studies.loc[0, "effect"] == 0.0
     assert studies.loc[0, "variance"] > 0.0
     assert bool(studies.loc[0, "continuity_corrected"])
+    assert bool(studies.loc[0, "rd_zero_variance"])
+    assert dict(result.method.options)["rd_zero_variance"] == "correct"
+
+
+def test_risk_difference_zero_variance_policy_covers_all_boundary_tables() -> None:
+    kwargs = {
+        "event_treat": [0, 20, 20, 0, 4],
+        "n_treat": [20, 20, 20, 20, 20],
+        "event_control": [0, 20, 0, 20, 5],
+        "n_control": [20, 20, 20, 20, 20],
+        "measure": "RD",
+        "method": "IV",
+        "model": "common",
+    }
+
+    corrected = ma.meta_binary(**kwargs)
+    corrected_studies = corrected.study_results
+
+    assert corrected.k == 5
+    assert corrected_studies["rd_zero_variance"].tolist() == [
+        True,
+        True,
+        True,
+        True,
+        False,
+    ]
+    np.testing.assert_allclose(
+        corrected_studies["effect"], [0.0, 0.0, 1.0, -1.0, -0.05]
+    )
+    assert (corrected_studies["variance"] > 0.0).all()
+
+    excluded = ma.meta_binary(**kwargs, rd_zero_variance="exclude")
+    excluded_studies = excluded.study_results
+
+    assert excluded.k == 1
+    assert excluded_studies["included"].tolist() == [
+        False,
+        False,
+        False,
+        False,
+        True,
+    ]
+    assert (
+        excluded_studies.loc[:3, "exclusion_reason"]
+        == "zero uncorrected risk-difference variance"
+    ).all()
+    assert excluded.q_df == 0
+    policy_record = next(
+        record
+        for record in excluded.provenance.transformations
+        if record.name == "rd_zero_variance_policy"
+    )
+    assert policy_record.affected_rows == (0, 1, 2, 3)
+
+
+def test_rd_zero_variance_option_is_validated_and_rd_specific() -> None:
+    base = {
+        "event_treat": [1, 2],
+        "n_treat": [20, 20],
+        "event_control": [2, 3],
+        "n_control": [20, 20],
+        "method": "IV",
+        "model": "common",
+    }
+    with pytest.raises(ma.UnsupportedMethodError, match="correct.*exclude"):
+        ma.meta_binary(**base, measure="RD", rd_zero_variance="mystery")
+    with pytest.raises(ma.UnsupportedMethodError, match="correct.*exclude"):
+        ma.meta_binary(
+            **base,
+            measure="RD",
+            rd_zero_variance=None,  # type: ignore[arg-type]
+        )
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_binary(**base, measure="RR", rd_zero_variance="exclude")
 
 
 def test_zero_correction_can_be_disabled_only_when_effect_remains_defined() -> None:

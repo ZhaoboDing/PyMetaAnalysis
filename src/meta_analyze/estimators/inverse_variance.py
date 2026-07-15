@@ -146,6 +146,11 @@ def fit_inverse_variance(
             prediction_se = float(np.sqrt(tau2_value + classic_variance))
             margin = critical_value * prediction_se
             prediction_interval = (estimate - margin, estimate + margin)
+            if len(effect) < 5:
+                warnings.append(
+                    "Prediction intervals are especially uncertain with fewer "
+                    "than five included studies."
+                )
         else:
             warnings.append(
                 "A prediction interval requires at least three included studies."

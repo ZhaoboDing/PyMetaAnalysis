@@ -126,6 +126,15 @@ def test_random_effects_prediction_interval_requires_three_studies() -> None:
     assert three.prediction_interval is not None
     assert "Prediction interval:" in str(three.summary())
     assert "tau^2:" in str(three.summary())
+    assert any("fewer than five" in warning for warning in three.warnings)
+
+    five = ma.meta_analysis(
+        effect=[0.1, 0.3, 0.5, 0.7, 0.9],
+        variance=[0.01, 0.02, 0.03, 0.04, 0.05],
+        model="random",
+    )
+    assert five.prediction_interval is not None
+    assert not any("fewer than five" in warning for warning in five.warnings)
 
 
 def test_hartung_knapp_is_rejected_for_common_effect_model() -> None:

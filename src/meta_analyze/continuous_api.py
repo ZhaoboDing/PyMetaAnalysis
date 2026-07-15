@@ -16,7 +16,7 @@ from .effect_sizes.continuous import (
     normalize_continuous_studies,
 )
 from .estimators import fit_inverse_variance
-from .heterogeneity import classical_heterogeneity
+from .heterogeneity import classical_heterogeneity, tau2_inconsistency
 from .provenance import (
     TransformationRecord,
     add_input_field,
@@ -101,7 +101,12 @@ def _fit_meta_continuous_single(
     q, q_df, q_pvalue, i2, h2 = classical_heterogeneity(
         included_effect, included_variance
     )
-    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2)
+    tau2_value = 0.0 if fit.tau2 is None else fit.tau2.value
+    i2_method = "q_based"
+    if normalized_model == "random":
+        i2, h2 = tau2_inconsistency(included_variance, tau2_value)
+        i2_method = "tau2_typical_variance"
+    heterogeneity = HeterogeneityResult(q, q_df, q_pvalue, i2, h2, i2_method)
 
     row_count = len(included)
     raw_weights = np.full(row_count, np.nan, dtype=np.float64)
@@ -194,7 +199,7 @@ def _fit_meta_continuous_single(
         ci_low=fit.ci_low,
         ci_high=fit.ci_high,
         prediction_interval=fit.prediction_interval,
-        tau2=0.0 if fit.tau2 is None else fit.tau2.value,
+        tau2=tau2_value,
         heterogeneity=heterogeneity,
         k=len(included_effect),
         model=normalized_model,

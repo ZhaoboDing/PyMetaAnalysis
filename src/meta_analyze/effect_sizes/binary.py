@@ -25,6 +25,7 @@ from ..exceptions import InvalidStudyDataError, UnsupportedMethodError
 CorrectionScope: TypeAlias = Literal[
     "only_zero_studies", "all_studies", "if_any_zero", "none"
 ]
+RDZeroVariancePolicy: TypeAlias = Literal["correct", "exclude"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +50,7 @@ class BinaryEffectData:
     effect: NDArray[np.float64]
     variance: NDArray[np.float64]
     corrected: NDArray[np.bool_]
+    rd_zero_variance: NDArray[np.bool_]
     measure: str
     effect_scale: str
     display_scale: str
@@ -78,6 +80,17 @@ def normalize_correction_scope(scope: str) -> CorrectionScope:
             "'if_any_zero', or 'none'."
         )
     return cast(CorrectionScope, normalized)
+
+
+def normalize_rd_zero_variance(policy: str) -> RDZeroVariancePolicy:
+    """Normalize the policy for RD studies with zero raw sampling variance."""
+
+    if not isinstance(policy, str):
+        raise UnsupportedMethodError("rd_zero_variance must be 'correct' or 'exclude'.")
+    normalized = policy.lower().replace("-", "_")
+    if normalized not in {"correct", "exclude"}:
+        raise UnsupportedMethodError("rd_zero_variance must be 'correct' or 'exclude'.")
+    return cast(RDZeroVariancePolicy, normalized)
 
 
 def validate_correction(value: float | None, *, name: str) -> float:
@@ -267,15 +280,39 @@ def calculate_binary_effects(
     measure: str,
     continuity_correction: float,
     correction_scope: CorrectionScope,
+    rd_zero_variance: str = "correct",
 ) -> BinaryEffectData:
     """Calculate OR, RR, or RD effects and sampling variances."""
 
     normalized_measure = measure.upper()
     if normalized_measure not in {"OR", "RR", "RD"}:
         raise UnsupportedMethodError("measure must be 'OR', 'RR', or 'RD'.")
+    rd_policy = normalize_rd_zero_variance(rd_zero_variance)
+    if normalized_measure != "RD" and rd_policy != "correct":
+        raise UnsupportedMethodError(
+            "rd_zero_variance is only configurable when measure='RD'."
+        )
 
     included = studies.included.copy()
     reasons = studies.exclusion_reason.copy()
+    rd_zero_variance_mask = np.zeros_like(included)
+    if normalized_measure == "RD":
+        raw_rd_variance = (
+            studies.event_treat
+            * (studies.n_treat - studies.event_treat)
+            / studies.n_treat**3
+            + studies.event_control
+            * (studies.n_control - studies.event_control)
+            / studies.n_control**3
+        )
+        rd_zero_variance_mask = np.asarray(
+            included & (raw_rd_variance == 0.0), dtype=np.bool_
+        )
+        if rd_policy == "exclude":
+            included[rd_zero_variance_mask] = False
+            for index in np.flatnonzero(rd_zero_variance_mask):
+                reasons[index] = "zero uncorrected risk-difference variance"
+
     if normalized_measure in {"OR", "RR"}:
         double_zero = (studies.event_treat == 0.0) & (studies.event_control == 0.0)
         double_all = (studies.event_treat == studies.n_treat) & (
@@ -368,6 +405,7 @@ def calculate_binary_effects(
         effect=effect,
         variance=variance,
         corrected=corrected,
+        rd_zero_variance=rd_zero_variance_mask,
         measure=normalized_measure,
         effect_scale=effect_scale,
         display_scale=display_scale,

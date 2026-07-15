@@ -26,8 +26,8 @@ totals. Required inputs are `event_treat`, `n_treat`, `event_control`, and
 
 Important optional arguments include `measure`, `method`, `model`,
 `tau2_method`, `ci_method`, `continuity_correction`, `correction_scope`,
-`mh_continuity_correction`, `mh_correction_scope`, `study`, `subgroup`, and
-`missing`.
+`rd_zero_variance`, `mh_continuity_correction`, `mh_correction_scope`, `study`,
+`subgroup`, and `missing`.
 
 ### `meta_continuous()`
 
@@ -68,8 +68,8 @@ workflows except for `funnel()`, which remains a single-analysis diagnostic.
   between-group test.
 - `FitDiagnostics` records convergence, iteration count, and tau-squared
   boundary status.
-- `HeterogeneityResult` contains Q, degrees of freedom, p-value, I-squared, and
-  H-squared.
+- `HeterogeneityResult` contains Q, degrees of freedom, p-value, I-squared,
+  H-squared, and the `i2_method` definition identifier.
 - `AnalysisProvenance` records package/schema versions, resolved input fields,
   input row decisions, and transformations.
 - `InputFieldProvenance` describes whether an input came from a DataFrame
