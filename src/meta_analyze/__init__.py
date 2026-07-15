@@ -3,6 +3,7 @@
 from .api import meta_analysis
 from .binary_api import meta_binary
 from .config import MethodConfig
+from .continuous_api import meta_continuous
 from .exceptions import (
     ConvergenceError,
     InsufficientStudiesError,
@@ -30,6 +31,7 @@ __all__ = [
     "UnsupportedMethodError",
     "meta_analysis",
     "meta_binary",
+    "meta_continuous",
 ]
 
 __version__ = "0.1.0.dev0"
