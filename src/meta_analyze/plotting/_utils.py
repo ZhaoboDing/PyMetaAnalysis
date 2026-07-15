@@ -56,3 +56,12 @@ def configure_log_axis(ax: Axes) -> None:
     ax.xaxis.set_major_locator(LogLocator(base=10.0, subs=(1.0, 2.0, 5.0)))
     ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:g}"))
     ax.xaxis.set_minor_formatter(NullFormatter())
+
+
+def marker_areas(weights: NDArray[np.float64]) -> NDArray[np.float64]:
+    """Scale positive relative weights to readable forest-plot marker areas."""
+
+    largest = float(np.max(weights))
+    if not np.isfinite(largest) or largest <= 0.0:
+        raise ValueError("Forest plot weights must be finite and strictly positive.")
+    return 24.0 + 176.0 * weights / largest

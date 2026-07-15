@@ -5,11 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.stats import norm
 
 from ..results import MetaAnalysisResult
-from ._utils import configure_log_axis, default_effect_label, to_display_scale
+from ._utils import (
+    configure_log_axis,
+    default_effect_label,
+    marker_areas,
+    to_display_scale,
+)
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -19,13 +23,6 @@ else:
 
 def _default_pooled_label(result: MetaAnalysisResult) -> str:
     return "Common effect" if result.model == "common" else "Random effects"
-
-
-def _marker_areas(weights: NDArray[np.float64]) -> NDArray[np.float64]:
-    largest = float(np.max(weights))
-    if not np.isfinite(largest) or largest <= 0.0:
-        raise ValueError("Forest plot weights must be finite and strictly positive.")
-    return 24.0 + 176.0 * weights / largest
 
 
 def forest_plot(
@@ -112,7 +109,7 @@ def forest_plot(
     ax.scatter(
         study_estimate,
         y_studies,
-        s=_marker_areas(weights),
+        s=marker_areas(weights),
         marker="s",
         color="#2f6f9f",
         edgecolors="white",

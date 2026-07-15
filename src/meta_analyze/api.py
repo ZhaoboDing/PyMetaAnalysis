@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import overload
+
 import numpy as np
 import pandas as pd
 
@@ -14,7 +16,9 @@ from .results import (
     FitDiagnostics,
     HeterogeneityResult,
     MetaAnalysisResult,
+    SubgroupMetaAnalysisResult,
 )
+from .subgroups import fit_subgroup_analysis
 
 
 def _normalize_model(model: str) -> str:
@@ -55,7 +59,7 @@ def _validate_analysis_controls(
     return float(confidence_level), float(atol), max_iter
 
 
-def meta_analysis(
+def _fit_meta_analysis_single(
     data: pd.DataFrame | None = None,
     *,
     effect: ColumnOrArray,
@@ -196,4 +200,102 @@ def meta_analysis(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         _study_results=study_results,
+    )
+
+
+@overload
+def meta_analysis(
+    data: pd.DataFrame | None = None,
+    *,
+    effect: ColumnOrArray,
+    variance: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: None = None,
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult: ...
+
+
+@overload
+def meta_analysis(
+    data: pd.DataFrame | None = None,
+    *,
+    effect: ColumnOrArray,
+    variance: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray,
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> SubgroupMetaAnalysisResult: ...
+
+
+def meta_analysis(
+    data: pd.DataFrame | None = None,
+    *,
+    effect: ColumnOrArray,
+    variance: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray | None = None,
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
+    """Fit a generic inverse-variance meta-analysis, optionally by subgroup.
+
+    ``subgroup`` accepts a DataFrame column name or one-dimensional array-like.
+    When supplied, the function returns :class:`SubgroupMetaAnalysisResult`;
+    otherwise it returns :class:`MetaAnalysisResult`. Missing subgroup labels
+    are rejected explicitly.
+    """
+
+    overall = _fit_meta_analysis_single(
+        data,
+        effect=effect,
+        variance=variance,
+        study=study,
+        model=model,
+        tau2_method=tau2_method,
+        ci_method=ci_method,
+        confidence_level=confidence_level,
+        missing=missing,
+        atol=atol,
+        max_iter=max_iter,
+    )
+    if subgroup is None:
+        return overall
+
+    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+        rows = overall.study_results.iloc[positions]
+        return _fit_meta_analysis_single(
+            effect=rows["effect"].to_numpy(dtype=np.float64, copy=True),
+            variance=rows["variance"].to_numpy(dtype=np.float64, copy=True),
+            study=rows["study"].to_numpy(dtype=object, copy=True),
+            model=model,
+            tau2_method=tau2_method,
+            ci_method=ci_method,
+            confidence_level=confidence_level,
+            missing=missing,
+            atol=atol,
+            max_iter=max_iter,
+        )
+
+    return fit_subgroup_analysis(
+        data=data,
+        subgroup=subgroup,
+        overall=overall,
+        fit_group=fit_group,
     )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import overload
+
 import numpy as np
 import pandas as pd
 
@@ -22,7 +24,13 @@ from .effect_sizes.binary import (
 from .estimators import fit_inverse_variance, fit_mantel_haenszel
 from .exceptions import UnsupportedMethodError
 from .heterogeneity import classical_heterogeneity, heterogeneity_at_estimate
-from .results import FitDiagnostics, HeterogeneityResult, MetaAnalysisResult
+from .results import (
+    FitDiagnostics,
+    HeterogeneityResult,
+    MetaAnalysisResult,
+    SubgroupMetaAnalysisResult,
+)
+from .subgroups import fit_subgroup_analysis
 
 
 def _normalize_pooling_method(method: str) -> str:
@@ -36,7 +44,7 @@ def _normalize_pooling_method(method: str) -> str:
     )
 
 
-def meta_binary(
+def _fit_meta_binary_single(
     data: pd.DataFrame | None = None,
     *,
     event_treat: ColumnOrArray,
@@ -267,4 +275,136 @@ def meta_binary(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         _study_results=study_results,
+    )
+
+
+@overload
+def meta_binary(
+    data: pd.DataFrame | None = None,
+    *,
+    event_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    event_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: None = None,
+    measure: str = "RR",
+    method: str = "MH",
+    model: str = "common",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    continuity_correction: float = 0.5,
+    correction_scope: str = "only_zero_studies",
+    mh_continuity_correction: float | None = None,
+    mh_correction_scope: str = "only_zero_studies",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult: ...
+
+
+@overload
+def meta_binary(
+    data: pd.DataFrame | None = None,
+    *,
+    event_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    event_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray,
+    measure: str = "RR",
+    method: str = "MH",
+    model: str = "common",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    continuity_correction: float = 0.5,
+    correction_scope: str = "only_zero_studies",
+    mh_continuity_correction: float | None = None,
+    mh_correction_scope: str = "only_zero_studies",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> SubgroupMetaAnalysisResult: ...
+
+
+def meta_binary(
+    data: pd.DataFrame | None = None,
+    *,
+    event_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    event_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray | None = None,
+    measure: str = "RR",
+    method: str = "MH",
+    model: str = "common",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    continuity_correction: float = 0.5,
+    correction_scope: str = "only_zero_studies",
+    mh_continuity_correction: float | None = None,
+    mh_correction_scope: str = "only_zero_studies",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
+    """Pool binary outcomes, optionally fitting independent study subgroups."""
+
+    overall = _fit_meta_binary_single(
+        data,
+        event_treat=event_treat,
+        n_treat=n_treat,
+        event_control=event_control,
+        n_control=n_control,
+        study=study,
+        measure=measure,
+        method=method,
+        model=model,
+        tau2_method=tau2_method,
+        ci_method=ci_method,
+        confidence_level=confidence_level,
+        continuity_correction=continuity_correction,
+        correction_scope=correction_scope,
+        mh_continuity_correction=mh_continuity_correction,
+        mh_correction_scope=mh_correction_scope,
+        missing=missing,
+        atol=atol,
+        max_iter=max_iter,
+    )
+    if subgroup is None:
+        return overall
+
+    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+        rows = overall.study_results.iloc[positions]
+        return _fit_meta_binary_single(
+            event_treat=rows["event_treat"].to_numpy(dtype=np.float64, copy=True),
+            n_treat=rows["n_treat"].to_numpy(dtype=np.float64, copy=True),
+            event_control=rows["event_control"].to_numpy(dtype=np.float64, copy=True),
+            n_control=rows["n_control"].to_numpy(dtype=np.float64, copy=True),
+            study=rows["study"].to_numpy(dtype=object, copy=True),
+            measure=measure,
+            method=method,
+            model=model,
+            tau2_method=tau2_method,
+            ci_method=ci_method,
+            confidence_level=confidence_level,
+            continuity_correction=continuity_correction,
+            correction_scope=correction_scope,
+            mh_continuity_correction=mh_continuity_correction,
+            mh_correction_scope=mh_correction_scope,
+            missing=missing,
+            atol=atol,
+            max_iter=max_iter,
+        )
+
+    return fit_subgroup_analysis(
+        data=data,
+        subgroup=subgroup,
+        overall=overall,
+        fit_group=fit_group,
     )

@@ -2,7 +2,7 @@
 
 from .api import meta_analysis
 from .binary_api import meta_binary
-from .config import MethodConfig
+from .config import MethodConfig, SubgroupMethodConfig
 from .continuous_api import meta_continuous
 from .exceptions import (
     ConvergenceError,
@@ -16,6 +16,8 @@ from .results import (
     HeterogeneityResult,
     MetaAnalysisResult,
     MetaAnalysisSummary,
+    SubgroupMetaAnalysisResult,
+    SubgroupMetaAnalysisSummary,
 )
 
 __all__ = [
@@ -28,6 +30,9 @@ __all__ = [
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
     "MethodConfig",
+    "SubgroupMetaAnalysisResult",
+    "SubgroupMetaAnalysisSummary",
+    "SubgroupMethodConfig",
     "UnsupportedMethodError",
     "meta_analysis",
     "meta_binary",

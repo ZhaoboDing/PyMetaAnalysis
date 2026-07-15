@@ -20,3 +20,13 @@ class MethodConfig:
     prediction_interval_method: str | None
     missing: str
     options: tuple[tuple[str, MethodOptionValue], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SubgroupMethodConfig:
+    """The fully resolved assumptions used for a subgroup analysis."""
+
+    model: str
+    tau2_strategy: str
+    test_method: str
+    subgroup_missing: str
