@@ -35,6 +35,12 @@ dependencies = [
   "scipy>=1.10",
 ]
 
+[project.urls]
+Documentation = "https://github.com/ZhaoboDing/PyMetaAnalysis/tree/main/docs"
+Source = "https://github.com/ZhaoboDing/PyMetaAnalysis"
+Issues = "https://github.com/ZhaoboDing/PyMetaAnalysis/issues"
+Changelog = "https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md"
+
 [tool.hatch.build]
 exclude = [
   "/.coverage",

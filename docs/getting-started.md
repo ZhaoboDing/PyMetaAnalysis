@@ -16,6 +16,8 @@ For a source checkout, install the project in editable mode:
 python -m pip install -e ".[test,plot]"
 ```
 
+See [installation](installation.md) for all extras and development checks.
+
 ## 2. Prepare a DataFrame
 
 The generic API expects one effect estimate and one strictly positive sampling
@@ -70,6 +72,7 @@ result.tau2
 result.q
 result.i2       # a proportion from 0 to 1
 result.h2
+result.i2_method
 ```
 
 The machine-readable summary and study table are suitable for reporting and
@@ -159,12 +162,20 @@ ax = result.funnel()
 Both methods return a Matplotlib `Axes` and never call `show()`. This keeps them
 usable in notebooks, scripts, tests, and composed figures.
 
+See [plotting](guides/plotting.md) for every parameter, display-scale rules,
+axes composition, and interpretation cautions.
+
 ## Next steps
 
 - Review [choosing methods](guides/method-selection.md) before changing model,
   tau-squared estimator, or confidence-interval method.
 - Use [generic effects](guides/generic-effects.md) for array input and missing
   value policies.
+- Read [input data and row decisions](guides/input-data.md) before relying on
+  exclusions or provenance in a larger pipeline.
 - Use an outcome-specific entry point when raw group summaries are available.
 - Use [sensitivity analysis](guides/sensitivity-analysis.md) to assess how the
   pooled estimate changes across repeated refits.
+- Consult [statistical methods](methods/statistical-methods.md) for implemented
+  equations and [scope and limitations](limitations.md) before selecting the
+  library for a review.

@@ -190,6 +190,18 @@ def test_method_details_expand_random_effects_and_hartung_knapp_choices() -> Non
     assert f"PyMetaAnalysis {ma.__version__}" in details
 
 
+def test_method_details_do_not_claim_unavailable_prediction_interval() -> None:
+    result = ma.meta_analysis(
+        effect=[0.1, 0.4],
+        variance=[0.01, 0.02],
+        model="random",
+    )
+
+    details = result.method_details()
+    assert "was unavailable because fewer than three studies" in details
+    assert "was calculated" not in details
+
+
 def test_random_effects_summary_gives_small_sample_interval_guidance() -> None:
     result = ma.meta_analysis(
         effect=[0.1, 0.2, 0.4],

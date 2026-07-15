@@ -102,3 +102,7 @@ with `included=False` and an exclusion reason.
 Sparse tables require additional decisions. Read
 [zero-event studies](zero-events.md) before changing continuity-correction
 settings.
+
+See [statistical methods](../methods/statistical-methods.md#binary-study-effects)
+for the OR/RR/RD and Mantel-Haenszel equations, and
+[validation](../validation.md) for cross-software coverage.

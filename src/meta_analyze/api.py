@@ -273,10 +273,12 @@ def meta_analysis(
 ) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
     """Fit a generic inverse-variance meta-analysis, optionally by subgroup.
 
-    ``subgroup`` accepts a DataFrame column name or one-dimensional array-like.
-    When supplied, the function returns :class:`SubgroupMetaAnalysisResult`;
-    otherwise it returns :class:`MetaAnalysisResult`. Missing subgroup labels
-    are rejected explicitly.
+    ``effect`` and ``variance`` accept DataFrame column names or one-dimensional
+    array-like values. Sampling variances must be finite and strictly positive.
+    The default is a REML random-effects model with a normal confidence
+    interval. ``subgroup`` returns :class:`SubgroupMetaAnalysisResult` when
+    supplied; otherwise the return value is :class:`MetaAnalysisResult`.
+    Missing subgroup labels are rejected explicitly.
     """
 
     overall = _fit_meta_analysis_single(

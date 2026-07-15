@@ -136,9 +136,16 @@ def method_details(result: MetaAnalysisResult) -> str:
         )
 
     if method.prediction_interval_method is not None:
-        sentences.append(
-            "A Higgins–Thompson–Spiegelhalter prediction interval was calculated."
-        )
+        if result.prediction_interval is not None:
+            sentences.append(
+                "A Higgins–Thompson–Spiegelhalter prediction interval was calculated."
+            )
+        else:
+            sentences.append(
+                "The configured Higgins–Thompson–Spiegelhalter prediction "
+                "interval was unavailable because fewer than three studies "
+                "were included."
+            )
 
     options = dict(method.options)
     if result.measure in {"OR", "RR", "RD"}:
