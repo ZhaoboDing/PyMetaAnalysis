@@ -14,6 +14,7 @@ from scipy.stats import chi2
 from .config import SubgroupMethodConfig
 from .data import ColumnOrArray, _resolve_vector
 from .exceptions import InsufficientStudiesError, InvalidStudyDataError
+from .provenance import remap_provenance_rows
 from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
 GroupFitter = Callable[[NDArray[np.int64]], MetaAnalysisResult]
@@ -60,7 +61,12 @@ def _restore_global_rows(
     group_source = (
         None if source_data is None else source_data.iloc[positions].copy(deep=True)
     )
-    return replace(result, _study_results=studies, _source_data=group_source)
+    return replace(
+        result,
+        provenance=remap_provenance_rows(result.provenance, positions.tolist()),
+        _study_results=studies,
+        _source_data=group_source,
+    )
 
 
 def _between_group_test(
