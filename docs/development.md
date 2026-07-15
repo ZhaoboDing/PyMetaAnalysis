@@ -21,13 +21,18 @@ Before opening a pull request:
 ```console
 python -m ruff format .
 python -m ruff check .
+actionlint
 python -m mypy
 python -m pytest --cov=meta_analyze --cov-branch --cov-report=term-missing
 python -m mkdocs build --strict
+python tools/execute_notebooks.py
+python tools/check_release.py
 python -m build
+python tools/inspect_distribution.py dist
 ```
 
 The CI matrix also tests Python 3.10–3.13 and declared dependency lower bounds.
+Install the `notebook` extra before running the notebook executor.
 
 ## Statistical changes
 
@@ -73,3 +78,10 @@ For a statistical discrepancy, include a minimal dataset, exact call, package
 and Python versions, observed output, expected output, and the independent
 method/software used for comparison. Remove confidential study data before
 posting it publicly.
+
+## Releases
+
+Releases use a separate tag-triggered workflow, PyPI Trusted Publishing, and
+GitHub Pages. See the [release process](releasing.md) for one-time repository
+configuration, version synchronization, validation, tagging, and post-release
+checks.

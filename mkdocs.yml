@@ -1,5 +1,6 @@
 site_name: PyMetaAnalysis
 site_description: Pandas-first, auditable meta-analysis workflows for Python
+site_url: https://zhaoboding.github.io/PyMetaAnalysis/
 repo_url: https://github.com/ZhaoboDing/PyMetaAnalysis
 repo_name: ZhaoboDing/PyMetaAnalysis
 edit_uri: edit/main/docs/
@@ -44,6 +45,7 @@ nav:
       - Sensitivity analysis: guides/sensitivity-analysis.md
       - Plotting: guides/plotting.md
       - Provenance and reporting: guides/provenance-reporting.md
+      - Mapping R workflows: guides/r-interoperability.md
   - Methods:
       - Choosing methods: guides/method-selection.md
       - Statistical methods: methods/statistical-methods.md
@@ -56,6 +58,7 @@ nav:
       - Project:
           - Citing PyMetaAnalysis: citation.md
           - Development and contribution: development.md
+          - Release process: releasing.md
           - Decisions:
               - Optional Matplotlib: adr/0001-optional-matplotlib.md
               - Statistical defaults and boundary policies: adr/0002-statistical-policy.md

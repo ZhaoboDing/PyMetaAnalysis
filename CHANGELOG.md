@@ -25,6 +25,11 @@ under `Unreleased`.
   reporting;
 - complete MkDocs user, methods, API, validation, limitation, and development
   documentation.
+- R `meta`/`metafor` terminology and parameter mappings;
+- machine-readable citation metadata and an executable end-to-end notebook;
+- GitHub Pages and PyPI Trusted Publishing release workflows;
+- release metadata, distribution-content, notebook-execution, and performance
+  baseline tooling.
 
 ### Changed
 

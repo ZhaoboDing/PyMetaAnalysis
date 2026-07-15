@@ -3,6 +3,11 @@
 PyMetaAnalysis does not yet have a DOI or software paper. Until one is
 available, cite the exact software version and repository used in the analysis.
 
+The repository includes machine-readable [`CITATION.cff`](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CITATION.cff)
+metadata. GitHub's **Cite this repository** control can export it to common
+bibliographic formats. Release maintainers keep its version synchronized with
+the package metadata.
+
 Retrieve the installed version with:
 
 ```python

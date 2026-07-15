@@ -40,6 +40,10 @@ pip install "PyMetaAnalysis[plot]"
 See [installation](installation.md) for supported Python versions, editable
 development installs, extras, and verification.
 
+The executable [quickstart notebook](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/examples/quickstart.ipynb)
+demonstrates a complete synthetic-data workflow. Users porting an existing R
+analysis can start with [mapping R workflows](guides/r-interoperability.md).
+
 ## Start here
 
 The [getting-started guide](getting-started.md) fits a complete analysis and

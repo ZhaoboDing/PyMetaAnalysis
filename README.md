@@ -1,6 +1,7 @@
 # PyMetaAnalysis
 
 [![CI](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml)
+[![Documentation](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/pages.yml/badge.svg)](https://zhaoboding.github.io/PyMetaAnalysis/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 PyMetaAnalysis is an early-stage, pandas-first Python library for conventional
@@ -120,6 +121,9 @@ are descriptive small-study-effect diagnostics, not proof of publication bias.
 
 ## Documentation
 
+The complete documentation is published at
+[zhaoboding.github.io/PyMetaAnalysis](https://zhaoboding.github.io/PyMetaAnalysis/).
+
 - [Installation](docs/installation.md)
 - [Getting started](docs/getting-started.md)
 - [Input data and row decisions](docs/guides/input-data.md)
@@ -129,6 +133,10 @@ are descriptive small-study-effect diagnostics, not proof of publication bias.
 - [Public API](docs/reference/api.md), [result objects](docs/reference/results.md), and [report schema](docs/reference/report-schema.md)
 - [Validation strategy](docs/validation.md) and [scope/limitations](docs/limitations.md)
 - [Citation guidance](docs/citation.md)
+- [R `meta`/`metafor` mapping](docs/guides/r-interoperability.md)
+
+An executable [end-to-end notebook](examples/quickstart.ipynb) uses synthetic
+data to demonstrate analysis, provenance, reporting, sensitivity, and plotting.
 
 Build the complete site locally with:
 

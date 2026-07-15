@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build release artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out tagged revision
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require the tagged commit to belong to main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Validate release metadata
+        run: python tools/check_release.py --tag "$GITHUB_REF_NAME"
+
+      - name: Build distributions
+        run: python -m build
+
+      - name: Check distribution metadata and contents
+        run: |
+          python -m twine check dist/*
+          python tools/inspect_distribution.py dist
+
+      - name: Benchmark the built wheel
+        run: |
+          python -m pip install --force-reinstall dist/*.whl
+          python benchmarks/benchmark_core.py --output release-benchmark.json
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload release benchmark
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-benchmark
+          path: release-benchmark.json
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish distributions to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/PyMetaAnalysis
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v8
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v8
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Download release benchmark
+        uses: actions/download-artifact@v8
+        with:
+          name: release-benchmark
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=("$GITHUB_REF_NAME" dist/* release-benchmark.json --verify-tag --generate-notes)
+          version="${GITHUB_REF_NAME#v}"
+          if [[ "$version" =~ [[:alpha:]] ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}"

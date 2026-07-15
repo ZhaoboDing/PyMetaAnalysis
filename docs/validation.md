@@ -88,6 +88,8 @@ GitHub Actions runs:
 - Ruff formatting and lint checks;
 - strict Mypy type checking;
 - MkDocs strict link/navigation validation;
+- execution of every committed example notebook;
+- release-metadata and distribution-content checks;
 - wheel and source-distribution builds plus an installed-wheel smoke test.
 
 The configured branch-coverage floor is 90%.
@@ -102,7 +104,10 @@ python -m ruff check .
 python -m mypy
 python -m pytest --cov=meta_analyze --cov-branch --cov-report=term-missing
 python -m mkdocs build --strict
+python tools/execute_notebooks.py
+python tools/check_release.py
 python -m build
+python tools/inspect_distribution.py dist
 ```
 
 ## Validation boundary

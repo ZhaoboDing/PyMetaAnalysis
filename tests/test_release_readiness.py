@@ -1,0 +1,83 @@
+"""Release metadata, notebook, and benchmark smoke contracts."""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import meta_analyze as ma
+
+ROOT = Path(__file__).parents[1]
+
+
+def test_release_metadata_sources_match() -> None:
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    project_match = re.search(r'^version = "([^"]+)"$', pyproject, re.MULTILINE)
+    citation_match = re.search(r"^version:\s*([^\s]+)", citation, re.MULTILINE)
+
+    assert project_match is not None
+    assert citation_match is not None
+    assert project_match.group(1) == citation_match.group(1) == ma.__version__
+
+
+def test_release_metadata_checker_runs() -> None:
+    completed = subprocess.run(
+        [sys.executable, "tools/check_release.py"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert ma.__version__ in completed.stdout
+
+
+def test_quickstart_notebook_is_valid_unexecuted_json() -> None:
+    path = ROOT / "examples" / "quickstart.ipynb"
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+
+    assert notebook["nbformat"] == 4
+    assert any(cell["cell_type"] == "code" for cell in notebook["cells"])
+    assert all(
+        cell.get("execution_count") is None
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+    markdown = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "markdown"
+    )
+    assert "synthetic" in markdown.lower()
+
+
+def test_core_benchmark_smoke(tmp_path: Path) -> None:
+    output = tmp_path / "benchmark.json"
+    subprocess.run(
+        [
+            sys.executable,
+            "benchmarks/benchmark_core.py",
+            "--studies",
+            "6",
+            "--repeat",
+            "1",
+            "--number",
+            "1",
+            "--output",
+            str(output),
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["package_version"] == ma.__version__
+    assert set(payload["cases"]) == {
+        "generic_random_reml",
+        "binary_rr_random_reml",
+        "continuous_smd_random_reml",
+    }
