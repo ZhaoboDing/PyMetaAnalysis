@@ -2,6 +2,7 @@ site_name: PyMetaAnalysis
 site_description: Pandas-first, auditable meta-analysis workflows for Python
 repo_url: https://github.com/ZhaoboDing/PyMetaAnalysis
 repo_name: ZhaoboDing/PyMetaAnalysis
+edit_uri: edit/main/docs/
 strict: true
 
 theme:
@@ -14,6 +15,9 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+
+extra_css:
+  - stylesheets/extra.css
 
 validation:
   nav:
@@ -28,18 +32,30 @@ validation:
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
+  - Start:
+      - Installation: installation.md
+      - Getting started: getting-started.md
+      - Input data and row decisions: guides/input-data.md
   - Guides:
       - Generic effects: guides/generic-effects.md
       - Binary outcomes: guides/binary-outcomes.md
       - Continuous outcomes: guides/continuous-outcomes.md
-      - Choosing methods: guides/method-selection.md
       - Zero-event studies: guides/zero-events.md
       - Sensitivity analysis: guides/sensitivity-analysis.md
+      - Plotting: guides/plotting.md
       - Provenance and reporting: guides/provenance-reporting.md
+  - Methods:
+      - Choosing methods: guides/method-selection.md
+      - Statistical methods: methods/statistical-methods.md
+      - Validation strategy: validation.md
+      - Scope and limitations: limitations.md
   - Reference:
       - Public API: reference/api.md
       - Result objects: reference/results.md
-  - Decisions:
-      - Optional Matplotlib: adr/0001-optional-matplotlib.md
-      - Statistical defaults and boundary policies: adr/0002-statistical-policy.md
+      - Report and provenance schemas: reference/report-schema.md
+      - Project:
+          - Citing PyMetaAnalysis: citation.md
+          - Development and contribution: development.md
+          - Decisions:
+              - Optional Matplotlib: adr/0001-optional-matplotlib.md
+              - Statistical defaults and boundary policies: adr/0002-statistical-policy.md

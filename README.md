@@ -1,288 +1,160 @@
 # PyMetaAnalysis
 
-PyMetaAnalysis is an early-stage, pandas-first Python library for auditable
-meta-analysis workflows.
+[![CI](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-The documentation includes a
-[five-minute introduction](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/docs/getting-started.md),
-outcome-specific guides, method-selection guidance, and an API reference.
-Build it locally with `pip install ".[docs]"` followed by `mkdocs serve`.
+PyMetaAnalysis is an early-stage, pandas-first Python library for conventional
+study-level meta-analysis. It accepts DataFrames, NumPy arrays, and ordinary
+Python sequences, then returns immutable, auditable result objects containing
+study effects, exclusions, weights, method choices, diagnostics, provenance,
+and structured reports.
 
-The library currently supports generic inverse-variance meta-analysis from
-study-level effects and sampling variances:
+> **Pre-release:** the API may change before version 0.1. Consequential results
+> should be reviewed against the analysis protocol and independently checked.
+
+## Install
+
+```console
+python -m pip install PyMetaAnalysis
+```
+
+Install optional Matplotlib plotting support with:
+
+```console
+python -m pip install "PyMetaAnalysis[plot]"
+```
+
+The distribution name is `PyMetaAnalysis`; the import name is
+`meta_analyze`.
+
+## Quick start
 
 ```python
 import meta_analyze as ma
 
 result = ma.meta_analysis(
-    data=studies,
+    effect=[0.12, 0.35, -0.08, 0.21],
+    variance=[0.04, 0.06, 0.03, 0.05],
+    study=["Trial A", "Trial B", "Trial C", "Trial D"],
+    model="random",
+    tau2_method="REML",
+)
+
+print(result.summary())
+print(result.study_results)
+```
+
+DataFrame column names work directly:
+
+```python
+result = ma.meta_analysis(
+    studies,
     effect="effect",
     variance="variance",
-    study="study",
-    model="random",
-    tau2_method="REML",
-)
-
-print(result.summary())
-```
-
-Two-group binary outcomes can be analyzed directly from a DataFrame. The
-default is a Mantel-Haenszel common-effect risk ratio:
-
-```python
-result = ma.meta_binary(
-    data=studies,
-    event_treat="event_treat",
-    n_treat="n_treat",
-    event_control="event_control",
-    n_control="n_control",
-    study="study",
-    measure="RR",          # "OR", "RR", or "RD"
-    method="MH",           # "MH" or "IV"
-    model="common",
-)
-
-print(result.summary())
-```
-
-For random-effects binary meta-analysis, use inverse-variance pooling and
-select the between-study variance estimator explicitly if desired:
-
-```python
-result = ma.meta_binary(
-    data=studies,
-    event_treat="event_treat",
-    n_treat="n_treat",
-    event_control="event_control",
-    n_control="n_control",
-    measure="OR",
-    method="IV",
-    model="random",
-    tau2_method="REML",
-)
-```
-
-Two-group continuous outcomes accept the same DataFrame-or-array style. The
-default measure is the raw mean difference; use `measure="SMD"` for Hedges'
-adjusted g:
-
-```python
-result = ma.meta_continuous(
-    data=studies,
-    mean_treat="mean_treat",
-    sd_treat="sd_treat",
-    n_treat="n_treat",
-    mean_control="mean_control",
-    sd_control="sd_control",
-    n_control="n_control",
-    study="study",
-    measure="SMD",        # "MD" or "SMD"
-    model="random",
-    tau2_method="REML",
-)
-```
-
-Effects are defined as treatment minus control, so positive MD/SMD values
-indicate larger outcomes in the treatment group. MD uses the unpooled sampling
-variance. SMD uses the pooled within-study SD, the exact gamma-function Hedges
-correction, and the `metafor` `vtype="LS"` sampling variance convention. The
-per-study pooled SD, Cohen's d, correction factor, final effect, variance, and
-weights remain available in `result.study_results`.
-
-## Subgroup analysis
-
-All three analysis entry points accept a DataFrame column or one-dimensional
-array-like through `subgroup=`:
-
-```python
-subgroups = ma.meta_binary(
-    data=studies,
-    event_treat="event_treat",
-    n_treat="n_treat",
-    event_control="event_control",
-    n_control="n_control",
-    study="study",
+    study="citation",
     subgroup="region",
-    measure="RR",
-    method="MH",
-    model="common",
 )
-
-print(subgroups.summary())
-ax = subgroups.forest()
 ```
 
-Supplying `subgroup=` returns a `SubgroupMetaAnalysisResult` containing an
-ordered mapping of subgroup labels to `MetaAnalysisResult` objects, the overall
-analysis, and a formal test for subgroup differences. The test follows the
-RevMan formulation: subgroup summary effects are weighted by the inverse square
-of their pooled standard errors and compared with a chi-squared Q statistic.
-It is not based on comparing whether separate subgroup p-values are
-statistically significant. See Cochrane's
-[Statistical Methods Programmed in RevMan](https://training.cochrane.org/handbook/current/statistical-methods-revman5)
-for the defining equations.
+Omit `study=` to use the DataFrame index. Supplying `subgroup=` returns a
+dedicated result containing group fits, the overall fit, and a formal test for
+subgroup differences.
 
-For random-effects analyses, tau-squared is currently estimated independently
-within each subgroup and separately for the overall analysis. This assumption
-is recorded as `result.method.tau2_strategy == "independent"`. Each random-
-effects subgroup therefore needs at least two included studies. Missing
-subgroup labels are rejected explicitly rather than silently assigned or
-dropped. Outcome rows excluded by the selected missing-data or zero-event
-policy remain visible with their subgroup label in `result.study_results`.
+## Supported analyses
 
-The subgroup forest plot shows study estimates, subgroup subtotals, the overall
-estimate, optional prediction intervals, overall study weights, and the formal
-test for subgroup differences. It follows the same optional-Matplotlib and
-display-scale behavior as ordinary forest plots.
+| Input | Effects | Pooling/models |
+| --- | --- | --- |
+| Effect + sampling variance | Generic | Common/random inverse variance |
+| Two-group events + totals | OR, RR, RD | Common MH OR/RR; common/random IV |
+| Two-group means + SDs + sizes | MD, Hedges' g | Common/random inverse variance |
 
-## Sensitivity and cumulative analysis
+Random-effects inverse-variance models support REML (default), Paule-Mandel,
+and DerSimonian-Laird tau-squared estimators. Mean confidence intervals support
+the normal default plus unmodified and safeguarded Hartung-Knapp variants.
+Eligible random-effects fits include an HTS prediction interval.
 
-Every fitted result can be refitted while omitting one included study at a
-time. The returned table reports the omitted row and study labels together with
-the pooled estimate, confidence interval, tau-squared, Q, I-squared, and
-H-squared from each refit:
+Sparse binary behavior is explicit: study-level and Mantel-Haenszel continuity
+corrections are separate, relative-effect double-zero/double-all rows remain
+visible as exclusions, and RD exposes
+`rd_zero_variance="correct" | "exclude"`.
+
+## Inspect and report
 
 ```python
-influence = result.leave_one_out()
-print(influence.to_dataframe())
-```
+result.estimate
+result.display_estimate
+result.ci
+result.tau2
+result.i2
+result.i2_method
+result.diagnostics
+result.provenance
 
-The original model, pooling method, confidence-interval method, continuity
-corrections, tau-squared estimator, confidence level, and numerical controls
-are reused for every fit. Originally excluded studies are not treated as
-leave-one-out candidates. A common-effect leave-one-out analysis needs at least
-two included studies; a random-effects analysis needs at least three so that
-every refit retains the two studies required to estimate tau-squared.
-
-Cumulative analysis adds included studies in the original input order by
-default. A DataFrame column name or one-dimensional array-like can define a
-different stable order:
-
-```python
-cumulative = result.cumulative(order="publication_year")
-print(cumulative.to_dataframe())
-```
-
-Use `ascending=False` to reverse the order. With an explicit order,
-`collapse=True` adds studies sharing the same order value simultaneously.
-Missing order values are rejected for included studies but ignored for rows
-that the original analysis already excluded. Random-effects cumulative
-analysis starts with the first estimable `k=2` prefix and records this boundary
-in `cumulative.warnings`; it never silently substitutes a common-effect model
-for the single-study prefix.
-
-For a `SubgroupMetaAnalysisResult`, the same methods return dedicated composite
-objects with `.groups` and `.overall` sensitivity results. These paths describe
-the accumulation or omission behavior within each fitted subgroup and within
-the overall model; they do not reinterpret different-length paths as a new
-sequence of subgroup-differences tests.
-
-These workflows follow the repeated-refitting semantics documented for
-[`metafor::leave1out()`](https://wviechtb.github.io/metafor/reference/leave1out.html)
-and [`metafor::cumul()`](https://wviechtb.github.io/metafor/reference/cumul.html).
-
-## Provenance and reports
-
-Every fitted result records versioned provenance sufficient to audit how the
-analysis inputs were interpreted:
-
-```python
-print(result.provenance.package_version)
-print(result.provenance.column_mapping)
-print(result.provenance.included_rows)
-print(result.provenance.transformations)
-```
-
-The provenance record contains the package and schema versions, whether inputs
-came from a DataFrame or arrays, the resolved column/index mapping, input row
-count, included and excluded row IDs, and structured transformation records.
-For binary analyses these records distinguish individual-effect continuity
-corrections from Mantel-Haenszel pooling corrections. Continuous analyses
-record the resolved MD or SMD estimator. The original DataFrame is not embedded
-in the provenance object.
-
-`method_details()` produces a concise Methods-style description with all
-resolved model, interval, heterogeneity, correction, and numerical-control
-choices:
-
-```python
 methods_text = result.method_details()
-```
-
-For a complete export, `report()` returns a detached `ResultReport`:
-
-```python
 report = result.report()
-
 payload = report.to_dict()
 json_text = report.to_json()
 markdown = report.to_markdown()
 ```
 
-The structured report contains results on model and display scales, full
-method configuration, heterogeneity, convergence diagnostics, provenance,
-warnings, and row-level study results. `report(include_studies=False)` creates
-a smaller export without the study table. JSON output is strict: non-finite or
-unavailable statistical values are represented as `null`, not non-standard
-`NaN` tokens. Subgroup results expose the same API and additionally report each
-group and the assumptions used by the subgroup-differences test.
+OR and RR remain on the log model scale in auditable numeric attributes;
+`display_estimate`, `display_ci`, and `display_prediction_interval` provide
+exponentiated ratios.
 
-The generated text is intended as an auditable starting point. It does not
-claim to satisfy every journal's reporting requirements without review.
+Rows excluded by missing-value or sparse-data policies remain in
+`study_results` with a stable `row_id`, `included=False`, and an
+`exclusion_reason`.
 
-## Forest plots
-
-Plotting support is optional:
-
-```console
-pip install "PyMetaAnalysis[plot]"
-```
-
-Every fitted result can produce a Matplotlib forest plot:
+## Sensitivity and plots
 
 ```python
-ax = result.forest(
-    effect_label="Risk ratio",
-    show_prediction_interval=True,
-)
-```
+leave_one_out = result.leave_one_out().to_dataframe()
+cumulative = result.cumulative(order="publication_year").to_dataframe()
 
-The plot includes included-study confidence intervals, weight-scaled markers,
-the pooled confidence-interval diamond, and an optional prediction interval.
-OR and RR are shown on an exponentiated logarithmic axis with a null value of
-1; difference measures use a linear axis with a null value of 0. The method
-returns an `Axes` and does not call `show()`.
-
-## Funnel plots
-
-Fitted results also provide a standard-error funnel plot:
-
-```python
+ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
 ```
 
-The plot uses equal-sized study markers, an inverted standard-error axis, the
-model's pooled estimate as its reference line, and a pseudo confidence region
-that does not include tau-squared. Ratio measures are calculated on the log
-model scale and displayed as ratios on a logarithmic x-axis. A warning is
-emitted when fewer than 10 studies are available because asymmetry is difficult
-to assess reliably with so little information. Funnel-plot asymmetry indicates
-possible small-study effects and must not be treated as proof of publication
-bias.
+Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
+are descriptive small-study-effect diagnostics, not proof of publication bias.
 
-OR and RR are modeled on the log scale. `result.estimate` and `result.ci`
-therefore remain on that auditable model scale, while
-`result.display_estimate` and `result.display_ci` return exponentiated values.
+## Documentation
 
-By default, a correction of 0.5 is applied to every cell of an individual
-study table that contains at least one zero cell. Double-zero and double-all
-studies are excluded from relative-effect analyses and remain visible in
-`result.study_results` with an exclusion reason. Mantel-Haenszel pooling uses
-uncorrected tables by default; `mh_continuity_correction` is a separate,
-explicit option.
+- [Installation](docs/installation.md)
+- [Getting started](docs/getting-started.md)
+- [Input data and row decisions](docs/guides/input-data.md)
+- [Generic](docs/guides/generic-effects.md), [binary](docs/guides/binary-outcomes.md), and [continuous](docs/guides/continuous-outcomes.md) guides
+- [Choosing methods](docs/guides/method-selection.md) and [statistical formulas](docs/methods/statistical-methods.md)
+- [Sensitivity analysis](docs/guides/sensitivity-analysis.md) and [plotting](docs/guides/plotting.md)
+- [Public API](docs/reference/api.md), [result objects](docs/reference/results.md), and [report schema](docs/reference/report-schema.md)
+- [Validation strategy](docs/validation.md) and [scope/limitations](docs/limitations.md)
+- [Citation guidance](docs/citation.md)
 
-The public API is under active development and may change before version 0.1.
+Build the complete site locally with:
+
+```console
+python -m pip install ".[docs]"
+python -m mkdocs serve
+```
+
+## Validation status
+
+The test suite combines hand calculations, statistical invariants, numerical
+edge cases, and committed R `metafor` reference fixtures. CI covers Python
+3.10–3.13, declared dependency lower bounds, strict typing/linting, docs, and
+distribution builds.
+
+This is independent cross-software validation, not a formal external
+statistical audit. See [validation](docs/validation.md) for exact coverage.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the full
+[development guide](docs/development.md). Statistical changes require formula
+documentation, boundary tests, and an independent comparison where available.
+
+Security-sensitive reports should follow [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)

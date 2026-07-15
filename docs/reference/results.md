@@ -1,97 +1,144 @@
 # Result objects
 
-Result objects are frozen dataclasses. Their scalar outputs, resolved method
-settings, diagnostics, warnings, and row-level data remain available after the
-model is fitted.
+Result objects are frozen dataclasses. Scalar outputs, method settings,
+diagnostics, warnings, provenance, and row-level data remain inspectable after
+fitting. DataFrame-returning properties provide defensive copies.
 
 ## `MetaAnalysisResult`
+
+### Analysis identity
+
+| Attribute | Meaning |
+| --- | --- |
+| `k` | Number of included studies |
+| `model` | Resolved `common` or `random` model |
+| `measure` | `GENERIC`, `OR`, `RR`, `RD`, `MD`, or `SMD` |
+| `effect_scale` | Scale used for model calculations |
+| `display_scale` | Identity or exponentiating display transformation |
 
 ### Pooled estimates
 
 | Attribute | Meaning |
 | --- | --- |
 | `estimate` | Pooled estimate on the model scale |
-| `standard_error` | Standard error of the pooled estimate |
-| `ci`, `ci_low`, `ci_high` | Confidence interval on the model scale |
+| `standard_error` | Standard error used by the selected mean CI |
+| `ci_low`, `ci_high`, `ci` | Confidence interval on the model scale |
 | `prediction_interval` | Random-effects prediction interval, when available |
 | `display_estimate` | Pooled estimate on the display scale |
-| `display_ci` | Confidence interval on the display scale |
-| `display_prediction_interval` | Prediction interval on the display scale |
+| `display_ci` | Display-scale confidence interval |
+| `display_prediction_interval` | Display-scale prediction interval |
 
-For OR and RR, the model scale is logarithmic and the display scale is
-exponentiated. Other implemented measures use an identity display transform.
+For OR and RR, `estimate`, `ci`, and `prediction_interval` are logarithmic;
+their display counterparts are exponentiated ratios. Other measures use the
+identity transformation.
 
 ### Heterogeneity
 
-`tau2`, `q`, `q_df`, `q_pvalue`, `i2`, `h2`, and `i2_method` expose the principal
-heterogeneity outputs. `i2` is stored as a proportion from zero to one; summary
-and plotting layers format it as a percentage. `i2_method` is `q_based` for
-common-effect/Mantel-Haenszel analyses and `tau2_typical_variance` for random-
-effects analyses.
+| Attribute | Meaning |
+| --- | --- |
+| `tau2` | Between-study variance; zero for common-effect fits |
+| `q`, `q_df`, `q_pvalue` | Cochran Q statistic, degrees of freedom, and p-value |
+| `i2` | I-squared as a proportion from 0 to 1 |
+| `h2` | H-squared |
+| `i2_method` | `q_based` or `tau2_typical_variance` |
+| `heterogeneity` | The underlying `HeterogeneityResult` record |
+
+The definition differs by model and is specified under
+[statistical methods](../methods/statistical-methods.md#heterogeneity-and-inconsistency).
 
 ### Methods and diagnostics
 
-`result.method` is a `MethodConfig` containing the resolved settings actually
-used. Outcome-specific values such as continuity-correction scopes are
-available through `dict(result.method.options)`.
+`result.method` is a `MethodConfig` containing the settings actually used:
 
-`result.diagnostics` records whether iterative estimation converged, how many
-iterations it used, and whether tau-squared reached its zero boundary.
-Recoverable statistical notes are stored in the immutable `warnings` tuple.
+| Field | Meaning |
+| --- | --- |
+| `model` | Resolved model |
+| `pooling_method` | `inverse_variance` or `mantel_haenszel` |
+| `tau2_method` | `REML`, `PM`, `DL`, or `None` |
+| `ci_method` | Resolved mean confidence-interval method |
+| `confidence_level` | Fitted confidence level |
+| `prediction_interval_method` | `HTS` or `None` |
+| `missing` | Resolved missing-value policy |
+| `atol`, `max_iter` | Numerical controls |
+| `options` | Immutable outcome-specific key/value pairs |
+
+Convert outcome options to a mapping with `dict(result.method.options)`.
+
+`result.diagnostics` is a `FitDiagnostics` record:
+
+| Field | Meaning |
+| --- | --- |
+| `converged` | Whether the requested fit converged |
+| `iterations` | Iterations used; zero for closed-form/boundary fits |
+| `tau2_at_boundary` | Whether tau-squared reached zero; `None` if not applicable |
+
+Recoverable statistical and workflow notes are stored in the immutable
+`warnings` tuple.
 
 ### Provenance
 
-`result.provenance` is an immutable `AnalysisProvenance` record. It contains:
+`result.provenance` is an `AnalysisProvenance` record containing:
 
-- the PyMetaAnalysis and provenance-schema versions;
-- the analysis type and whether inputs came from a DataFrame or arrays;
-- one `InputFieldProvenance` per resolved public input;
-- DataFrame column mappings, when columns were selected by name;
-- input row count and included/excluded row IDs;
-- structured `TransformationRecord` entries.
+- PyMetaAnalysis and provenance-schema versions;
+- analysis type and DataFrame/array source kind;
+- one `InputFieldProvenance` per public input;
+- DataFrame `column_mapping` when columns were selected by name;
+- total row count plus included and excluded row IDs;
+- structured `TransformationRecord` values.
 
-Binary transformation records distinguish the continuity correction used for
-individual effects from the independently configured correction used for
-Mantel-Haenszel pooling. RD records also identify the zero-variance boundary
-policy and affected rows. Continuous records identify the resolved MD or SMD
-effect-size estimator. Provenance does not embed another copy of the original
-DataFrame.
+`result.source_data` returns a defensive copy of the supplied DataFrame, or
+`None` for array-only input. Provenance deliberately does not embed the source
+DataFrame in serialized output.
 
 ### Study tables
 
-- `study_results` returns all input rows and fitted row-level outputs.
-- `excluded_studies` returns rows with `included=False`.
-- `to_dataframe()` is an explicit alias for the complete study table.
+All study tables contain:
 
-All three return defensive DataFrame copies. Common columns include `row_id`,
-`study`, `effect`, `variance`, `included`, `exclusion_reason`, `weight`, and
-`normalized_weight`; outcome-specific analyses retain their raw inputs and
-intermediate effect-size calculations as additional columns.
+| Column | Meaning |
+| --- | --- |
+| `row_id` | Stable zero-based input position |
+| `study` | Display label |
+| `effect` | Study effect on the model scale |
+| `variance`, `standard_error` | Study sampling uncertainty |
+| `included` | Whether the row entered the fit |
+| `exclusion_reason` | Reason for exclusion or `None` |
+| `weight` | Raw fitted weight or `NaN` if excluded |
+| `normalized_weight` | Weight divided by included-weight sum |
 
-### Summaries and plots
+Accessors are:
 
-`summary()` returns a printable `MetaAnalysisSummary`; call its `to_dict()`
-method for a machine-readable scalar summary.
+```python
+result.study_results
+result.excluded_studies
+result.to_dataframe()
+```
 
-`forest()` and `funnel()` return Matplotlib axes without calling `show()`.
-Matplotlib is imported only when a plotting method is used.
+#### Generic-specific columns
 
-### Sensitivity analysis
+Generic tables contain only the common columns above.
 
-`leave_one_out()` returns a `LeaveOneOutResult` with the original result, one
-refit per included study, warnings, and a defensive summary table.
+#### Binary-specific columns
 
-`cumulative()` returns a `CumulativeMetaAnalysisResult`. Its `results` follow
-the selected stable order and its `final` property is the last fit. Both
-workflows reuse the stored model, pooling method, interval method, numerical
-controls, and outcome-specific options.
+Binary tables additionally contain raw counts, `effect_display`,
+`continuity_corrected`, `rd_zero_variance`, and
+`mh_continuity_corrected`.
 
-### Methods text and reports
+#### Continuous-specific columns
 
-`method_details()` returns concise prose describing the resolved estimator,
-confidence interval, heterogeneity statistics, corrections, missing-data
-policy, numerical controls, and package version.
+Continuous tables additionally contain raw group summaries, `effect_display`,
+`pooled_sd`, `cohen_d`, and `smd_correction_factor`. MD rows leave SMD-only
+intermediates unavailable.
 
+### Summaries
+
+`summary()` returns `MetaAnalysisSummary`. Its string form is concise human-
+readable output. `to_dict()` contains analysis identity, pooled/display
+estimates, interval and heterogeneity outputs, numerical controls, warnings,
+and outcome-specific method options.
+
+### Reports
+
+`method_details()` produces Methods-style prose from resolved configuration.
 `report(include_studies=True)` returns a detached `ResultReport`:
 
 ```python
@@ -100,31 +147,78 @@ report.to_json(indent=2)
 report.to_markdown()
 ```
 
-The report contains model- and display-scale results, heterogeneity, full
-method configuration, diagnostics, provenance, warnings, and—by default—the
-study table. Report schema version 1.1 includes `heterogeneity.i2_method`. Pass
-`include_studies=False` for a compact payload. JSON is strict:
-non-finite or unavailable values are serialized as `null` rather than `NaN`.
+See [report schema](report-schema.md) for the complete serialized structure.
+
+### Plotting
+
+`forest()` and `funnel()` return Matplotlib axes without calling `show()`.
+Matplotlib is imported only when a plot is requested. Parameters and display-
+scale behavior are documented in [plotting](../guides/plotting.md).
+
+## Sensitivity results
+
+### `LeaveOneOutResult`
+
+Contains:
+
+- `original`, the fitted source result;
+- `results`, one refit per omitted included study;
+- `warnings`, workflow-level notes;
+- `table`, `summary()`, and `to_dataframe()` defensive tabular views.
+
+The table columns are:
+
+```text
+omitted_row_id, omitted_study, k, estimate, standard_error,
+ci_low, ci_high, display_estimate, display_ci_low, display_ci_high,
+tau2, q, q_df, q_pvalue, i2, h2, i2_method
+```
+
+### `CumulativeMetaAnalysisResult`
+
+Contains `original`, ordered `results`, `warnings`, the defensive table views,
+and `final`, the final all-included-studies fit.
+
+The table columns are:
+
+```text
+step, added_row_ids, added_studies, order_value, k, estimate,
+standard_error, ci_low, ci_high, display_estimate, display_ci_low,
+display_ci_high, tau2, q, q_df, q_pvalue, i2, h2, i2_method
+```
+
+See [sensitivity analysis](../guides/sensitivity-analysis.md) for count and
+ordering rules.
 
 ## Subgroup results
 
-Supplying `subgroup=` returns `SubgroupMetaAnalysisResult`, which contains:
+Supplying `subgroup=` returns a `SubgroupMetaAnalysisResult`.
 
-- `groups`, a read-only ordered mapping from subgroup label to
-  `MetaAnalysisResult`;
-- `overall`, the analysis of all included studies;
-- `q_between`, `q_between_df`, and `q_between_pvalue` for the formal subgroup
-  difference test;
-- `i2_between`, the inconsistency statistic for subgroup differences;
-- `method`, a `SubgroupMethodConfig` recording subgroup assumptions;
-- the combined `study_results` and `excluded_studies` tables.
+| Attribute | Meaning |
+| --- | --- |
+| `groups` | Read-only ordered mapping from label to group result |
+| `overall` | Analysis of all eligible studies |
+| `q_between`, `q_between_df`, `q_between_pvalue` | Formal subgroup-difference test |
+| `i2_between` | Inconsistency statistic for subgroup differences |
+| `method` | `SubgroupMethodConfig` |
+| `warnings` | Subgroup-workflow notes |
+| `study_results` | Combined study table with a `subgroup` column |
 
-Its `summary().to_dict()` method returns nested group and overall summaries.
-Its `forest()` method draws study rows, subgroup pooled estimates, the overall
-estimate, prediction intervals when available, and the subgroup-difference
-test.
+`SubgroupMethodConfig` records `model`, `tau2_strategy`, `test_method`, and
+`subgroup_missing`. Random-effects subgroup fits currently use an independent
+tau-squared estimate within each group and another for the overall result.
 
-Subgroup results also provide `leave_one_out()`, `cumulative()`,
-`method_details()`, and `report()`. Their report contains each group, the
-overall fit, the formal subgroup-differences test, its tau-squared strategy,
-and the combined study table.
+`summary().to_dict()` returns nested group and overall summaries.
+`method_details()` and `report()` include subgroup assumptions and the formal
+test. `forest()` draws studies, subgroup subtotals, the overall result,
+prediction intervals when available, and the test for subgroup differences.
+
+### Subgroup sensitivity composites
+
+`SubgroupLeaveOneOutResult` and `SubgroupCumulativeMetaAnalysisResult` expose
+read-only `.groups` mappings plus `.overall`. Their `to_dataframe()` and
+`summary()` methods combine group and overall paths with `scope` and `subgroup`
+columns.
+
+These paths do not calculate a new subgroup-differences test at every repeated
+fit.

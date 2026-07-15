@@ -99,6 +99,10 @@ The payload contains:
 Report schema 1.1 records the resolved heterogeneity definition as
 `heterogeneity.i2_method`.
 
+The complete key-level contract, including the separately versioned
+provenance object and subgroup shape, is documented under
+[report and provenance schemas](../reference/report-schema.md).
+
 The default study table makes the report auditable but can be large. Omit it
 when only aggregate output is needed:
 

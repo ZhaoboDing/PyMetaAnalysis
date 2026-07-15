@@ -75,3 +75,7 @@ adjusted.
 Use `missing="drop"` only when excluding incomplete rows is consistent with the
 analysis plan. Excluded rows remain available through
 `result.excluded_studies`.
+
+The exact MD/SMD equations are specified under
+[statistical methods](../methods/statistical-methods.md#continuous-study-effects).
+See [validation](../validation.md) for the R `metafor` reference coverage.

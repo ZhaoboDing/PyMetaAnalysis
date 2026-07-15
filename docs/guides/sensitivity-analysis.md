@@ -77,10 +77,14 @@ Every refit reuses the original result's:
 - tau-squared and confidence-interval methods;
 - confidence level, absolute tolerance, and iteration limit;
 - missing-data policy;
-- binary continuity corrections or continuous effect-size convention.
+- binary continuity corrections and RD zero-variance policy, or the continuous
+  effect-size convention.
 
 Derived results retain provenance that maps their local calculations back to
 the original `row_id` values.
+
+Repeated-fit tables include `i2_method` so a random-effects path cannot be
+mistaken for a Q-based inconsistency series.
 
 ## Subgroup results
 

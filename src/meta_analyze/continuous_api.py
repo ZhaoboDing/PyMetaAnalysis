@@ -284,7 +284,13 @@ def meta_continuous(
     atol: float = 1e-10,
     max_iter: int = 1000,
 ) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
-    """Pool continuous outcomes, optionally fitting independent subgroups."""
+    """Pool two-group continuous outcomes, optionally by subgroup.
+
+    Group means, sample standard deviations, and sample sizes accept DataFrame
+    column names or one-dimensional array-like values. The default is a REML
+    random-effects mean difference. ``measure="SMD"`` calculates exact-
+    corrected Hedges' g with the LS sampling-variance convention.
+    """
 
     overall = _fit_meta_continuous_single(
         data,
