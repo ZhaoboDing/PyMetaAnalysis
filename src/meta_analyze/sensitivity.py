@@ -17,6 +17,7 @@ from .exceptions import (
     InvalidStudyDataError,
     UnsupportedMethodError,
 )
+from .provenance import remap_provenance_rows
 from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
 
@@ -274,6 +275,10 @@ def _refit(
     selected_source = None if source is None else source.iloc[positions].copy(deep=True)
     return replace(
         fitted,
+        provenance=remap_provenance_rows(
+            fitted.provenance,
+            selected["row_id"].to_numpy(dtype=np.int64, copy=True).tolist(),
+        ),
         _study_results=refitted_studies,
         _source_data=selected_source,
     )

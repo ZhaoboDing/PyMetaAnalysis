@@ -12,10 +12,12 @@ import pandas as pd
 
 from .config import MethodConfig, SubgroupMethodConfig
 from .data import ColumnOrArray
+from .provenance import AnalysisProvenance
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
+    from .reporting import ResultReport
     from .sensitivity import (
         CumulativeMetaAnalysisResult,
         LeaveOneOutResult,
@@ -115,6 +117,11 @@ class MetaAnalysisSummary:
             lines.append("Heterogeneity: not estimable with one study")
 
         lines.append(f"Confidence interval method: {result.method.ci_method}")
+        if result.model == "random" and result.method.ci_method == "normal":
+            lines.append(
+                "Method note: consider ci_method='hartung_knapp' for a "
+                "t-based random-effects confidence interval."
+            )
         if result.warnings:
             lines.append("Notes:")
             lines.extend(f"- {warning}" for warning in result.warnings)
@@ -198,6 +205,7 @@ class MetaAnalysisResult:
     display_scale: str
     method: MethodConfig
     diagnostics: FitDiagnostics
+    provenance: AnalysisProvenance
     warnings: tuple[str, ...]
     _study_results: pd.DataFrame = field(repr=False, compare=False)
     _source_data: pd.DataFrame | None = field(default=None, repr=False, compare=False)
@@ -279,6 +287,20 @@ class MetaAnalysisResult:
 
     def summary(self) -> MetaAnalysisSummary:
         return MetaAnalysisSummary(self)
+
+    def method_details(self) -> str:
+        """Return a concise Methods-style description of the fitted analysis."""
+
+        from .reporting import method_details
+
+        return method_details(self)
+
+    def report(self, *, include_studies: bool = True) -> ResultReport:
+        """Build a structured report with JSON and Markdown representations."""
+
+        from .reporting import build_report
+
+        return build_report(self, include_studies=include_studies)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Return the same row-level table as :attr:`study_results`."""
@@ -408,6 +430,20 @@ class SubgroupMetaAnalysisResult:
         """Return a printable and machine-readable subgroup summary."""
 
         return SubgroupMetaAnalysisSummary(self)
+
+    def method_details(self) -> str:
+        """Return a Methods-style description including subgroup assumptions."""
+
+        from .reporting import subgroup_method_details
+
+        return subgroup_method_details(self)
+
+    def report(self, *, include_studies: bool = True) -> ResultReport:
+        """Build a structured subgroup report with JSON and Markdown forms."""
+
+        from .reporting import build_subgroup_report
+
+        return build_subgroup_report(self, include_studies=include_studies)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Return the combined row-level subgroup table."""

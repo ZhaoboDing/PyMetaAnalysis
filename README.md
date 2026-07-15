@@ -176,6 +176,55 @@ These workflows follow the repeated-refitting semantics documented for
 [`metafor::leave1out()`](https://wviechtb.github.io/metafor/reference/leave1out.html)
 and [`metafor::cumul()`](https://wviechtb.github.io/metafor/reference/cumul.html).
 
+## Provenance and reports
+
+Every fitted result records versioned provenance sufficient to audit how the
+analysis inputs were interpreted:
+
+```python
+print(result.provenance.package_version)
+print(result.provenance.column_mapping)
+print(result.provenance.included_rows)
+print(result.provenance.transformations)
+```
+
+The provenance record contains the package and schema versions, whether inputs
+came from a DataFrame or arrays, the resolved column/index mapping, input row
+count, included and excluded row IDs, and structured transformation records.
+For binary analyses these records distinguish individual-effect continuity
+corrections from Mantel-Haenszel pooling corrections. Continuous analyses
+record the resolved MD or SMD estimator. The original DataFrame is not embedded
+in the provenance object.
+
+`method_details()` produces a concise Methods-style description with all
+resolved model, interval, heterogeneity, correction, and numerical-control
+choices:
+
+```python
+methods_text = result.method_details()
+```
+
+For a complete export, `report()` returns a detached `ResultReport`:
+
+```python
+report = result.report()
+
+payload = report.to_dict()
+json_text = report.to_json()
+markdown = report.to_markdown()
+```
+
+The structured report contains results on model and display scales, full
+method configuration, heterogeneity, convergence diagnostics, provenance,
+warnings, and row-level study results. `report(include_studies=False)` creates
+a smaller export without the study table. JSON output is strict: non-finite or
+unavailable statistical values are represented as `null`, not non-standard
+`NaN` tokens. Subgroup results expose the same API and additionally report each
+group and the assumptions used by the subgroup-differences test.
+
+The generated text is intended as an auditable starting point. It does not
+claim to satisfy every journal's reporting requirements without review.
+
 ## Forest plots
 
 Plotting support is optional:
