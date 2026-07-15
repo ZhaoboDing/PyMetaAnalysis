@@ -57,6 +57,33 @@ result = ma.meta_binary(
 )
 ```
 
+Two-group continuous outcomes accept the same DataFrame-or-array style. The
+default measure is the raw mean difference; use `measure="SMD"` for Hedges'
+adjusted g:
+
+```python
+result = ma.meta_continuous(
+    data=studies,
+    mean_treat="mean_treat",
+    sd_treat="sd_treat",
+    n_treat="n_treat",
+    mean_control="mean_control",
+    sd_control="sd_control",
+    n_control="n_control",
+    study="study",
+    measure="SMD",        # "MD" or "SMD"
+    model="random",
+    tau2_method="REML",
+)
+```
+
+Effects are defined as treatment minus control, so positive MD/SMD values
+indicate larger outcomes in the treatment group. MD uses the unpooled sampling
+variance. SMD uses the pooled within-study SD, the exact gamma-function Hedges
+correction, and the `metafor` `vtype="LS"` sampling variance convention. The
+per-study pooled SD, Cohen's d, correction factor, final effect, variance, and
+weights remain available in `result.study_results`.
+
 OR and RR are modeled on the log scale. `result.estimate` and `result.ci`
 therefore remain on that auditable model scale, while
 `result.display_estimate` and `result.display_ci` return exponentiated values.
