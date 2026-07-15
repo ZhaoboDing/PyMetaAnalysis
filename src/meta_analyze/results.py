@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -40,14 +41,20 @@ class MetaAnalysisSummary:
         result = self._result
         return {
             "model": result.model,
+            "pooling_method": result.method.pooling_method,
             "measure": result.measure,
+            "effect_scale": result.effect_scale,
+            "display_scale": result.display_scale,
             "studies": result.k,
             "estimate": result.estimate,
+            "display_estimate": result.display_estimate,
             "standard_error": result.standard_error,
             "confidence_level": result.method.confidence_level,
             "ci_low": result.ci_low,
             "ci_high": result.ci_high,
+            "display_ci": result.display_ci,
             "prediction_interval": result.prediction_interval,
+            "display_prediction_interval": result.display_prediction_interval,
             "tau2": result.tau2,
             "tau2_method": result.method.tau2_method,
             "q": result.q,
@@ -56,24 +63,28 @@ class MetaAnalysisSummary:
             "i2": result.i2,
             "h2": result.h2,
             "warnings": result.warnings,
+            "method_options": dict(result.method.options),
         }
 
     def __str__(self) -> str:
         result = self._result
         level = 100.0 * result.method.confidence_level
+        display_low, display_high = result.display_ci
         title = f"Meta-analysis ({result.model}-effect, {result.measure})"
         lines = [
             title,
             f"Studies: {result.k}",
             (
-                f"Estimate: {result.estimate:.6g} "
-                f"({level:g}% CI {result.ci_low:.6g} to {result.ci_high:.6g})"
+                f"Estimate: {result.display_estimate:.6g} "
+                f"({level:g}% CI {display_low:.6g} to {display_high:.6g})"
             ),
         ]
         if result.model == "random":
             lines.append(f"tau^2: {result.tau2:.6g} ({result.method.tau2_method})")
             if result.prediction_interval is not None:
-                low, high = result.prediction_interval
+                display_prediction = result.display_prediction_interval
+                assert display_prediction is not None
+                low, high = display_prediction
                 lines.append(f"Prediction interval: {low:.6g} to {high:.6g}")
 
         if result.q_df > 0:
@@ -107,6 +118,8 @@ class MetaAnalysisResult:
     k: int
     model: str
     measure: str
+    effect_scale: str
+    display_scale: str
     method: MethodConfig
     diagnostics: FitDiagnostics
     warnings: tuple[str, ...]
@@ -118,6 +131,31 @@ class MetaAnalysisResult:
     @property
     def ci(self) -> tuple[float, float]:
         return self.ci_low, self.ci_high
+
+    def _to_display_scale(self, value: float) -> float:
+        if self.display_scale == "identity":
+            return value
+        if self.display_scale == "exp":
+            return math.exp(value)
+        raise ValueError(f"Unknown display scale {self.display_scale!r}.")
+
+    @property
+    def display_estimate(self) -> float:
+        return self._to_display_scale(self.estimate)
+
+    @property
+    def display_ci(self) -> tuple[float, float]:
+        return (
+            self._to_display_scale(self.ci_low),
+            self._to_display_scale(self.ci_high),
+        )
+
+    @property
+    def display_prediction_interval(self) -> tuple[float, float] | None:
+        if self.prediction_interval is None:
+            return None
+        low, high = self.prediction_interval
+        return self._to_display_scale(low), self._to_display_scale(high)
 
     @property
     def q(self) -> float:

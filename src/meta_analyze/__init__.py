@@ -1,6 +1,7 @@
 """Pandas-first tools for auditable meta-analysis workflows."""
 
 from .api import meta_analysis
+from .binary_api import meta_binary
 from .config import MethodConfig
 from .exceptions import (
     ConvergenceError,
@@ -28,6 +29,7 @@ __all__ = [
     "MethodConfig",
     "UnsupportedMethodError",
     "meta_analysis",
+    "meta_binary",
 ]
 
 __version__ = "0.1.0.dev0"
