@@ -1,9 +1,13 @@
 # Regenerate continuous_metafor.json from the repository root with:
-# Rscript tests/reference/generate_continuous_metafor.R
+# Rscript tests/reference/generate_continuous_metafor.R [optional-output-path]
 
 library(jsonlite)
 library(metafor)
 
+args <- commandArgs(trailingOnly = TRUE)
+output <- if (length(args) >= 1) args[[1]] else {
+  "tests/reference/continuous_metafor.json"
+}
 input <- read.csv("tests/reference/continuous_input.csv")
 
 calculate <- function(measure) {
@@ -19,7 +23,7 @@ calculate <- function(measure) {
     vtype = "LS",
     correct = TRUE
   )
-  fit <- rma.uni(yi, vi, data = effects, method = "FE")
+  fit <- rma.uni(yi, vi, data = effects, method = "EE")
 
   list(
     effect = unname(effects$yi),
@@ -31,15 +35,17 @@ calculate <- function(measure) {
 }
 
 reference <- list(
-  generated_by = "metafor",
+  generated_by = "R metafor",
+  r_version = R.version.string,
   metafor_version = as.character(packageVersion("metafor")),
+  jsonlite_version = as.character(packageVersion("jsonlite")),
   md = calculate("MD"),
   smd = calculate("SMD")
 )
 
 write_json(
   reference,
-  "tests/reference/continuous_metafor.json",
+  output,
   auto_unbox = TRUE,
   digits = 16,
   pretty = TRUE

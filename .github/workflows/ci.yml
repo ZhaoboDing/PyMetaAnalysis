@@ -103,7 +103,7 @@ jobs:
       - name: Build wheel and source distribution
         run: python -m build
 
-      - name: Verify private design document is not distributed
+      - name: Verify private and generated files are not distributed
         shell: python
         run: |
           from pathlib import Path, PurePosixPath
@@ -127,6 +127,9 @@ jobs:
               assert all(
                   PurePosixPath(name).name != "DESIGN.md" for name in names
               ), f"DESIGN.md unexpectedly included in {artifact}"
+              assert all(
+                  "site" not in PurePosixPath(name).parts for name in names
+              ), f"generated site unexpectedly included in {artifact}"
 
       - name: Smoke test the installed wheel
         shell: bash
