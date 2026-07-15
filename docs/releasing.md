@@ -40,8 +40,9 @@ and its
 
 1. Confirm the distribution name is still available for the first release.
 2. Review public API and report-schema changes since the previous release.
-3. Set the same final version in `pyproject.toml`,
-   `src/meta_analyze/_version.py`, and `CITATION.cff`.
+3. Set the same final version in `src/meta_analyze/_version.py` and
+   `CITATION.cff`. Hatchling reads the package version dynamically from
+   `_version.py`.
 4. Move the relevant `CHANGELOG.md` entries from `Unreleased` to a dated
    heading such as `## 0.1.0 - 2026-07-15`.
 5. Run the complete validation suite.

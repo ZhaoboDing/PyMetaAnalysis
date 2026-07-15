@@ -16,12 +16,13 @@ ROOT = Path(__file__).parents[1]
 def test_release_metadata_sources_match() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     citation = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
-    project_match = re.search(r'^version = "([^"]+)"$', pyproject, re.MULTILINE)
     citation_match = re.search(r"^version:\s*([^\s]+)", citation, re.MULTILINE)
 
-    assert project_match is not None
     assert citation_match is not None
-    assert project_match.group(1) == citation_match.group(1) == ma.__version__
+    assert citation_match.group(1) == ma.__version__
+    assert re.search(r"^version\s*=", pyproject, re.MULTILINE) is None
+    assert 'dynamic = ["version"]' in pyproject
+    assert '[tool.hatch.version]\npath = "src/meta_analyze/_version.py"' in pyproject
     assert 'license = "MIT"' in pyproject
     assert 'license-files = ["LICENSE"]' in pyproject
     assert '"License ::' not in pyproject
