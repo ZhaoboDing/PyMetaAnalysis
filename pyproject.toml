@@ -46,6 +46,7 @@ exclude = [
   "/DESIGN.md",
   "/dist",
   "/htmlcov",
+  "/site",
   "**/__pycache__",
   "**/*.pyc",
 ]
