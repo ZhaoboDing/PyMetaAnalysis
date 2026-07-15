@@ -86,7 +86,34 @@ study_table = result.study_results[
 `study_results`, `excluded_studies`, and `to_dataframe()` return defensive
 copies. Editing them does not mutate the fitted result.
 
-## 5. Understand model and display scales
+## 5. Inspect provenance and create a report
+
+Every result records how its inputs were resolved and which rows entered the
+fit:
+
+```python
+result.provenance.column_mapping
+result.provenance.included_rows
+result.provenance.excluded_rows
+result.provenance.transformations
+```
+
+Use `method_details()` for a concise Methods-style description. Use `report()`
+when a complete structured or human-readable export is needed:
+
+```python
+methods_text = result.method_details()
+
+report = result.report()
+payload = report.to_dict()
+json_text = report.to_json()
+markdown = report.to_markdown()
+```
+
+See [provenance and reporting](guides/provenance-reporting.md) for the report
+schema, strict JSON behavior, and subgroup reports.
+
+## 6. Understand model and display scales
 
 Generic effects, MD, SMD, and RD use the identity scale. OR and RR are modeled
 on a log scale, so their audit-friendly numeric attributes remain logarithmic.
@@ -101,7 +128,26 @@ result.display_prediction_interval
 The [binary-outcome guide](guides/binary-outcomes.md) includes a complete ratio
 example.
 
-## 6. Plot without implicit display
+## 7. Check sensitivity
+
+Leave-one-out analysis refits the stored model once for every included study:
+
+```python
+influence = result.leave_one_out()
+print(influence.to_dataframe())
+```
+
+Cumulative analysis adds studies in input order by default:
+
+```python
+cumulative = result.cumulative()
+print(cumulative.to_dataframe())
+```
+
+The [sensitivity-analysis guide](guides/sensitivity-analysis.md) explains
+minimum study counts, ordering, tied order values, and subgroup behavior.
+
+## 8. Plot without implicit display
 
 After installing the `plot` extra:
 
@@ -120,3 +166,5 @@ usable in notebooks, scripts, tests, and composed figures.
 - Use [generic effects](guides/generic-effects.md) for array input and missing
   value policies.
 - Use an outcome-specific entry point when raw group summaries are available.
+- Use [sensitivity analysis](guides/sensitivity-analysis.md) to assess how the
+  pooled estimate changes across repeated refits.

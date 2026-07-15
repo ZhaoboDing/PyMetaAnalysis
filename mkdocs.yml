@@ -35,6 +35,8 @@ nav:
       - Continuous outcomes: guides/continuous-outcomes.md
       - Choosing methods: guides/method-selection.md
       - Zero-event studies: guides/zero-events.md
+      - Sensitivity analysis: guides/sensitivity-analysis.md
+      - Provenance and reporting: guides/provenance-reporting.md
   - Reference:
       - Public API: reference/api.md
       - Result objects: reference/results.md

@@ -46,6 +46,19 @@ Without `subgroup=`, every entry point returns `MetaAnalysisResult`. With
 
 See [result objects](results.md) for their stable inspection interface.
 
+## Result workflows
+
+Every `MetaAnalysisResult` provides:
+
+- `leave_one_out()` for repeated omission refits;
+- `cumulative()` for ordered accumulation refits;
+- `method_details()` for Methods-style text;
+- `report()` for dictionary, strict JSON, and Markdown output;
+- `forest()` and `funnel()` for optional Matplotlib visualizations.
+
+`SubgroupMetaAnalysisResult` provides the same sensitivity and reporting
+workflows except for `funnel()`, which remains a single-analysis diagnostic.
+
 ## Configuration and diagnostics
 
 - `MethodConfig` records the fully resolved model, pooling, tau-squared,
@@ -57,6 +70,13 @@ See [result objects](results.md) for their stable inspection interface.
   boundary status.
 - `HeterogeneityResult` contains Q, degrees of freedom, p-value, I-squared, and
   H-squared.
+- `AnalysisProvenance` records package/schema versions, resolved input fields,
+  input row decisions, and transformations.
+- `InputFieldProvenance` describes whether an input came from a DataFrame
+  column, index, generated label, or array.
+- `TransformationRecord` stores one configured transformation, its parameters,
+  and affected row IDs.
+- `ResultReport` provides `to_dict()`, `to_json()`, and `to_markdown()`.
 
 ## Exceptions
 

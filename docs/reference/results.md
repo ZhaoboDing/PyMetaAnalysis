@@ -37,6 +37,23 @@ available through `dict(result.method.options)`.
 iterations it used, and whether tau-squared reached its zero boundary.
 Recoverable statistical notes are stored in the immutable `warnings` tuple.
 
+### Provenance
+
+`result.provenance` is an immutable `AnalysisProvenance` record. It contains:
+
+- the PyMetaAnalysis and provenance-schema versions;
+- the analysis type and whether inputs came from a DataFrame or arrays;
+- one `InputFieldProvenance` per resolved public input;
+- DataFrame column mappings, when columns were selected by name;
+- input row count and included/excluded row IDs;
+- structured `TransformationRecord` entries.
+
+Binary transformation records distinguish the continuity correction used for
+individual effects from the independently configured correction used for
+Mantel-Haenszel pooling. Continuous records identify the resolved MD or SMD
+effect-size estimator. Provenance does not embed another copy of the original
+DataFrame.
+
 ### Study tables
 
 - `study_results` returns all input rows and fitted row-level outputs.
@@ -56,6 +73,35 @@ method for a machine-readable scalar summary.
 `forest()` and `funnel()` return Matplotlib axes without calling `show()`.
 Matplotlib is imported only when a plotting method is used.
 
+### Sensitivity analysis
+
+`leave_one_out()` returns a `LeaveOneOutResult` with the original result, one
+refit per included study, warnings, and a defensive summary table.
+
+`cumulative()` returns a `CumulativeMetaAnalysisResult`. Its `results` follow
+the selected stable order and its `final` property is the last fit. Both
+workflows reuse the stored model, pooling method, interval method, numerical
+controls, and outcome-specific options.
+
+### Methods text and reports
+
+`method_details()` returns concise prose describing the resolved estimator,
+confidence interval, heterogeneity statistics, corrections, missing-data
+policy, numerical controls, and package version.
+
+`report(include_studies=True)` returns a detached `ResultReport`:
+
+```python
+report.to_dict()
+report.to_json(indent=2)
+report.to_markdown()
+```
+
+The report contains model- and display-scale results, heterogeneity, full
+method configuration, diagnostics, provenance, warnings, and—by default—the
+study table. Pass `include_studies=False` for a compact payload. JSON is strict:
+non-finite or unavailable values are serialized as `null` rather than `NaN`.
+
 ## Subgroup results
 
 Supplying `subgroup=` returns `SubgroupMetaAnalysisResult`, which contains:
@@ -73,3 +119,8 @@ Its `summary().to_dict()` method returns nested group and overall summaries.
 Its `forest()` method draws study rows, subgroup pooled estimates, the overall
 estimate, prediction intervals when available, and the subgroup-difference
 test.
+
+Subgroup results also provide `leave_one_out()`, `cumulative()`,
+`method_details()`, and `report()`. Their report contains each group, the
+overall fit, the formal subgroup-differences test, its tau-squared strategy,
+and the combined study table.

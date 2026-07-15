@@ -50,11 +50,17 @@ Before selecting a model, read [choosing methods](guides/method-selection.md).
 Binary analyses with sparse data should also review
 [zero-event studies](guides/zero-events.md).
 
+After fitting a model, continue with [sensitivity analysis](guides/sensitivity-analysis.md)
+and [provenance and reporting](guides/provenance-reporting.md) to assess stability
+and create an auditable export.
+
 ## Design principles
 
 - Inputs and exclusions are explicit rather than silently repaired.
 - Model-scale results remain separate from display-scale transformations.
 - Resolved method settings are stored on every result.
+- Versioned provenance records inputs, row decisions, and transformations.
+- Reports provide detached dictionaries, strict JSON, and Markdown.
 - Plotting is optional and never calls `show()`.
 - Numerical implementations are independent and tested against hand
   calculations and external reference results.
