@@ -8,12 +8,18 @@ from scipy.stats import chi2
 
 
 def weighted_mean(effect: NDArray[np.float64], weights: NDArray[np.float64]) -> float:
-    """Return a weighted mean after validating the weight sum."""
+    """Return a weighted mean without overflowing the raw weight sum."""
 
-    weight_sum = float(np.sum(weights))
-    if not np.isfinite(weight_sum) or weight_sum <= 0.0:
+    largest = float(np.max(weights))
+    if not np.isfinite(largest) or largest <= 0.0:
+        raise ValueError("Weights must contain a finite, strictly positive value.")
+    scaled = weights / largest
+    scaled_sum = float(np.sum(scaled))
+    if not np.isfinite(scaled_sum) or scaled_sum <= 0.0:
         raise ValueError("Weights must have a finite, strictly positive sum.")
-    return float(np.dot(weights, effect) / weight_sum)
+    if bool(np.all(effect == effect[0])):
+        return float(effect[0])
+    return float(np.dot(scaled, effect) / scaled_sum)
 
 
 def generalized_q(

@@ -16,6 +16,7 @@ REFERENCE_DIR = Path(__file__).parent / "reference"
 GENERIC_DATA = pd.read_csv(REFERENCE_DIR / "generic_input.csv")
 BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_input.csv")
 SPARSE_BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_sparse_input.csv")
+WORKFLOW_DATA = pd.read_csv(REFERENCE_DIR / "workflow_input.csv")
 
 
 def _load_reference(filename: str) -> dict[str, Any]:
@@ -25,6 +26,7 @@ def _load_reference(filename: str) -> dict[str, Any]:
 GENERIC = _load_reference("generic_metafor.json")
 BINARY = _load_reference("binary_metafor.json")
 CONTINUOUS = _load_reference("continuous_metafor.json")
+WORKFLOW = _load_reference("workflow_metafor.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
@@ -76,7 +78,7 @@ def _assert_fit(
 
 
 def test_reference_fixtures_record_a_consistent_r_environment() -> None:
-    fixtures = [GENERIC, BINARY, CONTINUOUS]
+    fixtures = [GENERIC, BINARY, CONTINUOUS, WORKFLOW]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}
     assert len({fixture["r_version"] for fixture in fixtures}) == 1
@@ -87,6 +89,69 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
         "max_iterations": 1000,
     }
     assert BINARY["iterative_control"] == GENERIC["iterative_control"]
+    assert WORKFLOW["iterative_control"] == GENERIC["iterative_control"]
+
+
+def _assert_summary_values(
+    result: ma.MetaAnalysisResult,
+    expected: dict[str, Any],
+    *,
+    iterative: bool = False,
+) -> None:
+    rtol = ITERATIVE_RTOL if iterative else CLOSED_RTOL
+    atol = ITERATIVE_ATOL if iterative else CLOSED_ATOL
+    np.testing.assert_allclose(
+        [
+            result.estimate,
+            result.standard_error,
+            result.ci_low,
+            result.ci_high,
+            result.tau2,
+        ],
+        [
+            expected["estimate"],
+            expected["standard_error"],
+            *expected["ci"],
+            expected["tau2"],
+        ],
+        rtol=rtol,
+        atol=atol,
+    )
+
+
+def _assert_workflow_table(
+    table: pd.DataFrame,
+    expected: dict[str, Any],
+    *,
+    expected_slice: slice | None = None,
+    iterative: bool = False,
+) -> None:
+    rtol = ITERATIVE_RTOL if iterative else CLOSED_RTOL
+    atol = ITERATIVE_ATOL if iterative else CLOSED_ATOL
+    selected = slice(None) if expected_slice is None else expected_slice
+    for column in [
+        "estimate",
+        "standard_error",
+        "ci_low",
+        "ci_high",
+        "tau2",
+        "q",
+    ]:
+        np.testing.assert_allclose(
+            table[column],
+            np.asarray(expected[column], dtype=np.float64)[selected],
+            rtol=rtol,
+            atol=atol,
+        )
+    valid_q_pvalue = np.ones(len(table), dtype=bool)
+    if "q_df" in table:
+        valid_q_pvalue = table["q_df"].to_numpy() > 0
+    np.testing.assert_allclose(
+        table.loc[valid_q_pvalue, "q_pvalue"],
+        np.asarray(expected["q_pvalue"], dtype=np.float64)[selected][valid_q_pvalue],
+        rtol=rtol,
+        atol=atol,
+    )
 
 
 def test_generic_heterogeneity_matches_metafor() -> None:
@@ -273,3 +338,107 @@ def test_sparse_binary_zero_event_handling_matches_metafor(
     )
     assert studies.loc[~studies["included"], "normalized_weight"].isna().all()
     _assert_fit(result, expected[reference_key])
+
+
+def test_common_effect_subgroups_match_metafor_moderator_model() -> None:
+    expected = WORKFLOW["subgroup_common"]
+    result = ma.meta_analysis(
+        WORKFLOW_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        subgroup="subgroup",
+        model="common",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    _assert_summary_values(result.overall, expected["overall"])
+    assert list(result.groups) == list(expected["groups"])
+    for name, group in result.groups.items():
+        _assert_summary_values(group, expected["groups"][name])
+    np.testing.assert_allclose(
+        [result.q_between, result.q_between_pvalue, result.i2_between],
+        [
+            expected["q_between"],
+            expected["q_between_pvalue"],
+            expected["i2_between"],
+        ],
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+    )
+    assert result.q_between_df == expected["q_between_df"]
+
+
+@pytest.mark.parametrize(
+    ("model", "reference_key", "iterative"),
+    [("common", "common", False), ("random", "random_reml", True)],
+)
+def test_leave_one_out_workflow_matches_metafor(
+    model: str,
+    reference_key: str,
+    iterative: bool,
+) -> None:
+    expected = WORKFLOW["leave_one_out"][reference_key]
+    result = ma.meta_analysis(
+        WORKFLOW_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        model=model,
+        tau2_method="REML",
+    )
+    table = result.leave_one_out().to_dataframe()
+
+    assert table["omitted_study"].tolist() == expected["study"]
+    _assert_workflow_table(table, expected, iterative=iterative)
+    if model == "common":
+        np.testing.assert_allclose(
+            table[["i2", "h2"]],
+            np.column_stack([expected["i2"], expected["h2"]]),
+            rtol=CLOSED_RTOL,
+            atol=CLOSED_ATOL,
+        )
+
+
+@pytest.mark.parametrize(
+    ("model", "reference_key", "start", "iterative"),
+    [
+        ("common", "common", 0, False),
+        ("random", "random_reml", 1, True),
+    ],
+)
+def test_cumulative_workflow_matches_metafor(
+    model: str,
+    reference_key: str,
+    start: int,
+    iterative: bool,
+) -> None:
+    expected = WORKFLOW["cumulative"][reference_key]
+    result = ma.meta_analysis(
+        WORKFLOW_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        model=model,
+        tau2_method="REML",
+    )
+    table = result.cumulative(order="year").to_dataframe()
+    selected = slice(start, None)
+
+    assert table["k"].tolist() == expected["k"][selected]
+    assert table["order_value"].tolist() == expected["year"][selected]
+    added_studies = [study for studies in table["added_studies"] for study in studies]
+    assert added_studies == expected["study"]
+    _assert_workflow_table(
+        table,
+        expected,
+        expected_slice=selected,
+        iterative=iterative,
+    )
+    if model == "common":
+        np.testing.assert_allclose(
+            table.loc[1:, ["i2", "h2"]],
+            np.column_stack([expected["i2"][1:], expected["h2"][1:]]),
+            rtol=CLOSED_RTOL,
+            atol=CLOSED_ATOL,
+        )
