@@ -22,6 +22,9 @@ def test_release_metadata_sources_match() -> None:
     assert project_match is not None
     assert citation_match is not None
     assert project_match.group(1) == citation_match.group(1) == ma.__version__
+    assert 'license = "MIT"' in pyproject
+    assert 'license-files = ["LICENSE"]' in pyproject
+    assert '"License ::' not in pyproject
 
 
 def test_release_metadata_checker_runs() -> None:

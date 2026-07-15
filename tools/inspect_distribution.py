@@ -58,6 +58,7 @@ def _inspect(path: Path) -> None:
             metadata = archive.read(metadata_name).decode("utf-8")
         required_metadata = {
             "License-Expression: MIT",
+            "License-File: LICENSE",
             "Requires-Python: >=3.10",
             "Provides-Extra: notebook",
             (
@@ -70,6 +71,15 @@ def _inspect(path: Path) -> None:
         )
         assert not missing_metadata, (
             f"Required wheel metadata missing: {missing_metadata}"
+        )
+        forbidden_metadata = sorted(
+            line
+            for line in metadata.splitlines()
+            if line.startswith(("License:", "Classifier: License ::"))
+        )
+        assert not forbidden_metadata, (
+            "Deprecated or conflicting wheel license metadata present: "
+            f"{forbidden_metadata}"
         )
     else:
         missing = sorted(
