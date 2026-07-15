@@ -47,6 +47,14 @@ The extras have separate purposes:
 | `test` | pytest, Hypothesis, coverage, and plotting test dependencies |
 | `dev` | Ruff, Mypy, type stubs, and build tooling |
 | `docs` | MkDocs |
+| `notebook` | JupyterLab, notebook execution, and Matplotlib |
+
+To run the committed example notebook locally:
+
+```console
+python -m pip install -e ".[notebook]"
+python tools/execute_notebooks.py
+```
 
 ## Verify the installation
 

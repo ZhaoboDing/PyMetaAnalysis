@@ -3,6 +3,8 @@
 
 # Python environments and generated files
 /.venv/
+/.release-smoke/
+.ipynb_checkpoints/
 __pycache__/
 *.py[cod]
 *.egg-info/

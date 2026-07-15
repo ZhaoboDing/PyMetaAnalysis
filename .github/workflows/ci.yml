@@ -113,8 +113,14 @@ jobs:
       - name: Lint
         run: python -m ruff check .
 
+      - name: Validate GitHub Actions workflows
+        run: actionlint
+
       - name: Type check
         run: python -m mypy
+
+      - name: Check release metadata consistency
+        run: python tools/check_release.py
 
   docs:
     name: Documentation
@@ -137,10 +143,13 @@ jobs:
       - name: Install documentation dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[docs]"
+          python -m pip install ".[docs,notebook]"
 
       - name: Build documentation
         run: python -m mkdocs build --strict
+
+      - name: Execute example notebooks
+        run: python tools/execute_notebooks.py
 
   build:
     name: Build and inspect distributions
@@ -168,33 +177,8 @@ jobs:
       - name: Build wheel and source distribution
         run: python -m build
 
-      - name: Verify private and generated files are not distributed
-        shell: python
-        run: |
-          from pathlib import Path, PurePosixPath
-          import tarfile
-          import zipfile
-
-          artifacts = list(Path("dist").iterdir())
-          assert any(path.suffix == ".whl" for path in artifacts)
-          assert any(path.name.endswith(".tar.gz") for path in artifacts)
-
-          for artifact in artifacts:
-              if artifact.suffix == ".whl":
-                  with zipfile.ZipFile(artifact) as archive:
-                      names = archive.namelist()
-              elif artifact.name.endswith(".tar.gz"):
-                  with tarfile.open(artifact, "r:gz") as archive:
-                      names = archive.getnames()
-              else:
-                  continue
-
-              assert all(
-                  PurePosixPath(name).name != "DESIGN.md" for name in names
-              ), f"DESIGN.md unexpectedly included in {artifact}"
-              assert all(
-                  "site" not in PurePosixPath(name).parts for name in names
-              ), f"generated site unexpectedly included in {artifact}"
+      - name: Verify distribution contents
+        run: python tools/inspect_distribution.py dist
 
       - name: Smoke test the installed wheel
         shell: bash

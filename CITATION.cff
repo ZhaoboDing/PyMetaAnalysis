@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: >-
+  If you use PyMetaAnalysis in research, cite the exact software release and
+  report the statistical methods used in the analysis.
+title: PyMetaAnalysis
+type: software
+authors:
+  - name: PyMetaAnalysis contributors
+version: 0.1.0.dev0
+repository-code: https://github.com/ZhaoboDing/PyMetaAnalysis
+url: https://zhaoboding.github.io/PyMetaAnalysis/
+license: MIT
+abstract: >-
+  A pandas-first Python library for auditable, conventional study-level
+  meta-analysis.
+keywords:
+  - meta-analysis
+  - statistics
+  - systematic review
+  - evidence-based medicine
