@@ -9,12 +9,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _pyproject_version() -> str:
+def _validate_pyproject_version_source() -> None:
     text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    match = re.search(r'^version = "([^"]+)"$', text, flags=re.MULTILINE)
-    if match is None:
-        raise ValueError("Could not read project version from pyproject.toml")
-    return match.group(1)
+    if re.search(r"^version\s*=", text, flags=re.MULTILINE):
+        raise ValueError("pyproject.toml must not declare a static project version")
+    if not re.search(r'^dynamic\s*=\s*\[\s*"version"\s*\]$', text, flags=re.MULTILINE):
+        raise ValueError('pyproject.toml must declare dynamic = ["version"]')
+    expected = '[tool.hatch.version]\npath = "src/meta_analyze/_version.py"'
+    if expected not in text:
+        raise ValueError("Hatchling must read the version from _version.py")
 
 
 def _python_version() -> str:
@@ -54,8 +57,8 @@ def main() -> None:
     parser.add_argument("--tag", help="Optional release tag, for example v0.1.0")
     arguments = parser.parse_args()
 
+    _validate_pyproject_version_source()
     versions = {
-        "pyproject.toml": _pyproject_version(),
         "src/meta_analyze/_version.py": _python_version(),
         "CITATION.cff": _citation_version(),
     }

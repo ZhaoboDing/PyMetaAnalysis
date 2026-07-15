@@ -59,6 +59,7 @@ def _inspect(path: Path) -> None:
         required_metadata = {
             "License-Expression: MIT",
             "License-File: LICENSE",
+            "Maintainer-email: Zhaobo Ding <ding.zb@yahoo.com>",
             "Requires-Python: >=3.10",
             "Provides-Extra: notebook",
             (
