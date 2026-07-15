@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from .config import MethodConfig
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+else:
+    Axes = Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,3 +202,33 @@ class MetaAnalysisResult:
         """Return the same row-level table as :attr:`study_results`."""
 
         return self.study_results
+
+    def forest(
+        self,
+        *,
+        ax: Axes | None = None,
+        effect_label: str | None = None,
+        pooled_label: str | None = None,
+        show_prediction_interval: bool = True,
+        show_weights: bool = True,
+        null_value: float | None = None,
+        log_scale: bool | None = None,
+    ) -> Axes:
+        """Draw a Matplotlib forest plot without calling ``show()``.
+
+        Matplotlib is an optional dependency. Install ``PyMetaAnalysis[plot]``
+        before calling this method.
+        """
+
+        from .plotting import forest_plot
+
+        return forest_plot(
+            self,
+            ax=ax,
+            effect_label=effect_label,
+            pooled_label=pooled_label,
+            show_prediction_interval=show_prediction_interval,
+            show_weights=show_weights,
+            null_value=null_value,
+            log_scale=log_scale,
+        )

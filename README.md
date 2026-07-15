@@ -84,6 +84,29 @@ correction, and the `metafor` `vtype="LS"` sampling variance convention. The
 per-study pooled SD, Cohen's d, correction factor, final effect, variance, and
 weights remain available in `result.study_results`.
 
+## Forest plots
+
+Plotting support is optional:
+
+```console
+pip install "PyMetaAnalysis[plot]"
+```
+
+Every fitted result can produce a Matplotlib forest plot:
+
+```python
+ax = result.forest(
+    effect_label="Risk ratio",
+    show_prediction_interval=True,
+)
+```
+
+The plot includes included-study confidence intervals, weight-scaled markers,
+the pooled confidence-interval diamond, and an optional prediction interval.
+OR and RR are shown on an exponentiated logarithmic axis with a null value of
+1; difference measures use a linear axis with a null value of 0. The method
+returns an `Axes` and does not call `show()`.
+
 OR and RR are modeled on the log scale. `result.estimate` and `result.ci`
 therefore remain on that auditable model scale, while
 `result.display_estimate` and `result.display_ci` return exponentiated values.
