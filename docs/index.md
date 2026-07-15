@@ -5,11 +5,11 @@ meta-analysis. It accepts DataFrames, NumPy arrays, and ordinary Python
 sequences, then returns inspectable result objects that retain study-level
 effects, exclusions, weights, method choices, and diagnostics.
 
-!!! warning "Pre-release software"
+!!! warning "Early-stage software"
 
-    The public API is still under development and may change before version
-    0.1. Statistical results should be reviewed in the context of the analysis
-    protocol and independently checked for consequential work.
+    The public API is still under development and may change during the 0.x
+    series. Statistical results should be reviewed in the context of the
+    analysis protocol and independently checked for consequential work.
 
 ## Choose an entry point
 
@@ -82,9 +82,9 @@ lists unsupported methods explicitly.
 
 ## Project status
 
-PyMetaAnalysis is pre-release and has not yet undergone a formal external
-statistical audit. Pin the package version for consequential work and
-independently check important analyses. See the repository
+PyMetaAnalysis 0.1.0 is the initial public release and has not undergone a
+formal external statistical audit. Pin the package version for consequential
+work and independently check important analyses. See the repository
 [changelog](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md)
 and [contribution guide](development.md). For manuscripts and archived
 analyses, see [citing PyMetaAnalysis](citation.md).

@@ -84,5 +84,5 @@ python -m pip install --upgrade PyMetaAnalysis
 python -m pip uninstall PyMetaAnalysis
 ```
 
-PyMetaAnalysis is pre-release software. Pin the version used by a consequential
+PyMetaAnalysis is early-stage software. Pin the version used by a consequential
 analysis and record it with the analysis environment.

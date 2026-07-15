@@ -145,7 +145,7 @@ JSON output for programmatic consumers.
 
 ## Schema compatibility
 
-The package is pre-release, so consumers should inspect `schema_version`,
+The package is early-stage, so consumers should inspect `schema_version`,
 tolerate unknown additive fields, and pin the package version used in a
 production pipeline. A schema change is recorded separately from the package
 version so parsers can make an explicit compatibility decision.
