@@ -33,6 +33,8 @@ under `Unreleased`.
 
 ### Changed
 
+- independent external statistical review is documented as a recommended
+  validation activity rather than a release requirement;
 - report schema 1.1 records `heterogeneity.i2_method`;
 - random-effects I-squared/H-squared use tau-squared and typical within-study
   variance, while common-effect/MH analyses retain Q-based definitions;

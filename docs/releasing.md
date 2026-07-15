@@ -76,9 +76,10 @@ python tools/inspect_distribution.py dist
 python benchmarks/benchmark_core.py
 ```
 
-Before a stable release, obtain the independent statistical review described
-in [validation](validation.md). Record the reviewed commit, methods, datasets,
-and any accepted discrepancies.
+Independent external statistical review is not a release gate. Release notes
+and the [validation status](validation.md) must accurately describe the
+evidence available for the released commit and must not imply that a formal
+audit has occurred when it has not.
 
 ## Tag and publish
 
