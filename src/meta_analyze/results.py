@@ -232,3 +232,33 @@ class MetaAnalysisResult:
             null_value=null_value,
             log_scale=log_scale,
         )
+
+    def funnel(
+        self,
+        *,
+        ax: Axes | None = None,
+        effect_label: str | None = None,
+        confidence_level: float | None = None,
+        show_pseudo_confidence_interval: bool = True,
+        warn_on_few_studies: bool = True,
+        log_scale: bool | None = None,
+    ) -> Axes:
+        """Draw a standard-error funnel plot without calling ``show()``.
+
+        Matplotlib is an optional dependency. Install ``PyMetaAnalysis[plot]``
+        before calling this method. Funnel asymmetry is a diagnostic for
+        possible small-study effects and does not by itself establish
+        publication bias.
+        """
+
+        from .plotting import funnel_plot
+
+        return funnel_plot(
+            self,
+            ax=ax,
+            effect_label=effect_label,
+            confidence_level=confidence_level,
+            show_pseudo_confidence_interval=show_pseudo_confidence_interval,
+            warn_on_few_studies=warn_on_few_studies,
+            log_scale=log_scale,
+        )

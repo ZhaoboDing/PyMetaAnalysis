@@ -107,6 +107,23 @@ OR and RR are shown on an exponentiated logarithmic axis with a null value of
 1; difference measures use a linear axis with a null value of 0. The method
 returns an `Axes` and does not call `show()`.
 
+## Funnel plots
+
+Fitted results also provide a standard-error funnel plot:
+
+```python
+ax = result.funnel()
+```
+
+The plot uses equal-sized study markers, an inverted standard-error axis, the
+model's pooled estimate as its reference line, and a pseudo confidence region
+that does not include tau-squared. Ratio measures are calculated on the log
+model scale and displayed as ratios on a logarithmic x-axis. A warning is
+emitted when fewer than 10 studies are available because asymmetry is difficult
+to assess reliably with so little information. Funnel-plot asymmetry indicates
+possible small-study effects and must not be treated as proof of publication
+bias.
+
 OR and RR are modeled on the log scale. `result.estimate` and `result.ci`
 therefore remain on that auditable model scale, while
 `result.display_estimate` and `result.display_ci` return exponentiated values.
