@@ -39,6 +39,19 @@ def test_release_metadata_checker_runs() -> None:
     assert ma.__version__ in completed.stdout
 
 
+def test_github_release_command_has_repository_context() -> None:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+    assert (
+        """      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+"""
+        in workflow
+    )
+
+
 def test_quickstart_notebook_is_valid_unexecuted_json() -> None:
     path = ROOT / "examples" / "quickstart.ipynb"
     notebook = json.loads(path.read_text(encoding="utf-8"))
