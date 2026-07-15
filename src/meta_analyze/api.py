@@ -41,6 +41,20 @@ def _normalize_ci_method(ci_method: str) -> str:
     return aliases.get(normalized, normalized)
 
 
+def _validate_analysis_controls(
+    *, confidence_level: float, atol: float, max_iter: int
+) -> tuple[float, float, int]:
+    if not isinstance(confidence_level, (int, float)) or not (
+        0.0 < float(confidence_level) < 1.0
+    ):
+        raise InvalidStudyDataError("confidence_level must be between 0 and 1.")
+    if not isinstance(max_iter, int) or isinstance(max_iter, bool) or max_iter < 1:
+        raise InvalidStudyDataError("max_iter must be a positive integer.")
+    if not isinstance(atol, (int, float)) or not np.isfinite(atol) or atol <= 0.0:
+        raise InvalidStudyDataError("atol must be finite and strictly positive.")
+    return float(confidence_level), float(atol), max_iter
+
+
 def meta_analysis(
     data: pd.DataFrame | None = None,
     *,
@@ -84,14 +98,11 @@ def meta_analysis(
         Numerical controls for iterative tau-squared estimators.
     """
 
-    if not isinstance(confidence_level, (int, float)) or not (
-        0.0 < float(confidence_level) < 1.0
-    ):
-        raise InvalidStudyDataError("confidence_level must be between 0 and 1.")
-    if not isinstance(max_iter, int) or isinstance(max_iter, bool) or max_iter < 1:
-        raise InvalidStudyDataError("max_iter must be a positive integer.")
-    if not isinstance(atol, (int, float)) or not np.isfinite(atol) or atol <= 0.0:
-        raise InvalidStudyDataError("atol must be finite and strictly positive.")
+    confidence_level, atol, max_iter = _validate_analysis_controls(
+        confidence_level=confidence_level,
+        atol=atol,
+        max_iter=max_iter,
+    )
 
     normalized_model = _normalize_model(model)
     normalized_ci = _normalize_ci_method(ci_method)
@@ -113,8 +124,8 @@ def meta_analysis(
         model=normalized_model,
         tau2_method=normalized_tau2,
         ci_method=normalized_ci,
-        confidence_level=float(confidence_level),
-        atol=float(atol),
+        confidence_level=confidence_level,
+        atol=atol,
         max_iter=max_iter,
     )
 
@@ -159,11 +170,13 @@ def meta_analysis(
     )
     method = MethodConfig(
         model=normalized_model,
+        pooling_method="inverse_variance",
         tau2_method=None if normalized_model == "common" else normalized_tau2,
         ci_method=normalized_ci,
-        confidence_level=float(confidence_level),
+        confidence_level=confidence_level,
         prediction_interval_method="HTS" if normalized_model == "random" else None,
         missing=missing,
+        options=(),
     )
 
     return MetaAnalysisResult(
@@ -177,6 +190,8 @@ def meta_analysis(
         k=len(included_effect),
         model=normalized_model,
         measure="GENERIC",
+        effect_scale="identity",
+        display_scale="identity",
         method=method,
         diagnostics=diagnostics,
         warnings=tuple(warnings),

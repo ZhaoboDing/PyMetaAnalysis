@@ -36,7 +36,25 @@ def classical_heterogeneity(
     if k == 1:
         return 0.0, 0, float("nan"), float("nan"), float("nan")
 
-    q = generalized_q(effect, variance, 0.0)
+    weights = 1.0 / variance
+    estimate = weighted_mean(effect, weights)
+    return heterogeneity_at_estimate(effect, variance, estimate)
+
+
+def heterogeneity_at_estimate(
+    effect: NDArray[np.float64],
+    variance: NDArray[np.float64],
+    estimate: float,
+) -> tuple[float, int, float, float, float]:
+    """Return heterogeneity statistics around an explicitly pooled estimate."""
+
+    k = len(effect)
+    if k == 1:
+        return 0.0, 0, float("nan"), float("nan"), float("nan")
+
+    weights = 1.0 / variance
+    residual = effect - estimate
+    q = float(np.dot(weights, residual * residual))
     df = k - 1
     pvalue = float(chi2.sf(q, df))
     i2 = 0.0 if q <= 0.0 else max(0.0, (q - df) / q)
