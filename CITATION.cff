@@ -6,7 +6,8 @@ title: PyMetaAnalysis
 type: software
 authors:
   - name: PyMetaAnalysis contributors
-version: 0.1.0.dev0
+version: 0.1.0
+date-released: 2026-07-15
 repository-code: https://github.com/ZhaoboDing/PyMetaAnalysis
 url: https://zhaoboding.github.io/PyMetaAnalysis/
 license: MIT

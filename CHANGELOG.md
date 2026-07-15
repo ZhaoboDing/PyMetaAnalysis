@@ -2,10 +2,11 @@
 
 All notable changes to PyMetaAnalysis will be documented in this file.
 
-The project is pre-release. Until the first tagged release, changes accumulate
-under `Unreleased`.
+Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
+
+## 0.1.0 - 2026-07-15
 
 ### Added
 
@@ -24,7 +25,7 @@ under `Unreleased`.
 - explicit RD zero-variance boundary policy and heterogeneity-definition
   reporting;
 - complete MkDocs user, methods, API, validation, limitation, and development
-  documentation.
+  documentation;
 - R `meta`/`metafor` terminology and parameter mappings;
 - machine-readable citation metadata and an executable end-to-end notebook;
 - GitHub Pages and PyPI Trusted Publishing release workflows;

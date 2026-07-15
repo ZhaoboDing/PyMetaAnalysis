@@ -70,9 +70,9 @@ workflow must version those artifacts separately.
 
 ## Stability and review status
 
-The package version is currently `0.1.0.dev0`. Public APIs and serialized
-schemas may still change before the first stable release. Pin versions in
-analysis environments and inspect changelog/schema updates before upgrading.
+The package version is currently `0.1.0`. Public APIs and serialized schemas
+may change during the 0.x series. Pin versions in analysis environments and
+inspect changelog/schema updates before upgrading.
 
 The implementation is tested against independent R fixtures but has not yet
 received a formal external statistical audit. See [validation](validation.md)

@@ -10,8 +10,9 @@ Python sequences, then returns immutable, auditable result objects containing
 study effects, exclusions, weights, method choices, diagnostics, provenance,
 and structured reports.
 
-> **Pre-release:** the API may change before version 0.1. Consequential results
-> should be reviewed against the analysis protocol and independently checked.
+> **Early-stage:** the API may change during the 0.x series. Consequential
+> results should be reviewed against the analysis protocol and independently
+> checked.
 
 ## Install
 
