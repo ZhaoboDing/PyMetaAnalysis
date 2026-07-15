@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import overload
 
 import numpy as np
@@ -12,6 +13,7 @@ from .data import ColumnOrArray, MissingPolicy, normalize_studies
 from .estimators import fit_inverse_variance
 from .exceptions import InvalidStudyDataError, UnsupportedMethodError
 from .heterogeneity import classical_heterogeneity
+from .provenance import add_input_field, build_analysis_provenance
 from .results import (
     FitDiagnostics,
     HeterogeneityResult,
@@ -180,7 +182,16 @@ def _fit_meta_analysis_single(
         confidence_level=confidence_level,
         prediction_interval_method="HTS" if normalized_model == "random" else None,
         missing=missing,
+        atol=atol,
+        max_iter=max_iter,
         options=(),
+    )
+    provenance = build_analysis_provenance(
+        analysis_type="generic",
+        data=data,
+        inputs=(("effect", effect), ("variance", variance)),
+        study=study,
+        included=studies.included,
     )
 
     return MetaAnalysisResult(
@@ -198,8 +209,10 @@ def _fit_meta_analysis_single(
         display_scale="identity",
         method=method,
         diagnostics=diagnostics,
+        provenance=provenance,
         warnings=tuple(warnings),
         _study_results=study_results,
+        _source_data=data,
     )
 
 
@@ -277,6 +290,16 @@ def meta_analysis(
     )
     if subgroup is None:
         return overall
+
+    overall = replace(
+        overall,
+        provenance=add_input_field(
+            overall.provenance,
+            role="subgroup",
+            value=subgroup,
+            data=data,
+        ),
+    )
 
     def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]

@@ -11,9 +11,19 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 from .config import MethodConfig, SubgroupMethodConfig
+from .data import ColumnOrArray
+from .provenance import AnalysisProvenance
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
+
+    from .reporting import ResultReport
+    from .sensitivity import (
+        CumulativeMetaAnalysisResult,
+        LeaveOneOutResult,
+        SubgroupCumulativeMetaAnalysisResult,
+        SubgroupLeaveOneOutResult,
+    )
 else:
     Axes = Any
 
@@ -64,6 +74,8 @@ class MetaAnalysisSummary:
             "display_prediction_interval": result.display_prediction_interval,
             "tau2": result.tau2,
             "tau2_method": result.method.tau2_method,
+            "atol": result.method.atol,
+            "max_iter": result.method.max_iter,
             "q": result.q,
             "q_df": result.q_df,
             "q_pvalue": result.q_pvalue,
@@ -105,6 +117,11 @@ class MetaAnalysisSummary:
             lines.append("Heterogeneity: not estimable with one study")
 
         lines.append(f"Confidence interval method: {result.method.ci_method}")
+        if result.model == "random" and result.method.ci_method == "normal":
+            lines.append(
+                "Method note: consider ci_method='hartung_knapp' for a "
+                "t-based random-effects confidence interval."
+            )
         if result.warnings:
             lines.append("Notes:")
             lines.extend(f"- {warning}" for warning in result.warnings)
@@ -188,11 +205,15 @@ class MetaAnalysisResult:
     display_scale: str
     method: MethodConfig
     diagnostics: FitDiagnostics
+    provenance: AnalysisProvenance
     warnings: tuple[str, ...]
     _study_results: pd.DataFrame = field(repr=False, compare=False)
+    _source_data: pd.DataFrame | None = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_study_results", self._study_results.copy(deep=True))
+        if self._source_data is not None:
+            object.__setattr__(self, "_source_data", self._source_data.copy(deep=True))
 
     @property
     def ci(self) -> tuple[float, float]:
@@ -256,13 +277,60 @@ class MetaAnalysisResult:
         studies = self._study_results
         return studies.loc[~studies["included"]].copy(deep=True)
 
+    @property
+    def source_data(self) -> pd.DataFrame | None:
+        """Return a defensive copy of the source DataFrame, when one was supplied."""
+
+        if self._source_data is None:
+            return None
+        return self._source_data.copy(deep=True)
+
     def summary(self) -> MetaAnalysisSummary:
         return MetaAnalysisSummary(self)
+
+    def method_details(self) -> str:
+        """Return a concise Methods-style description of the fitted analysis."""
+
+        from .reporting import method_details
+
+        return method_details(self)
+
+    def report(self, *, include_studies: bool = True) -> ResultReport:
+        """Build a structured report with JSON and Markdown representations."""
+
+        from .reporting import build_report
+
+        return build_report(self, include_studies=include_studies)
 
     def to_dataframe(self) -> pd.DataFrame:
         """Return the same row-level table as :attr:`study_results`."""
 
         return self.study_results
+
+    def leave_one_out(self) -> LeaveOneOutResult:
+        """Repeatedly refit the model while omitting one included study."""
+
+        from .sensitivity import leave_one_out
+
+        return leave_one_out(self)
+
+    def cumulative(
+        self,
+        *,
+        order: ColumnOrArray | None = None,
+        ascending: bool = True,
+        collapse: bool = False,
+    ) -> CumulativeMetaAnalysisResult:
+        """Repeatedly refit the model while accumulating included studies."""
+
+        from .sensitivity import cumulative
+
+        return cumulative(
+            self,
+            order=order,
+            ascending=ascending,
+            collapse=collapse,
+        )
 
     def forest(
         self,
@@ -363,10 +431,49 @@ class SubgroupMetaAnalysisResult:
 
         return SubgroupMetaAnalysisSummary(self)
 
+    def method_details(self) -> str:
+        """Return a Methods-style description including subgroup assumptions."""
+
+        from .reporting import subgroup_method_details
+
+        return subgroup_method_details(self)
+
+    def report(self, *, include_studies: bool = True) -> ResultReport:
+        """Build a structured subgroup report with JSON and Markdown forms."""
+
+        from .reporting import build_subgroup_report
+
+        return build_subgroup_report(self, include_studies=include_studies)
+
     def to_dataframe(self) -> pd.DataFrame:
         """Return the combined row-level subgroup table."""
 
         return self.study_results
+
+    def leave_one_out(self) -> SubgroupLeaveOneOutResult:
+        """Run leave-one-out analyses for each subgroup and the overall model."""
+
+        from .sensitivity import subgroup_leave_one_out
+
+        return subgroup_leave_one_out(self)
+
+    def cumulative(
+        self,
+        *,
+        order: ColumnOrArray | None = None,
+        ascending: bool = True,
+        collapse: bool = False,
+    ) -> SubgroupCumulativeMetaAnalysisResult:
+        """Run cumulative analyses for each subgroup and the overall model."""
+
+        from .sensitivity import subgroup_cumulative
+
+        return subgroup_cumulative(
+            self,
+            order=order,
+            ascending=ascending,
+            collapse=collapse,
+        )
 
     def forest(
         self,

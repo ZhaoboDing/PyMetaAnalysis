@@ -135,6 +135,101 @@ estimate, optional prediction intervals, overall study weights, and the formal
 test for subgroup differences. It follows the same optional-Matplotlib and
 display-scale behavior as ordinary forest plots.
 
+## Sensitivity and cumulative analysis
+
+Every fitted result can be refitted while omitting one included study at a
+time. The returned table reports the omitted row and study labels together with
+the pooled estimate, confidence interval, tau-squared, Q, I-squared, and
+H-squared from each refit:
+
+```python
+influence = result.leave_one_out()
+print(influence.to_dataframe())
+```
+
+The original model, pooling method, confidence-interval method, continuity
+corrections, tau-squared estimator, confidence level, and numerical controls
+are reused for every fit. Originally excluded studies are not treated as
+leave-one-out candidates. A common-effect leave-one-out analysis needs at least
+two included studies; a random-effects analysis needs at least three so that
+every refit retains the two studies required to estimate tau-squared.
+
+Cumulative analysis adds included studies in the original input order by
+default. A DataFrame column name or one-dimensional array-like can define a
+different stable order:
+
+```python
+cumulative = result.cumulative(order="publication_year")
+print(cumulative.to_dataframe())
+```
+
+Use `ascending=False` to reverse the order. With an explicit order,
+`collapse=True` adds studies sharing the same order value simultaneously.
+Missing order values are rejected for included studies but ignored for rows
+that the original analysis already excluded. Random-effects cumulative
+analysis starts with the first estimable `k=2` prefix and records this boundary
+in `cumulative.warnings`; it never silently substitutes a common-effect model
+for the single-study prefix.
+
+For a `SubgroupMetaAnalysisResult`, the same methods return dedicated composite
+objects with `.groups` and `.overall` sensitivity results. These paths describe
+the accumulation or omission behavior within each fitted subgroup and within
+the overall model; they do not reinterpret different-length paths as a new
+sequence of subgroup-differences tests.
+
+These workflows follow the repeated-refitting semantics documented for
+[`metafor::leave1out()`](https://wviechtb.github.io/metafor/reference/leave1out.html)
+and [`metafor::cumul()`](https://wviechtb.github.io/metafor/reference/cumul.html).
+
+## Provenance and reports
+
+Every fitted result records versioned provenance sufficient to audit how the
+analysis inputs were interpreted:
+
+```python
+print(result.provenance.package_version)
+print(result.provenance.column_mapping)
+print(result.provenance.included_rows)
+print(result.provenance.transformations)
+```
+
+The provenance record contains the package and schema versions, whether inputs
+came from a DataFrame or arrays, the resolved column/index mapping, input row
+count, included and excluded row IDs, and structured transformation records.
+For binary analyses these records distinguish individual-effect continuity
+corrections from Mantel-Haenszel pooling corrections. Continuous analyses
+record the resolved MD or SMD estimator. The original DataFrame is not embedded
+in the provenance object.
+
+`method_details()` produces a concise Methods-style description with all
+resolved model, interval, heterogeneity, correction, and numerical-control
+choices:
+
+```python
+methods_text = result.method_details()
+```
+
+For a complete export, `report()` returns a detached `ResultReport`:
+
+```python
+report = result.report()
+
+payload = report.to_dict()
+json_text = report.to_json()
+markdown = report.to_markdown()
+```
+
+The structured report contains results on model and display scales, full
+method configuration, heterogeneity, convergence diagnostics, provenance,
+warnings, and row-level study results. `report(include_studies=False)` creates
+a smaller export without the study table. JSON output is strict: non-finite or
+unavailable statistical values are represented as `null`, not non-standard
+`NaN` tokens. Subgroup results expose the same API and additionally report each
+group and the assumptions used by the subgroup-differences test.
+
+The generated text is intended as an auditable starting point. It does not
+claim to satisfy every journal's reporting requirements without review.
+
 ## Forest plots
 
 Plotting support is optional:

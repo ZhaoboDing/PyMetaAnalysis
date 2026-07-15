@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import overload
 
 import numpy as np
@@ -16,6 +17,11 @@ from .effect_sizes.continuous import (
 )
 from .estimators import fit_inverse_variance
 from .heterogeneity import classical_heterogeneity
+from .provenance import (
+    TransformationRecord,
+    add_input_field,
+    build_analysis_provenance,
+)
 from .results import (
     FitDiagnostics,
     HeterogeneityResult,
@@ -152,12 +158,35 @@ def _fit_meta_continuous_single(
         confidence_level=confidence_level,
         prediction_interval_method="HTS" if normalized_model == "random" else None,
         missing=missing,
+        atol=atol,
+        max_iter=max_iter,
         options=options,
     )
     diagnostics = FitDiagnostics(
         converged=True if fit.tau2 is None else fit.tau2.converged,
         iterations=0 if fit.tau2 is None else fit.tau2.iterations,
         tau2_at_boundary=None if fit.tau2 is None else fit.tau2.boundary,
+    )
+    provenance = build_analysis_provenance(
+        analysis_type="continuous",
+        data=data,
+        inputs=(
+            ("mean_treat", mean_treat),
+            ("sd_treat", sd_treat),
+            ("n_treat", n_treat),
+            ("mean_control", mean_control),
+            ("sd_control", sd_control),
+            ("n_control", n_control),
+        ),
+        study=study,
+        included=included,
+        transformations=(
+            TransformationRecord(
+                name="continuous_effect_size",
+                parameters=(("measure", effects.measure), *options),
+                affected_rows=tuple(int(row) for row in np.flatnonzero(included)),
+            ),
+        ),
     )
     return MetaAnalysisResult(
         estimate=fit.estimate,
@@ -174,8 +203,10 @@ def _fit_meta_continuous_single(
         display_scale=effects.display_scale,
         method=method,
         diagnostics=diagnostics,
+        provenance=provenance,
         warnings=tuple(warnings),
         _study_results=study_results,
+        _source_data=data,
     )
 
 
@@ -271,6 +302,16 @@ def meta_continuous(
     )
     if subgroup is None:
         return overall
+
+    overall = replace(
+        overall,
+        provenance=add_input_field(
+            overall.provenance,
+            role="subgroup",
+            value=subgroup,
+            data=data,
+        ),
+    )
 
     def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]

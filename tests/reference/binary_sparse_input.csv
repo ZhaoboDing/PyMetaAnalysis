@@ -1,0 +1,6 @@
+study,event_treat,n_treat,event_control,n_control
+Single zero,0,50,4,50
+No zero A,8,60,6,60
+Double zero,0,40,0,40
+Double all,30,30,30,30
+No zero B,12,70,10,70

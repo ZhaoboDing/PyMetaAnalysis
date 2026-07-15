@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import overload
 
 import numpy as np
@@ -24,6 +25,11 @@ from .effect_sizes.binary import (
 from .estimators import fit_inverse_variance, fit_mantel_haenszel
 from .exceptions import UnsupportedMethodError
 from .heterogeneity import classical_heterogeneity, heterogeneity_at_estimate
+from .provenance import (
+    TransformationRecord,
+    add_input_field,
+    build_analysis_provenance,
+)
 from .results import (
     FitDiagnostics,
     HeterogeneityResult,
@@ -251,12 +257,77 @@ def _fit_meta_binary_single(
             else None
         ),
         missing=missing,
+        atol=atol,
+        max_iter=max_iter,
         options=(
             ("continuity_correction", correction),
             ("correction_scope", scope),
             ("mh_continuity_correction", mh_correction),
             ("mh_correction_scope", mh_scope),
         ),
+    )
+    transformations = [
+        TransformationRecord(
+            name="binary_effect_size",
+            parameters=(
+                ("measure", normalized_measure),
+                ("model_scale", effects.effect_scale),
+                ("display_scale", effects.display_scale),
+            ),
+            affected_rows=tuple(int(row) for row in np.flatnonzero(included)),
+        ),
+        TransformationRecord(
+            name="continuity_correction",
+            parameters=(
+                ("value", correction),
+                ("scope", scope),
+                ("target", "individual_effects"),
+            ),
+            affected_rows=tuple(int(row) for row in np.flatnonzero(effects.corrected)),
+        ),
+    ]
+    relative_exclusions = np.flatnonzero(
+        (~included)
+        & np.isin(
+            effects.studies.exclusion_reason,
+            [
+                "no events in either group",
+                "all participants have events in both groups",
+            ],
+        )
+    )
+    if len(relative_exclusions):
+        transformations.append(
+            TransformationRecord(
+                name="relative_effect_exclusion",
+                parameters=(("measure", normalized_measure),),
+                affected_rows=tuple(int(row) for row in relative_exclusions),
+            )
+        )
+    if normalized_method == "mantel_haenszel":
+        transformations.append(
+            TransformationRecord(
+                name="mantel_haenszel_continuity_correction",
+                parameters=(
+                    ("value", mh_correction),
+                    ("scope", mh_scope),
+                    ("target", "pooling"),
+                ),
+                affected_rows=tuple(int(row) for row in np.flatnonzero(mh_corrected)),
+            )
+        )
+    provenance = build_analysis_provenance(
+        analysis_type="binary",
+        data=data,
+        inputs=(
+            ("event_treat", event_treat),
+            ("n_treat", n_treat),
+            ("event_control", event_control),
+            ("n_control", n_control),
+        ),
+        study=study,
+        included=included,
+        transformations=tuple(transformations),
     )
     return MetaAnalysisResult(
         estimate=estimate,
@@ -273,8 +344,10 @@ def _fit_meta_binary_single(
         display_scale=effects.display_scale,
         method=method_config,
         diagnostics=diagnostics,
+        provenance=provenance,
         warnings=tuple(warnings),
         _study_results=study_results,
+        _source_data=data,
     )
 
 
@@ -378,6 +451,16 @@ def meta_binary(
     )
     if subgroup is None:
         return overall
+
+    overall = replace(
+        overall,
+        provenance=add_input_field(
+            overall.provenance,
+            role="subgroup",
+            value=subgroup,
+            data=data,
+        ),
+    )
 
     def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]
