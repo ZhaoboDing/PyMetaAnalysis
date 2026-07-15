@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Hashable, Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from .config import MethodConfig
+from .config import MethodConfig, SubgroupMethodConfig
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -103,6 +105,65 @@ class MetaAnalysisSummary:
             lines.append("Heterogeneity: not estimable with one study")
 
         lines.append(f"Confidence interval method: {result.method.ci_method}")
+        if result.warnings:
+            lines.append("Notes:")
+            lines.extend(f"- {warning}" for warning in result.warnings)
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True, slots=True)
+class SubgroupMetaAnalysisSummary:
+    """A printable and machine-readable subgroup analysis summary."""
+
+    _result: SubgroupMetaAnalysisResult = field(repr=False)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return nested subgroup, overall, and interaction-test results."""
+
+        result = self._result
+        return {
+            "groups": {
+                label: group.summary().to_dict()
+                for label, group in result.groups.items()
+            },
+            "overall": result.overall.summary().to_dict(),
+            "q_between": result.q_between,
+            "q_between_df": result.q_between_df,
+            "q_between_pvalue": result.q_between_pvalue,
+            "i2_between": result.i2_between,
+            "method": {
+                "model": result.method.model,
+                "tau2_strategy": result.method.tau2_strategy,
+                "test_method": result.method.test_method,
+                "subgroup_missing": result.method.subgroup_missing,
+            },
+            "warnings": result.warnings,
+        }
+
+    def __str__(self) -> str:
+        result = self._result
+        level = 100.0 * result.overall.method.confidence_level
+        lines = [
+            f"Subgroup meta-analysis ({result.overall.model}-effect, "
+            f"{result.overall.measure})",
+            f"Groups: {len(result.groups)}; studies: {result.overall.k}",
+        ]
+        for label, group in result.groups.items():
+            low, high = group.display_ci
+            lines.append(
+                f"- {label}: {group.display_estimate:.6g} "
+                f"({level:g}% CI {low:.6g} to {high:.6g}; k={group.k})"
+            )
+        lines.append(
+            "Test for subgroup differences: "
+            f"Q({result.q_between_df})={result.q_between:.6g}, "
+            f"p={result.q_between_pvalue:.6g}, "
+            f"I^2={100.0 * result.i2_between:.2f}%"
+        )
+        lines.append(
+            f"Subgroup tau^2 strategy: {result.method.tau2_strategy}; "
+            f"test method: {result.method.test_method}"
+        )
         if result.warnings:
             lines.append("Notes:")
             lines.extend(f"- {warning}" for warning in result.warnings)
@@ -260,5 +321,73 @@ class MetaAnalysisResult:
             confidence_level=confidence_level,
             show_pseudo_confidence_interval=show_pseudo_confidence_interval,
             warn_on_few_studies=warn_on_few_studies,
+            log_scale=log_scale,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SubgroupMetaAnalysisResult:
+    """Results for independent study subgroups and their formal comparison."""
+
+    groups: Mapping[Hashable, MetaAnalysisResult]
+    overall: MetaAnalysisResult
+    q_between: float
+    q_between_df: int
+    q_between_pvalue: float
+    i2_between: float
+    method: SubgroupMethodConfig
+    warnings: tuple[str, ...]
+    _study_results: pd.DataFrame = field(repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        """Defensively freeze the group mapping and combined study table."""
+
+        object.__setattr__(self, "groups", MappingProxyType(dict(self.groups)))
+        object.__setattr__(self, "_study_results", self._study_results.copy(deep=True))
+
+    @property
+    def study_results(self) -> pd.DataFrame:
+        """Return all rows with their subgroup labels and overall fit metadata."""
+
+        return self._study_results.copy(deep=True)
+
+    @property
+    def excluded_studies(self) -> pd.DataFrame:
+        """Return rows excluded from the overall and subgroup fits."""
+
+        studies = self._study_results
+        return studies.loc[~studies["included"]].copy(deep=True)
+
+    def summary(self) -> SubgroupMetaAnalysisSummary:
+        """Return a printable and machine-readable subgroup summary."""
+
+        return SubgroupMetaAnalysisSummary(self)
+
+    def to_dataframe(self) -> pd.DataFrame:
+        """Return the combined row-level subgroup table."""
+
+        return self.study_results
+
+    def forest(
+        self,
+        *,
+        ax: Axes | None = None,
+        effect_label: str | None = None,
+        show_prediction_interval: bool = True,
+        show_weights: bool = True,
+        null_value: float | None = None,
+        log_scale: bool | None = None,
+    ) -> Axes:
+        """Draw a subgroup forest plot without calling ``show()``."""
+
+        from .plotting import subgroup_forest_plot
+
+        return subgroup_forest_plot(
+            self,
+            ax=ax,
+            effect_label=effect_label,
+            show_prediction_interval=show_prediction_interval,
+            show_weights=show_weights,
+            null_value=null_value,
             log_scale=log_scale,
         )

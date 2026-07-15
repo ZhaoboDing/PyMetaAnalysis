@@ -84,6 +84,52 @@ correction, and the `metafor` `vtype="LS"` sampling variance convention. The
 per-study pooled SD, Cohen's d, correction factor, final effect, variance, and
 weights remain available in `result.study_results`.
 
+## Subgroup analysis
+
+All three analysis entry points accept a DataFrame column or one-dimensional
+array-like through `subgroup=`:
+
+```python
+subgroups = ma.meta_binary(
+    data=studies,
+    event_treat="event_treat",
+    n_treat="n_treat",
+    event_control="event_control",
+    n_control="n_control",
+    study="study",
+    subgroup="region",
+    measure="RR",
+    method="MH",
+    model="common",
+)
+
+print(subgroups.summary())
+ax = subgroups.forest()
+```
+
+Supplying `subgroup=` returns a `SubgroupMetaAnalysisResult` containing an
+ordered mapping of subgroup labels to `MetaAnalysisResult` objects, the overall
+analysis, and a formal test for subgroup differences. The test follows the
+RevMan formulation: subgroup summary effects are weighted by the inverse square
+of their pooled standard errors and compared with a chi-squared Q statistic.
+It is not based on comparing whether separate subgroup p-values are
+statistically significant. See Cochrane's
+[Statistical Methods Programmed in RevMan](https://training.cochrane.org/handbook/current/statistical-methods-revman5)
+for the defining equations.
+
+For random-effects analyses, tau-squared is currently estimated independently
+within each subgroup and separately for the overall analysis. This assumption
+is recorded as `result.method.tau2_strategy == "independent"`. Each random-
+effects subgroup therefore needs at least two included studies. Missing
+subgroup labels are rejected explicitly rather than silently assigned or
+dropped. Outcome rows excluded by the selected missing-data or zero-event
+policy remain visible with their subgroup label in `result.study_results`.
+
+The subgroup forest plot shows study estimates, subgroup subtotals, the overall
+estimate, optional prediction intervals, overall study weights, and the formal
+test for subgroup differences. It follows the same optional-Matplotlib and
+display-scale behavior as ordinary forest plots.
+
 ## Forest plots
 
 Plotting support is optional:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import overload
+
 import numpy as np
 import pandas as pd
 
@@ -14,10 +16,16 @@ from .effect_sizes.continuous import (
 )
 from .estimators import fit_inverse_variance
 from .heterogeneity import classical_heterogeneity
-from .results import FitDiagnostics, HeterogeneityResult, MetaAnalysisResult
+from .results import (
+    FitDiagnostics,
+    HeterogeneityResult,
+    MetaAnalysisResult,
+    SubgroupMetaAnalysisResult,
+)
+from .subgroups import fit_subgroup_analysis
 
 
-def meta_continuous(
+def _fit_meta_continuous_single(
     data: pd.DataFrame | None = None,
     *,
     mean_treat: ColumnOrArray,
@@ -168,4 +176,126 @@ def meta_continuous(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         _study_results=study_results,
+    )
+
+
+@overload
+def meta_continuous(
+    data: pd.DataFrame | None = None,
+    *,
+    mean_treat: ColumnOrArray,
+    sd_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    mean_control: ColumnOrArray,
+    sd_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: None = None,
+    measure: str = "MD",
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    smd_variance: str = "LS",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult: ...
+
+
+@overload
+def meta_continuous(
+    data: pd.DataFrame | None = None,
+    *,
+    mean_treat: ColumnOrArray,
+    sd_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    mean_control: ColumnOrArray,
+    sd_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray,
+    measure: str = "MD",
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    smd_variance: str = "LS",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> SubgroupMetaAnalysisResult: ...
+
+
+def meta_continuous(
+    data: pd.DataFrame | None = None,
+    *,
+    mean_treat: ColumnOrArray,
+    sd_treat: ColumnOrArray,
+    n_treat: ColumnOrArray,
+    mean_control: ColumnOrArray,
+    sd_control: ColumnOrArray,
+    n_control: ColumnOrArray,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray | None = None,
+    measure: str = "MD",
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    smd_variance: str = "LS",
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
+    """Pool continuous outcomes, optionally fitting independent subgroups."""
+
+    overall = _fit_meta_continuous_single(
+        data,
+        mean_treat=mean_treat,
+        sd_treat=sd_treat,
+        n_treat=n_treat,
+        mean_control=mean_control,
+        sd_control=sd_control,
+        n_control=n_control,
+        study=study,
+        measure=measure,
+        model=model,
+        tau2_method=tau2_method,
+        ci_method=ci_method,
+        confidence_level=confidence_level,
+        smd_variance=smd_variance,
+        missing=missing,
+        atol=atol,
+        max_iter=max_iter,
+    )
+    if subgroup is None:
+        return overall
+
+    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+        rows = overall.study_results.iloc[positions]
+        return _fit_meta_continuous_single(
+            mean_treat=rows["mean_treat"].to_numpy(dtype=np.float64, copy=True),
+            sd_treat=rows["sd_treat"].to_numpy(dtype=np.float64, copy=True),
+            n_treat=rows["n_treat"].to_numpy(dtype=np.float64, copy=True),
+            mean_control=rows["mean_control"].to_numpy(dtype=np.float64, copy=True),
+            sd_control=rows["sd_control"].to_numpy(dtype=np.float64, copy=True),
+            n_control=rows["n_control"].to_numpy(dtype=np.float64, copy=True),
+            study=rows["study"].to_numpy(dtype=object, copy=True),
+            measure=measure,
+            model=model,
+            tau2_method=tau2_method,
+            ci_method=ci_method,
+            confidence_level=confidence_level,
+            smd_variance=smd_variance,
+            missing=missing,
+            atol=atol,
+            max_iter=max_iter,
+        )
+
+    return fit_subgroup_analysis(
+        data=data,
+        subgroup=subgroup,
+        overall=overall,
+        fit_group=fit_group,
     )
