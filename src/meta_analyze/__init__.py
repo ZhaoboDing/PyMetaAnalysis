@@ -19,19 +19,29 @@ from .results import (
     SubgroupMetaAnalysisResult,
     SubgroupMetaAnalysisSummary,
 )
+from .sensitivity import (
+    CumulativeMetaAnalysisResult,
+    LeaveOneOutResult,
+    SubgroupCumulativeMetaAnalysisResult,
+    SubgroupLeaveOneOutResult,
+)
 
 __all__ = [
     "ConvergenceError",
+    "CumulativeMetaAnalysisResult",
     "FitDiagnostics",
     "HeterogeneityResult",
     "InsufficientStudiesError",
     "InvalidStudyDataError",
+    "LeaveOneOutResult",
     "MetaAnalysisError",
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
     "MethodConfig",
     "SubgroupMetaAnalysisResult",
     "SubgroupMetaAnalysisSummary",
+    "SubgroupCumulativeMetaAnalysisResult",
+    "SubgroupLeaveOneOutResult",
     "SubgroupMethodConfig",
     "UnsupportedMethodError",
     "meta_analysis",

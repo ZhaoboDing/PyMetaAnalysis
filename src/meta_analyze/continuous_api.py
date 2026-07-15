@@ -152,6 +152,8 @@ def _fit_meta_continuous_single(
         confidence_level=confidence_level,
         prediction_interval_method="HTS" if normalized_model == "random" else None,
         missing=missing,
+        atol=atol,
+        max_iter=max_iter,
         options=options,
     )
     diagnostics = FitDiagnostics(
@@ -176,6 +178,7 @@ def _fit_meta_continuous_single(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         _study_results=study_results,
+        _source_data=data,
     )
 
 

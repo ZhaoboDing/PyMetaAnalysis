@@ -251,6 +251,8 @@ def _fit_meta_binary_single(
             else None
         ),
         missing=missing,
+        atol=atol,
+        max_iter=max_iter,
         options=(
             ("continuity_correction", correction),
             ("correction_scope", scope),
@@ -275,6 +277,7 @@ def _fit_meta_binary_single(
         diagnostics=diagnostics,
         warnings=tuple(warnings),
         _study_results=study_results,
+        _source_data=data,
     )
 
 
