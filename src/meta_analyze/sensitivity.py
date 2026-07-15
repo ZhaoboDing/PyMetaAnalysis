@@ -223,6 +223,7 @@ def _refit(
             correction_scope=_string_option(
                 options, "correction_scope", "only_zero_studies"
             ),
+            rd_zero_variance=_string_option(options, "rd_zero_variance", "correct"),
             mh_continuity_correction=_float_option(
                 options, "mh_continuity_correction", 0.0
             ),
@@ -301,6 +302,7 @@ def _fit_summary(result: MetaAnalysisResult) -> dict[str, Any]:
         "q_pvalue": result.q_pvalue,
         "i2": result.i2,
         "h2": result.h2,
+        "i2_method": result.i2_method,
     }
 
 

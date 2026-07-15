@@ -42,6 +42,7 @@ Binary analyses record:
 
 - the OR, RR, or RD effect-size transformation and its scales;
 - continuity correction for individual-study effects;
+- the RD zero-variance policy and affected boundary rows;
 - non-informative relative-effect exclusions;
 - a separate Mantel-Haenszel correction record when MH pooling is used.
 
@@ -94,6 +95,9 @@ The payload contains:
 - convergence diagnostics;
 - provenance and warnings;
 - row-level study results.
+
+Report schema 1.1 records the resolved heterogeneity definition as
+`heterogeneity.i2_method`.
 
 The default study table makes the report auditable but can be large. Omit it
 when only aggregate output is needed:

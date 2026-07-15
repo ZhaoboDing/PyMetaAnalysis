@@ -27,6 +27,16 @@ fit_summary <- function(fit, include_tau2 = TRUE) {
   result
 }
 
+heterogeneity_summary <- function(fit) {
+  list(
+    q = unname(fit$QE),
+    df = unname(fit$k - 1),
+    pvalue = unname(fit$QEp),
+    i2 = unname(fit$I2 / 100),
+    h2 = unname(fit$H2)
+  )
+}
+
 calculate_effects <- function(data, measure) {
   escalc(
     measure = measure,
@@ -72,6 +82,7 @@ calculate_clean <- function(measure) {
       correct = FALSE
     )
     result$mantel_haenszel <- fit_summary(mh, include_tau2 = FALSE)
+    result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
   }
   result
 }
@@ -91,11 +102,31 @@ calculate_sparse <- function(measure) {
     drop00 = c(TRUE, TRUE),
     correct = FALSE
   )
-  list(
+  result <- list(
     effect = unname(effects$yi),
     variance = unname(effects$vi),
     common_iv = fit_summary(common),
     mantel_haenszel = fit_summary(mh, include_tau2 = FALSE)
+  )
+  result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
+  result
+}
+
+calculate_sparse_rd <- function() {
+  effects <- escalc(
+    measure = "RD",
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = sparse_input,
+    add = 0.5,
+    to = "only0",
+    drop00 = FALSE
+  )
+  list(
+    metafor_effect = unname(effects$yi),
+    variance = unname(effects$vi)
   )
 }
 
@@ -112,7 +143,8 @@ reference <- list(
   ),
   sparse = list(
     OR = calculate_sparse("OR"),
-    RR = calculate_sparse("RR")
+    RR = calculate_sparse("RR"),
+    RD = calculate_sparse_rd()
   )
 )
 

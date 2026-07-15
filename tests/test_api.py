@@ -99,9 +99,10 @@ def test_summary_has_text_and_machine_readable_forms() -> None:
     values = result.summary().to_dict()
 
     assert "Meta-analysis (common-effect, GENERIC)" in rendered
-    assert "I^2:" in rendered
+    assert "I^2 (Q-based):" in rendered
     assert values["estimate"] == result.estimate
     assert values["studies"] == 3
+    assert values["i2_method"] == "q_based"
     assert result.ci == (result.ci_low, result.ci_high)
     pd.testing.assert_frame_equal(result.to_dataframe(), result.study_results)
 
@@ -113,6 +114,24 @@ def test_single_study_common_model_reports_unavailable_heterogeneity() -> None:
     assert np.isnan(result.q_pvalue)
     assert np.isnan(result.i2)
     assert "not estimable with one study" in str(result.summary())
+
+
+def test_random_effects_i2_uses_tau2_and_typical_within_study_variance() -> None:
+    variance = np.asarray([0.02, 0.03, 0.04, 0.08], dtype=np.float64)
+    result = ma.meta_analysis(
+        effect=[-0.7, 0.0, 0.8, 1.5],
+        variance=variance,
+        model="random",
+        tau2_method="REML",
+    )
+    weights = 1.0 / variance
+    c_value = weights.sum() - np.dot(weights, weights) / weights.sum()
+    typical_variance = (len(variance) - 1) / c_value
+
+    assert result.i2_method == "tau2_typical_variance"
+    assert result.i2 == pytest.approx(result.tau2 / (result.tau2 + typical_variance))
+    assert result.h2 == pytest.approx(1.0 + result.tau2 / typical_variance)
+    assert "tau^2/typical-variance" in str(result.summary())
 
 
 def test_fixed_alias_and_ci_aliases_are_resolved() -> None:

@@ -30,13 +30,14 @@ else:
 
 @dataclass(frozen=True, slots=True)
 class HeterogeneityResult:
-    """Classical heterogeneity statistics."""
+    """Heterogeneity statistics and the definition used for I-squared/H-squared."""
 
     q: float
     df: int
     pvalue: float
     i2: float
     h2: float
+    i2_method: str = "q_based"
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +82,7 @@ class MetaAnalysisSummary:
             "q_pvalue": result.q_pvalue,
             "i2": result.i2,
             "h2": result.h2,
+            "i2_method": result.i2_method,
             "warnings": result.warnings,
             "method_options": dict(result.method.options),
         }
@@ -107,10 +109,16 @@ class MetaAnalysisSummary:
                 lines.append(f"Prediction interval: {low:.6g} to {high:.6g}")
 
         if result.q_df > 0:
+            inconsistency_label = (
+                "tau^2/typical-variance"
+                if result.i2_method == "tau2_typical_variance"
+                else "Q-based"
+            )
             lines.extend(
                 [
                     (f"Q({result.q_df}): {result.q:.6g}, p={result.q_pvalue:.6g}"),
-                    f"I^2: {100.0 * result.i2:.2f}%; H^2: {result.h2:.6g}",
+                    f"I^2 ({inconsistency_label}): {100.0 * result.i2:.2f}%; "
+                    f"H^2: {result.h2:.6g}",
                 ]
             )
         else:
@@ -118,10 +126,17 @@ class MetaAnalysisSummary:
 
         lines.append(f"Confidence interval method: {result.method.ci_method}")
         if result.model == "random" and result.method.ci_method == "normal":
-            lines.append(
-                "Method note: consider ci_method='hartung_knapp' for a "
-                "t-based random-effects confidence interval."
-            )
+            if result.k <= 3:
+                lines.append(
+                    "Method note: with three or fewer studies, compare normal and "
+                    "Hartung-Knapp intervals; neither method fully resolves the "
+                    "small-sample uncertainty."
+                )
+            elif result.tau2 > 0.0:
+                lines.append(
+                    "Method note: consider ci_method='hartung_knapp' as a "
+                    "t-based random-effects sensitivity analysis."
+                )
         if result.warnings:
             lines.append("Notes:")
             lines.extend(f"- {warning}" for warning in result.warnings)
@@ -265,6 +280,10 @@ class MetaAnalysisResult:
     @property
     def h2(self) -> float:
         return self.heterogeneity.h2
+
+    @property
+    def i2_method(self) -> str:
+        return self.heterogeneity.i2_method
 
     @property
     def study_results(self) -> pd.DataFrame:

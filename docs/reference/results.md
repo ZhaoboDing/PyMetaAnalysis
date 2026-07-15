@@ -23,9 +23,11 @@ exponentiated. Other implemented measures use an identity display transform.
 
 ### Heterogeneity
 
-`tau2`, `q`, `q_df`, `q_pvalue`, `i2`, and `h2` expose the principal
+`tau2`, `q`, `q_df`, `q_pvalue`, `i2`, `h2`, and `i2_method` expose the principal
 heterogeneity outputs. `i2` is stored as a proportion from zero to one; summary
-and plotting layers format it as a percentage.
+and plotting layers format it as a percentage. `i2_method` is `q_based` for
+common-effect/Mantel-Haenszel analyses and `tau2_typical_variance` for random-
+effects analyses.
 
 ### Methods and diagnostics
 
@@ -50,7 +52,8 @@ Recoverable statistical notes are stored in the immutable `warnings` tuple.
 
 Binary transformation records distinguish the continuity correction used for
 individual effects from the independently configured correction used for
-Mantel-Haenszel pooling. Continuous records identify the resolved MD or SMD
+Mantel-Haenszel pooling. RD records also identify the zero-variance boundary
+policy and affected rows. Continuous records identify the resolved MD or SMD
 effect-size estimator. Provenance does not embed another copy of the original
 DataFrame.
 
@@ -99,7 +102,8 @@ report.to_markdown()
 
 The report contains model- and display-scale results, heterogeneity, full
 method configuration, diagnostics, provenance, warnings, and—by default—the
-study table. Pass `include_studies=False` for a compact payload. JSON is strict:
+study table. Report schema version 1.1 includes `heterogeneity.i2_method`. Pass
+`include_studies=False` for a compact payload. JSON is strict:
 non-finite or unavailable values are serialized as `null` rather than `NaN`.
 
 ## Subgroup results
