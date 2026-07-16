@@ -54,7 +54,7 @@ def _validate_tag(version: str, tag: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tag", help="Optional release tag, for example v0.1.0")
+    parser.add_argument("--tag", help="Optional release tag in vX.Y.Z form")
     arguments = parser.parse_args()
 
     _validate_pyproject_version_source()

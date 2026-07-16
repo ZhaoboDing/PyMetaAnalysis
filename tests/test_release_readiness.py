@@ -26,6 +26,10 @@ def test_release_metadata_sources_match() -> None:
     assert 'license = "MIT"' in pyproject
     assert 'license-files = ["LICENSE"]' in pyproject
     assert '"License ::' not in pyproject
+    assert pyproject.count('{ name = "Zhaobo Ding", email = "ding.zb@yahoo.com" }') == 2
+    assert "family-names: Ding" in citation
+    assert "given-names: Zhaobo" in citation
+    assert "email: ding.zb@yahoo.com" in citation
 
 
 def test_release_metadata_checker_runs() -> None:

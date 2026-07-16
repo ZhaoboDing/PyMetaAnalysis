@@ -44,7 +44,7 @@ and its
    `CITATION.cff`. Hatchling reads the package version dynamically from
    `_version.py`.
 4. Move the relevant `CHANGELOG.md` entries from `Unreleased` to a dated
-   heading such as `## 0.1.0 - 2026-07-15`.
+   heading such as `## X.Y.Z - YYYY-MM-DD`.
 5. Run the complete validation suite.
 
 The local consistency check is:
@@ -56,7 +56,7 @@ python tools/check_release.py
 For a proposed tag, add:
 
 ```console
-python tools/check_release.py --tag v0.1.0
+python tools/check_release.py --tag vX.Y.Z
 ```
 
 The tag check rejects development versions, version mismatches, and releases
@@ -90,8 +90,8 @@ commit:
 ```console
 git switch main
 git pull --ff-only
-git tag -a v0.1.0 -m "PyMetaAnalysis 0.1.0"
-git push origin v0.1.0
+git tag -a vX.Y.Z -m "PyMetaAnalysis X.Y.Z"
+git push origin vX.Y.Z
 ```
 
 The release workflow then:
