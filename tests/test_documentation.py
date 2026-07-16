@@ -51,3 +51,15 @@ def test_relative_markdown_links_resolve(path: Path) -> None:
             assert (path.parent / relative).exists(), (
                 f"Broken relative link {target!r} in {path.relative_to(ROOT)}"
             )
+
+
+def test_pypi_readme_links_are_absolute() -> None:
+    """PyPI resolves relative long-description links against its project URL."""
+    pattern = re.compile(r"\]\(([^)]+)\)")
+    for raw_target in pattern.findall(
+        (ROOT / "README.md").read_text(encoding="utf-8")
+    ):
+        target = raw_target.split(maxsplit=1)[0].strip("<>")
+        assert target.startswith(("https://", "http://", "#", "mailto:")), (
+            f"README link {target!r} must be absolute so it works on PyPI"
+        )
