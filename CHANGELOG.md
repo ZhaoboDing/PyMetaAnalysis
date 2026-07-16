@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.2.0 - 2026-07-16
+
 ### Added
 
 - generic `meta_analysis()` accepts either sampling variances or standard

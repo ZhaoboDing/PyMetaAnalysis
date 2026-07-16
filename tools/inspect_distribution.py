@@ -57,6 +57,7 @@ def _inspect(path: Path) -> None:
         with zipfile.ZipFile(path) as archive:
             metadata = archive.read(metadata_name).decode("utf-8")
         required_metadata = {
+            "Author-email: Zhaobo Ding <ding.zb@yahoo.com>",
             "License-Expression: MIT",
             "License-File: LICENSE",
             "Maintainer-email: Zhaobo Ding <ding.zb@yahoo.com>",
