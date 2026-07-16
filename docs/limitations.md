@@ -27,8 +27,7 @@ deferred functionality explicit.
 - multilevel, multivariate, network, dose-response, diagnostic-accuracy, or
   individual-participant-data meta-analysis;
 - robust variance estimation or dependent-effect clustering;
-- single proportions, incidence rates, correlations, survival outcomes, or
-  generic standard-error input helpers;
+- single proportions, incidence rates, correlations, or survival outcomes;
 - Knapp-Hartung variants beyond the two documented choices;
 - alternative prediction-interval methods;
 - formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias

@@ -82,3 +82,35 @@ def test_normalized_weights_are_nonnegative_and_sum_to_one(
 
     assert np.all(weights >= 0.0)
     assert np.sum(weights) == pytest.approx(1.0, abs=1e-12)
+
+
+@given(study_vectors())
+@settings(max_examples=75, deadline=None)
+def test_standard_error_and_variance_inputs_are_equivalent(
+    vectors: tuple[np.ndarray, np.ndarray],
+) -> None:
+    effect, variance = vectors
+    from_variance = ma.meta_analysis(
+        effect=effect,
+        variance=variance,
+        model="common",
+    )
+    from_standard_error = ma.meta_analysis(
+        effect=effect,
+        standard_error=np.sqrt(variance),
+        model="common",
+    )
+
+    assert from_standard_error.estimate == pytest.approx(
+        from_variance.estimate, rel=1e-12, abs=1e-12
+    )
+    assert from_standard_error.standard_error == pytest.approx(
+        from_variance.standard_error, rel=1e-12, abs=1e-12
+    )
+    assert from_standard_error.q == pytest.approx(from_variance.q, rel=1e-11, abs=1e-11)
+    np.testing.assert_allclose(
+        from_standard_error.study_results["normalized_weight"],
+        from_variance.study_results["normalized_weight"],
+        rtol=1e-12,
+        atol=1e-12,
+    )

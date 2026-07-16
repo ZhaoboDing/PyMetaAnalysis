@@ -66,7 +66,7 @@ subgroup differences.
 
 | Input | Effects | Pooling/models |
 | --- | --- | --- |
-| Effect + sampling variance | Generic | Common/random inverse variance |
+| Effect + sampling variance or standard error | Generic | Common/random inverse variance |
 | Two-group events + totals | OR, RR, RD | Common MH OR/RR; common/random IV |
 | Two-group means + SDs + sizes | MD, Hedges' g | Common/random inverse variance |
 
@@ -74,6 +74,10 @@ Random-effects inverse-variance models support REML (default), Paule-Mandel,
 and DerSimonian-Laird tau-squared estimators. Mean confidence intervals support
 the normal default plus unmodified and safeguarded Hartung-Knapp variants.
 Eligible random-effects fits include an HTS prediction interval.
+
+Generic analyses accept exactly one of `variance=` or `standard_error=`.
+Standard errors are squared internally and the conversion is recorded in the
+result provenance.
 
 Sparse binary behavior is explicit: study-level and Mantel-Haenszel continuity
 corrections are separate, relative-effect double-zero/double-all rows remain

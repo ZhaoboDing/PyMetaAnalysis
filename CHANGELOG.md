@@ -6,6 +6,20 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- generic `meta_analysis()` accepts either sampling variances or standard
+  errors, with explicit validation and auditable conversion provenance.
+
+### Changed
+
+- package author metadata identifies the project maintainer directly.
+
+### Fixed
+
+- GitHub Release creation receives explicit repository context in tag-driven
+  release jobs.
+
 ## 0.1.0 - 2026-07-15
 
 ### Added

@@ -47,7 +47,8 @@ ma.meta_analysis(
     data=None,
     *,
     effect,
-    variance,
+    variance=None,
+    standard_error=None,
     study=None,
     subgroup=None,
     model="random",
@@ -66,7 +67,8 @@ Fits generic study effects using inverse-variance pooling.
 | --- | --- |
 | `data` | Optional DataFrame used by string-valued input selectors |
 | `effect` | Study effect column or array on a consistent model scale |
-| `variance` | Finite, strictly positive sampling variances—not standard errors |
+| `variance` | Finite, strictly positive sampling variances |
+| `standard_error` | Finite, strictly positive standard errors, squared internally |
 | `study` | Optional label column/array; defaults to index or row number |
 | `subgroup` | Optional subgroup column/array |
 | `model` | `"common"` or `"random"` |
@@ -76,6 +78,10 @@ Fits generic study effects using inverse-variance pooling.
 | `missing` | `"raise"` or `"drop"` |
 | `atol` | Strictly positive iterative-estimator tolerance |
 | `max_iter` | Positive iterative-estimator iteration limit |
+
+Supply exactly one of `variance` or `standard_error`. The selected argument
+supports the same DataFrame-column and array-like conventions as `effect`.
+Standard-error conversion is recorded in result provenance.
 
 ## `meta_binary()`
 

@@ -105,6 +105,13 @@ def method_details(result: MetaAnalysisResult) -> str:
         f"using {_measure_description(result.measure)}, pooled with {pooling}."
     ]
 
+    standard_error_rows = _transformation_rows(result, "standard_error_to_variance")
+    if standard_error_rows:
+        sentences.append(
+            "Supplied standard errors were squared to obtain sampling "
+            f"variances for {len(standard_error_rows)} row(s)."
+        )
+
     if result.model == "random":
         sentences.append(
             "Between-study variance was estimated with "

@@ -30,6 +30,8 @@ result = ma.meta_analysis(
 
 Column names must exist. Array-like inputs may be mixed with DataFrame columns,
 but every array must contain exactly one value for every DataFrame row.
+Generic analyses require exactly one uncertainty input: `variance=` or
+`standard_error=`.
 
 ## Array-like inputs
 
@@ -38,7 +40,7 @@ Lists, tuples, pandas Series, and one-dimensional NumPy arrays are accepted:
 ```python
 result = ma.meta_analysis(
     effect=[0.1, 0.3, -0.2],
-    variance=[0.02, 0.04, 0.03],
+    standard_error=[0.14, 0.20, 0.17],
     study=["A", "B", "C"],
 )
 ```

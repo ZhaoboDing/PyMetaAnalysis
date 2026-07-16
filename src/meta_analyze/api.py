@@ -13,7 +13,11 @@ from .data import ColumnOrArray, MissingPolicy, normalize_studies
 from .estimators import fit_inverse_variance
 from .exceptions import InvalidStudyDataError, UnsupportedMethodError
 from .heterogeneity import classical_heterogeneity, tau2_inconsistency
-from .provenance import add_input_field, build_analysis_provenance
+from .provenance import (
+    TransformationRecord,
+    add_input_field,
+    build_analysis_provenance,
+)
 from .results import (
     FitDiagnostics,
     HeterogeneityResult,
@@ -65,7 +69,8 @@ def _fit_meta_analysis_single(
     data: pd.DataFrame | None = None,
     *,
     effect: ColumnOrArray,
-    variance: ColumnOrArray,
+    variance: ColumnOrArray | None = None,
+    standard_error: ColumnOrArray | None = None,
     study: ColumnOrArray | None = None,
     model: str = "random",
     tau2_method: str = "REML",
@@ -82,9 +87,14 @@ def _fit_meta_analysis_single(
     data:
         Optional pandas DataFrame. String-valued input arguments select columns
         from this frame.
-    effect, variance:
+    effect:
         A DataFrame column name or one-dimensional array-like containing study
-        effects and strictly positive sampling variances.
+        effects.
+    variance, standard_error:
+        Exactly one must be provided as a DataFrame column name or
+        one-dimensional array-like. Values must be finite and strictly
+        positive. Standard errors are squared internally to obtain sampling
+        variances.
     study:
         Optional study label column/array. DataFrame input defaults to its index;
         array-only input defaults to integer row labels.
@@ -118,6 +128,7 @@ def _fit_meta_analysis_single(
         data=data,
         effect=effect,
         variance=variance,
+        standard_error=standard_error,
         study=study,
         missing=missing,
     )
@@ -190,12 +201,30 @@ def _fit_meta_analysis_single(
         max_iter=max_iter,
         options=(),
     )
+    transformations: tuple[TransformationRecord, ...] = ()
+    if standard_error is not None:
+        uncertainty_input = ("standard_error", standard_error)
+        transformed_rows = tuple(
+            int(row) for row in np.flatnonzero(~pd.isna(studies.variance))
+        )
+        transformations = (
+            TransformationRecord(
+                name="standard_error_to_variance",
+                affected_rows=transformed_rows,
+            ),
+        )
+    else:
+        if variance is None:  # pragma: no cover - validated by normalize_studies
+            raise RuntimeError("variance input unexpectedly missing")
+        uncertainty_input = ("variance", variance)
+
     provenance = build_analysis_provenance(
         analysis_type="generic",
         data=data,
-        inputs=(("effect", effect), ("variance", variance)),
+        inputs=(("effect", effect), uncertainty_input),
         study=study,
         included=studies.included,
+        transformations=transformations,
     )
 
     return MetaAnalysisResult(
@@ -226,6 +255,26 @@ def meta_analysis(
     *,
     effect: ColumnOrArray,
     variance: ColumnOrArray,
+    standard_error: None = None,
+    study: ColumnOrArray | None = None,
+    subgroup: None = None,
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> MetaAnalysisResult: ...
+
+
+@overload
+def meta_analysis(
+    data: pd.DataFrame | None = None,
+    *,
+    effect: ColumnOrArray,
+    variance: None = None,
+    standard_error: ColumnOrArray,
     study: ColumnOrArray | None = None,
     subgroup: None = None,
     model: str = "random",
@@ -244,6 +293,26 @@ def meta_analysis(
     *,
     effect: ColumnOrArray,
     variance: ColumnOrArray,
+    standard_error: None = None,
+    study: ColumnOrArray | None = None,
+    subgroup: ColumnOrArray,
+    model: str = "random",
+    tau2_method: str = "REML",
+    ci_method: str = "normal",
+    confidence_level: float = 0.95,
+    missing: MissingPolicy = "raise",
+    atol: float = 1e-10,
+    max_iter: int = 1000,
+) -> SubgroupMetaAnalysisResult: ...
+
+
+@overload
+def meta_analysis(
+    data: pd.DataFrame | None = None,
+    *,
+    effect: ColumnOrArray,
+    variance: None = None,
+    standard_error: ColumnOrArray,
     study: ColumnOrArray | None = None,
     subgroup: ColumnOrArray,
     model: str = "random",
@@ -260,7 +329,8 @@ def meta_analysis(
     data: pd.DataFrame | None = None,
     *,
     effect: ColumnOrArray,
-    variance: ColumnOrArray,
+    variance: ColumnOrArray | None = None,
+    standard_error: ColumnOrArray | None = None,
     study: ColumnOrArray | None = None,
     subgroup: ColumnOrArray | None = None,
     model: str = "random",
@@ -273,18 +343,21 @@ def meta_analysis(
 ) -> MetaAnalysisResult | SubgroupMetaAnalysisResult:
     """Fit a generic inverse-variance meta-analysis, optionally by subgroup.
 
-    ``effect`` and ``variance`` accept DataFrame column names or one-dimensional
-    array-like values. Sampling variances must be finite and strictly positive.
-    The default is a REML random-effects model with a normal confidence
-    interval. ``subgroup`` returns :class:`SubgroupMetaAnalysisResult` when
-    supplied; otherwise the return value is :class:`MetaAnalysisResult`.
-    Missing subgroup labels are rejected explicitly.
+    ``effect`` and the selected uncertainty input accept DataFrame column names
+    or one-dimensional array-like values. Supply exactly one of ``variance`` or
+    ``standard_error``; standard errors are squared internally. Uncertainty
+    values must be finite and strictly positive. The default is a REML
+    random-effects model with a normal confidence interval. ``subgroup``
+    returns :class:`SubgroupMetaAnalysisResult` when supplied; otherwise the
+    return value is :class:`MetaAnalysisResult`. Missing subgroup labels are
+    rejected explicitly.
     """
 
     overall = _fit_meta_analysis_single(
         data,
         effect=effect,
         variance=variance,
+        standard_error=standard_error,
         study=study,
         model=model,
         tau2_method=tau2_method,

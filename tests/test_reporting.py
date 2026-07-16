@@ -82,6 +82,32 @@ def test_array_inputs_and_generated_study_labels_are_explicit() -> None:
     assert dict(result.provenance.column_mapping) == {}
 
 
+def test_standard_error_provenance_records_column_and_conversion() -> None:
+    data = pd.DataFrame(
+        {
+            "yi": [0.1, 0.2, 0.3],
+            "sei": [0.1, np.nan, 0.2],
+        }
+    )
+    result = ma.meta_analysis(
+        data,
+        effect="yi",
+        standard_error="sei",
+        missing="drop",
+        model="common",
+    )
+
+    assert dict(result.provenance.column_mapping) == {
+        "effect": "yi",
+        "standard_error": "sei",
+    }
+    [transformation] = result.provenance.transformations
+    assert transformation.name == "standard_error_to_variance"
+    assert transformation.affected_rows == (0, 2)
+    assert "standard errors were squared" in result.method_details()
+    assert "for 2 row(s)" in result.method_details()
+
+
 def test_binary_provenance_records_corrections_and_uninformative_rows() -> None:
     result = _sparse_binary()
     transformations = {
