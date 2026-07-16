@@ -80,6 +80,32 @@ def test_dataframe_column_preserves_group_order_labels_and_global_row_ids() -> N
     assert result.groups["A"].study_results["row_id"].tolist() == [2, 3]
 
 
+def test_generic_subgroups_accept_standard_error_column() -> None:
+    data = pd.DataFrame(
+        {
+            "yi": [0.0, 0.2, 0.8, 1.0],
+            "sei": [0.2, 0.2, 0.2, 0.2],
+            "region": ["A", "A", "B", "B"],
+        }
+    )
+    result = ma.meta_analysis(
+        data,
+        effect="yi",
+        standard_error="sei",
+        subgroup="region",
+        model="common",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    assert result.overall.estimate == pytest.approx(0.5)
+    assert result.groups["A"].estimate == pytest.approx(0.1)
+    assert dict(result.overall.provenance.column_mapping) == {
+        "effect": "yi",
+        "standard_error": "sei",
+        "subgroup": "region",
+    }
+
+
 def test_binary_mantel_haenszel_supports_subgroups() -> None:
     result = ma.meta_binary(
         event_treat=[12, 5, 20, 7],

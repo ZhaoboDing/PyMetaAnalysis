@@ -42,6 +42,34 @@ def test_dataframe_columns_and_default_index_labels() -> None:
     assert result.study_results["row_id"].tolist() == [0, 1, 2]
 
 
+def test_standard_error_input_matches_sampling_variance_input() -> None:
+    effect = np.asarray([0.1, 0.4, -0.2])
+    standard_error = np.asarray([0.2, 0.3, 0.4])
+
+    from_standard_error = ma.meta_analysis(
+        effect=effect,
+        standard_error=standard_error,
+        model="common",
+    )
+    from_variance = ma.meta_analysis(
+        effect=effect,
+        variance=standard_error**2,
+        model="common",
+    )
+
+    assert from_standard_error.estimate == pytest.approx(from_variance.estimate)
+    assert from_standard_error.standard_error == pytest.approx(
+        from_variance.standard_error
+    )
+    assert from_standard_error.q == pytest.approx(from_variance.q)
+    np.testing.assert_allclose(
+        from_standard_error.study_results["variance"], standard_error**2
+    )
+    np.testing.assert_allclose(
+        from_standard_error.study_results["standard_error"], standard_error
+    )
+
+
 def test_explicit_study_column_overrides_dataframe_index() -> None:
     data = pd.DataFrame(
         {
@@ -160,6 +188,62 @@ def test_invalid_study_data_raises_domain_error(
 ) -> None:
     with pytest.raises(ma.InvalidStudyDataError, match=match):
         ma.meta_analysis(**kwargs, model="common")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        ({"effect": [0.1]}, "Exactly one"),
+        (
+            {
+                "effect": [0.1],
+                "variance": [0.01],
+                "standard_error": [0.1],
+            },
+            "Exactly one",
+        ),
+        (
+            {"effect": [0.1], "standard_error": [0.0]},
+            "standard errors must be strictly positive",
+        ),
+        (
+            {"effect": [0.1], "standard_error": [np.inf]},
+            "Standard error values must be finite",
+        ),
+        (
+            {"effect": [0.1], "standard_error": ["invalid"]},
+            "standard error must contain numeric values",
+        ),
+        (
+            {"effect": [0.1], "standard_error": [1e308]},
+            "finite, strictly positive sampling variances after squaring",
+        ),
+        (
+            {"effect": [0.1], "standard_error": [1e-300]},
+            "finite, strictly positive sampling variances after squaring",
+        ),
+    ],
+)
+def test_standard_error_input_errors_are_explicit(
+    kwargs: dict[str, object], match: str
+) -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match=match):
+        ma.meta_analysis(**kwargs, model="common")  # type: ignore[arg-type]
+
+
+def test_missing_standard_error_drop_records_specific_reasons() -> None:
+    result = ma.meta_analysis(
+        effect=[np.nan, 0.2, 0.3],
+        standard_error=[np.nan, np.nan, 0.2],
+        missing="drop",
+        model="common",
+    )
+
+    assert result.study_results["exclusion_reason"].tolist() == [
+        "missing effect and standard error",
+        "missing standard error",
+        None,
+    ]
 
 
 def test_random_effects_requires_two_included_studies() -> None:

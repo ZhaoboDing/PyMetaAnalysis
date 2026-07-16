@@ -139,7 +139,19 @@ rma.uni(
 ```
 
 The corresponding R `meta` configuration starts from standard errors rather
-than variances:
+than variances. PyMetaAnalysis can accept that uncertainty column directly as
+`standard_error=`; no manual squaring step is required:
+
+```python
+result = ma.meta_analysis(
+    studies,
+    effect="yi",
+    standard_error="sei",
+    model="random",
+    tau2_method="REML",
+    ci_method="hartung_knapp_adhoc",
+)
+```
 
 ```r
 metagen(

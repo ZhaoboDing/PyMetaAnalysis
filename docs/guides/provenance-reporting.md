@@ -38,6 +38,10 @@ document.
 Each `TransformationRecord` has a stable name, resolved parameters, and the
 original row IDs it affected.
 
+Generic analyses supplied through `standard_error=` record a
+`standard_error_to_variance` transformation for every non-missing standard
+error that was squared before fitting.
+
 Binary analyses record:
 
 - the OR, RR, or RD effect-size transformation and its scales;

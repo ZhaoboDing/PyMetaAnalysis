@@ -20,9 +20,10 @@ See [installation](installation.md) for all extras and development checks.
 
 ## 2. Prepare a DataFrame
 
-The generic API expects one effect estimate and one strictly positive sampling
-variance per study. A standard error is not a variance; square it before using
-it as `variance=`.
+The generic API expects one effect estimate and either a strictly positive
+sampling variance or standard error per study. Supply `variance=` or
+`standard_error=`; standard errors are squared internally and recorded in
+provenance.
 
 ```python
 import pandas as pd

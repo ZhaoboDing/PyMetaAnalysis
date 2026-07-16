@@ -1,8 +1,8 @@
 # Generic effects
 
 Use `meta_analysis()` when each study already has an effect estimate and its
-sampling variance. This is the generic inverse-variance workflow; it does not
-calculate an outcome-specific effect size.
+sampling variance or standard error. This is the generic inverse-variance
+workflow; it does not calculate an outcome-specific effect size.
 
 The pooling, tau-squared, confidence-interval, prediction-interval, and
 heterogeneity equations are specified under
@@ -49,22 +49,29 @@ result = ma.meta_analysis(
 All array-like arguments must be one-dimensional and have equal lengths.
 Generated row labels start at zero when no study labels are supplied.
 
-## Variance, not standard error
+## Variance or standard error
 
-`variance=` must contain finite, strictly positive sampling variances. Convert
-reported standard errors explicitly:
+Supply exactly one of `variance=` or `standard_error=`. Both must contain
+finite, strictly positive values. A reported standard-error column can be used
+directly:
 
 ```python
-data["vi"] = data["standard_error"] ** 2
+result = ma.meta_analysis(
+    data,
+    effect="yi",
+    standard_error="standard_error",
+)
 ```
 
-Do not pass confidence-interval widths or study sample variances unless they
-have first been converted to the sampling variance of the effect estimate.
+PyMetaAnalysis squares standard errors internally, retains both uncertainty
+columns in the study table, and records the conversion in provenance. Do not
+pass confidence-interval widths or study sample standard deviations as
+standard errors; they describe different quantities.
 
 ## Missing values
 
-The default `missing="raise"` rejects missing effects or variances. To
-retain incomplete rows as structured exclusions:
+The default `missing="raise"` rejects missing effects or values in the selected
+uncertainty input. To retain incomplete rows as structured exclusions:
 
 ```python
 result = ma.meta_analysis(
