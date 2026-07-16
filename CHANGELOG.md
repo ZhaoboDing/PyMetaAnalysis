@@ -6,6 +6,11 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Fixed
+
+- README documentation and repository links use absolute URLs so they resolve
+  correctly when the project description is rendered on PyPI.
+
 ## 0.2.0 - 2026-07-16
 
 ### Added

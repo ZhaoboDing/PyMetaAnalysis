@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml/badge.svg)](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/ci.yml)
 [![Documentation](https://github.com/ZhaoboDing/PyMetaAnalysis/actions/workflows/pages.yml/badge.svg)](https://zhaoboding.github.io/PyMetaAnalysis/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/LICENSE)
 
 PyMetaAnalysis is an early-stage, pandas-first Python library for conventional
 study-level meta-analysis. It accepts DataFrames, NumPy arrays, and ordinary
@@ -129,18 +129,18 @@ are descriptive small-study-effect diagnostics, not proof of publication bias.
 The complete documentation is published at
 [zhaoboding.github.io/PyMetaAnalysis](https://zhaoboding.github.io/PyMetaAnalysis/).
 
-- [Installation](docs/installation.md)
-- [Getting started](docs/getting-started.md)
-- [Input data and row decisions](docs/guides/input-data.md)
-- [Generic](docs/guides/generic-effects.md), [binary](docs/guides/binary-outcomes.md), and [continuous](docs/guides/continuous-outcomes.md) guides
-- [Choosing methods](docs/guides/method-selection.md) and [statistical formulas](docs/methods/statistical-methods.md)
-- [Sensitivity analysis](docs/guides/sensitivity-analysis.md) and [plotting](docs/guides/plotting.md)
-- [Public API](docs/reference/api.md), [result objects](docs/reference/results.md), and [report schema](docs/reference/report-schema.md)
-- [Validation strategy](docs/validation.md) and [scope/limitations](docs/limitations.md)
-- [Citation guidance](docs/citation.md)
-- [R `meta`/`metafor` mapping](docs/guides/r-interoperability.md)
+- [Installation](https://zhaoboding.github.io/PyMetaAnalysis/installation/)
+- [Getting started](https://zhaoboding.github.io/PyMetaAnalysis/getting-started/)
+- [Input data and row decisions](https://zhaoboding.github.io/PyMetaAnalysis/guides/input-data/)
+- [Generic](https://zhaoboding.github.io/PyMetaAnalysis/guides/generic-effects/), [binary](https://zhaoboding.github.io/PyMetaAnalysis/guides/binary-outcomes/), and [continuous](https://zhaoboding.github.io/PyMetaAnalysis/guides/continuous-outcomes/) guides
+- [Choosing methods](https://zhaoboding.github.io/PyMetaAnalysis/guides/method-selection/) and [statistical formulas](https://zhaoboding.github.io/PyMetaAnalysis/methods/statistical-methods/)
+- [Sensitivity analysis](https://zhaoboding.github.io/PyMetaAnalysis/guides/sensitivity-analysis/) and [plotting](https://zhaoboding.github.io/PyMetaAnalysis/guides/plotting/)
+- [Public API](https://zhaoboding.github.io/PyMetaAnalysis/reference/api/), [result objects](https://zhaoboding.github.io/PyMetaAnalysis/reference/results/), and [report schema](https://zhaoboding.github.io/PyMetaAnalysis/reference/report-schema/)
+- [Validation strategy](https://zhaoboding.github.io/PyMetaAnalysis/validation/) and [scope/limitations](https://zhaoboding.github.io/PyMetaAnalysis/limitations/)
+- [Citation guidance](https://zhaoboding.github.io/PyMetaAnalysis/citation/)
+- [R `meta`/`metafor` mapping](https://zhaoboding.github.io/PyMetaAnalysis/guides/r-interoperability/)
 
-An executable [end-to-end notebook](examples/quickstart.ipynb) uses synthetic
+An executable [end-to-end notebook](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/examples/quickstart.ipynb) uses synthetic
 data to demonstrate analysis, provenance, reporting, sensitivity, and plotting.
 
 Build the complete site locally with:
@@ -158,16 +158,22 @@ edge cases, and committed R `metafor` reference fixtures. CI covers Python
 distribution builds.
 
 This is independent cross-software validation, not a formal external
-statistical audit. See [validation](docs/validation.md) for exact coverage.
+statistical audit. See
+[validation](https://zhaoboding.github.io/PyMetaAnalysis/validation/) for exact
+coverage.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the full
-[development guide](docs/development.md). Statistical changes require formula
+See
+[CONTRIBUTING.md](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CONTRIBUTING.md)
+and the full
+[development guide](https://zhaoboding.github.io/PyMetaAnalysis/development/).
+Statistical changes require formula
 documentation, boundary tests, and an independent comparison where available.
 
-Security-sensitive reports should follow [SECURITY.md](SECURITY.md).
+Security-sensitive reports should follow
+[SECURITY.md](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/SECURITY.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/LICENSE)
