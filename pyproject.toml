@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-  { name = "PyMetaAnalysis contributors" },
+  { name = "Zhaobo Ding", email = "ding.zb@yahoo.com" },
 ]
 maintainers = [
   { name = "Zhaobo Ding", email = "ding.zb@yahoo.com" },
