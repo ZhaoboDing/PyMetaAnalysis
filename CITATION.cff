@@ -8,8 +8,8 @@ authors:
   - family-names: Ding
     given-names: Zhaobo
     email: ding.zb@yahoo.com
-version: 0.2.0
-date-released: 2026-07-16
+version: 0.2.1
+date-released: 2026-07-17
 repository-code: https://github.com/ZhaoboDing/PyMetaAnalysis
 url: https://zhaoboding.github.io/PyMetaAnalysis/
 license: MIT

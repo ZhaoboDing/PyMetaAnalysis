@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.2.1 - 2026-07-17
+
 ### Fixed
 
 - README documentation and repository links use absolute URLs so they resolve

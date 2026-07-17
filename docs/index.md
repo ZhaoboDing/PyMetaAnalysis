@@ -82,10 +82,11 @@ lists unsupported methods explicitly.
 
 ## Project status
 
-PyMetaAnalysis 0.2.0 adds direct generic standard-error input to the initial
-public analysis scope. It has not undergone a formal external statistical
-audit. Pin the package version for consequential work and independently check
-important analyses. See the repository
+PyMetaAnalysis 0.2.1 fixes documentation and repository links in the PyPI
+project description. Version 0.2.0 added direct generic standard-error input
+to the initial public analysis scope. The project has not undergone a formal
+external statistical audit. Pin the package version for consequential work
+and independently check important analyses. See the repository
 [changelog](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md)
 and [contribution guide](development.md). For manuscripts and archived
 analyses, see [citing PyMetaAnalysis](citation.md).
