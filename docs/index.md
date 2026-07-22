@@ -18,8 +18,9 @@ effects, exclusions, weights, method choices, and diagnostics.
 | Effect estimates and sampling variances | `meta_analysis()` | Generic inverse variance |
 | Events and totals for two groups | `meta_binary()` | OR, RR, RD |
 | Means, SDs, and sample sizes for two groups | `meta_continuous()` | MD, Hedges' g |
+| Effect estimates, uncertainty, and study-level moderators | `meta_regression()` | Generic Meta-regression |
 
-All three functions accept an optional `subgroup=` column or array. Supplying
+The three pooling functions accept an optional `subgroup=` column or array. Supplying
 it returns a dedicated subgroup result containing each group, the overall
 analysis, and a formal test for subgroup differences.
 
@@ -52,6 +53,7 @@ shows how to inspect its output. Continue with the guide matching your input:
 - [generic effects and variances](guides/generic-effects.md);
 - [binary outcomes](guides/binary-outcomes.md);
 - [continuous outcomes](guides/continuous-outcomes.md).
+- [study-level Meta-regression](guides/meta-regression.md).
 
 Read [input data and row decisions](guides/input-data.md) before building a
 pipeline around exclusions or mixed DataFrame/array inputs.

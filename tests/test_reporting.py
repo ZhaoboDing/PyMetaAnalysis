@@ -280,7 +280,7 @@ def test_report_payload_contains_resolved_methods_diagnostics_and_studies() -> N
     payload = report.to_dict()
 
     assert isinstance(report, ma.ResultReport)
-    assert payload["schema_version"] == "1.1"
+    assert payload["schema_version"] == "1.2"
     assert payload["report_type"] == "meta_analysis"
     assert payload["analysis"] == {
         "model": "common",

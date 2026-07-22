@@ -62,6 +62,22 @@ Omit `study=` to use the DataFrame index. Supplying `subgroup=` returns a
 dedicated result containing group fits, the overall fit, and a formal test for
 subgroup differences.
 
+Study-level moderators use the dedicated Meta-regression entry point:
+
+```python
+regression = ma.meta_regression(
+    studies,
+    effect="effect",
+    standard_error="se",
+    moderators=["mean_age", "region"],
+    categorical={"region": ["Europe", "Asia", "North America"]},
+)
+```
+
+Categorical levels are explicit and ordered; the first value is the treatment-
+coding reference. Moderator coefficients describe study-level associations,
+not individual-level or causal effects.
+
 ## Supported analyses
 
 | Input | Effects | Pooling/models |
@@ -69,6 +85,7 @@ subgroup differences.
 | Effect + sampling variance or standard error | Generic | Common/random inverse variance |
 | Two-group events + totals | OR, RR, RD | Common MH OR/RR; common/random IV |
 | Two-group means + SDs + sizes | MD, Hedges' g | Common/random inverse variance |
+| Effect + variance/SE + moderators | Generic | Common/mixed Meta-regression |
 
 Random-effects inverse-variance models support REML (default), Paule-Mandel,
 and DerSimonian-Laird tau-squared estimators. Mean confidence intervals support
@@ -133,6 +150,7 @@ The complete documentation is published at
 - [Getting started](https://zhaoboding.github.io/PyMetaAnalysis/getting-started/)
 - [Input data and row decisions](https://zhaoboding.github.io/PyMetaAnalysis/guides/input-data/)
 - [Generic](https://zhaoboding.github.io/PyMetaAnalysis/guides/generic-effects/), [binary](https://zhaoboding.github.io/PyMetaAnalysis/guides/binary-outcomes/), and [continuous](https://zhaoboding.github.io/PyMetaAnalysis/guides/continuous-outcomes/) guides
+- [Meta-regression](https://zhaoboding.github.io/PyMetaAnalysis/guides/meta-regression/)
 - [Choosing methods](https://zhaoboding.github.io/PyMetaAnalysis/guides/method-selection/) and [statistical formulas](https://zhaoboding.github.io/PyMetaAnalysis/methods/statistical-methods/)
 - [Sensitivity analysis](https://zhaoboding.github.io/PyMetaAnalysis/guides/sensitivity-analysis/) and [plotting](https://zhaoboding.github.io/PyMetaAnalysis/guides/plotting/)
 - [Public API](https://zhaoboding.github.io/PyMetaAnalysis/reference/api/), [result objects](https://zhaoboding.github.io/PyMetaAnalysis/reference/results/), and [report schema](https://zhaoboding.github.io/PyMetaAnalysis/reference/report-schema/)

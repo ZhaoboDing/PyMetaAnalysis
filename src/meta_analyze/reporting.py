@@ -14,9 +14,10 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
+    from .regression_results import MetaRegressionResult
     from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
-REPORT_SCHEMA_VERSION = "1.1"
+REPORT_SCHEMA_VERSION = "1.2"
 
 
 def _json_safe(value: Any) -> Any:
@@ -438,3 +439,170 @@ def build_subgroup_report(
     if include_studies:
         payload["studies"] = result.study_results.to_dict(orient="records")
     return ResultReport(_json_safe(payload), _subgroup_markdown(result))
+
+
+def _meta_regression_markdown(result: MetaRegressionResult) -> str:
+    test = result.global_test
+    test_df = (
+        str(test.df_num) if test.df_denom is None else f"{test.df_num}, {test.df_denom}"
+    )
+    lines = [
+        "# Meta-regression report",
+        "",
+        "## Results",
+        "",
+        f"- Model: {result.model}-effects meta-regression",
+        (f"- Studies: {result.k} included of {result.provenance.row_count} input rows"),
+        (
+            f"- Coefficients: {result.p}; residual degrees of freedom: "
+            f"{result.residual_df}"
+        ),
+        (
+            f"- Global moderator test: {test.statistic_name}({test_df})="
+            f"{_number(test.statistic)}, p={_number(test.pvalue)}"
+        ),
+        (
+            f"- Residual heterogeneity: QE({result.heterogeneity.df})="
+            f"{_number(result.heterogeneity.q)}, "
+            f"p={_number(result.heterogeneity.pvalue)}; "
+            f"I²={_number(100.0 * result.heterogeneity.i2)}%; "
+            f"H²={_number(result.heterogeneity.h2)} "
+            f"({result.heterogeneity.i2_method})"
+        ),
+    ]
+    if result.model == "mixed":
+        lines.append(
+            f"- Residual τ²: {_number(result.tau2)} ({result.method.tau2_method})"
+        )
+        if result.pseudo_r2 is not None:
+            lines.append(f"- Pseudo-R²: {_number(100.0 * result.pseudo_r2)}%")
+    lines.extend(
+        [
+            "",
+            (
+                "| Term | Estimate | Standard error | Confidence interval | "
+                "Test | p-value |"
+            ),
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for row in result.coefficients.itertuples(index=False):
+        safe_term = str(row.term).replace("|", "\\|")
+        lines.append(
+            f"| {safe_term} | {_number(row.estimate)} | "
+            f"{_number(row.standard_error)} | {_number(row.ci_low)} to "
+            f"{_number(row.ci_high)} | {row.statistic_name}="
+            f"{_number(row.statistic)} | {_number(row.pvalue)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Methods",
+            "",
+            result.method_details(),
+            "",
+            "## Provenance and diagnostics",
+            "",
+            f"- Package version: {result.provenance.package_version}",
+            f"- Provenance schema: {result.provenance.schema_version}",
+            f"- Input source: {result.provenance.data_source}",
+            f"- Converged: {result.diagnostics.converged}",
+            f"- Iterations: {result.diagnostics.iterations}",
+            f"- Design rank: {result.diagnostics.rank}",
+            (
+                "- Design condition number: "
+                f"{_number(result.diagnostics.condition_number)}"
+            ),
+            (f"- Excluded row IDs: {list(result.provenance.excluded_rows) or 'none'}"),
+            "",
+            (
+                "Moderator coefficients are study-level associations and must not "
+                "be interpreted as individual-level causal effects."
+            ),
+        ]
+    )
+    if result.warnings:
+        lines.extend(["", "## Notes", ""])
+        lines.extend(f"- {warning}" for warning in result.warnings)
+    return "\n".join(lines)
+
+
+def build_meta_regression_report(
+    result: MetaRegressionResult,
+    *,
+    include_studies: bool = True,
+) -> ResultReport:
+    """Build a detached report for a fitted meta-regression."""
+
+    method = result.method
+    payload: dict[str, Any] = {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "report_type": "meta_regression",
+        "analysis": {
+            "model": result.model,
+            "included_studies": result.k,
+            "total_rows": result.provenance.row_count,
+            "coefficients": result.p,
+            "residual_df": result.residual_df,
+        },
+        "coefficients": result.coefficients.to_dict(orient="records"),
+        "coefficient_covariance": {
+            "terms": list(result.design_info.term_names),
+            "values": result.coefficient_covariance.to_numpy().tolist(),
+        },
+        "residual_heterogeneity": {
+            "qe": result.heterogeneity.q,
+            "df": result.heterogeneity.df,
+            "pvalue": result.heterogeneity.pvalue,
+            "i2": result.heterogeneity.i2,
+            "h2": result.heterogeneity.h2,
+            "i2_method": result.heterogeneity.i2_method,
+            "tau2": result.tau2,
+            "tau2_null": result.tau2_null,
+            "pseudo_r2": result.pseudo_r2,
+            "pseudo_r2_raw": result.pseudo_r2_raw,
+        },
+        "global_moderator_test": result.global_test.to_dict(),
+        "design": {
+            "intercept": result.design_info.intercept,
+            "term_names": list(result.design_info.term_names),
+            "moderators": [
+                {
+                    "name": spec.name,
+                    "kind": spec.kind,
+                    "term_names": list(spec.term_names),
+                    "levels": list(spec.levels),
+                    "reference": spec.reference,
+                }
+                for spec in result.design_info.moderators
+            ],
+        },
+        "method": {
+            "model": method.model,
+            "tau2_method": method.tau2_method,
+            "inference_method": method.inference_method,
+            "confidence_level": method.confidence_level,
+            "intercept": method.intercept,
+            "prediction_interval_method": method.prediction_interval_method,
+            "missing": method.missing,
+            "atol": method.atol,
+            "max_iter": method.max_iter,
+        },
+        "diagnostics": {
+            "converged": result.diagnostics.converged,
+            "iterations": result.diagnostics.iterations,
+            "tau2_at_boundary": result.diagnostics.tau2_at_boundary,
+            "rank": result.diagnostics.rank,
+            "condition_number": result.diagnostics.condition_number,
+            "residual_scale": result.diagnostics.residual_scale,
+        },
+        "provenance": result.provenance.to_dict(),
+        "warnings": list(result.warnings),
+        "method_details": result.method_details(),
+    }
+    if include_studies:
+        payload["studies"] = result.study_results.to_dict(orient="records")
+    return ResultReport(
+        cast(dict[str, Any], _json_safe(payload)),
+        _meta_regression_markdown(result),
+    )

@@ -26,6 +26,9 @@ Property-based and targeted tests check invariants such as:
 - excluded rows do not contribute weights or heterogeneity;
 - result DataFrames and reports are defensive copies;
 - subgroup and repeated-fit row IDs map back to original input positions.
+- Meta-regression is invariant to row order and moderator centering; changing a
+  categorical reference preserves fitted values, residual heterogeneity, and
+  joint tests.
 
 ### Numerical edge cases
 
@@ -47,6 +50,13 @@ The current fixture families cover:
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
+
+The initial Meta-regression core is covered by hand-calculated weighted least
+squares, generalized tau-squared score equations, intercept-only equivalence
+with the independently validated pooling path, inference covariance checks,
+and encoding invariants. Dedicated committed `metafor::rma.uni()` moderator
+fixtures are required before the 0.3.0 release candidate and are not yet part
+of the fixture table above.
 
 Every artifact records the R, `metafor`, and `jsonlite` versions used to
 produce it. Method-specific numerical tolerances distinguish closed-form from

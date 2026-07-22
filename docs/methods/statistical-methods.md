@@ -161,6 +161,127 @@ proportion internally and is formatted as a percentage in human-readable
 output. With one study, Q is zero and its p-value, I-squared, and H-squared are
 unavailable.
 
+## Meta-regression
+
+For `k` study effects, let `X` be the full-rank `k`-by-`p` design matrix. It
+contains an intercept by default plus numeric moderator columns and treatment-
+coded categorical terms:
+
+```text
+y = X beta + u + epsilon
+epsilon ~ N(0, V),  V = diag(v_i)
+u ~ N(0, tau^2 I)
+```
+
+Given residual tau-squared:
+
+```text
+W = diag(1 / (v_i + tau^2))
+B = (X' W X)^(-1)
+beta_hat = B X' W y
+P = W - W X B X' W
+residual df = k - p
+```
+
+The implementation uses stable linear solves rather than forming an explicit
+matrix inverse. A rank-deficient design or `k <= p` is rejected; terms are not
+silently removed and a pseudo-inverse is not used.
+
+### Residual tau-squared
+
+For generalized DL, define `W0` and `P0` at tau-squared zero:
+
+```text
+QE0 = y' P0 y
+C = trace(P0)
+tau^2_DL = max(0, (QE0 - (k-p)) / C)
+```
+
+PM solves:
+
+```text
+y' P(tau^2) y = k - p
+```
+
+REML solves the restricted score:
+
+```text
+y' P(tau^2)^2 y - trace(P(tau^2)) = 0
+```
+
+All estimators are constrained to non-negative tau-squared. PM and REML use a
+bracketed scalar root; a non-positive equation at zero returns the boundary.
+Failure raises `ConvergenceError` without estimator fallback.
+
+### Coefficient and moderator inference
+
+Normal inference uses covariance `B`, z coefficient tests, and a chi-squared
+Wald test for one or more moderator terms.
+
+For both Hartung-Knapp choices:
+
+```text
+q = y' P(tau^2) y / (k-p)
+Cov_HK(beta_hat) = q B
+```
+
+Coefficient tests use a t distribution with `k-p` degrees of freedom. Joint
+tests divide their Wald statistic by the number of tested terms and use an F
+distribution with that numerator df and `k-p` denominator df.
+`hartung_knapp_adhoc` replaces `q` with `max(1, q)`; unmodified
+`hartung_knapp` retains `q` and warns when it is below one.
+
+The global moderator test covers every non-intercept term.
+`test_moderator(name)` covers every encoded term for one original moderator,
+so a multi-level category receives a joint test.
+
+### Residual heterogeneity and pseudo-R-squared
+
+Residual heterogeneity uses:
+
+```text
+QE = y' P0 y
+QE ~ chi-square_(k-p) under the null
+```
+
+Common models derive residual I-squared and H-squared from QE. Mixed models
+use:
+
+```text
+v_typical = (k-p) / trace(P0)
+I^2_residual = tau^2 / (tau^2 + v_typical)
+H^2_residual = 1 + tau^2 / v_typical
+```
+
+For mixed models with an intercept, the same rows are refitted with an
+intercept-only design and the same tau-squared estimator:
+
+```text
+R^2_raw = 1 - tau^2_model / tau^2_null
+R^2 = max(0, R^2_raw)
+```
+
+The raw value is retained. Pseudo-R-squared is unavailable when the null
+tau-squared is zero and is not equivalent to ordinary regression R-squared.
+
+### Meta-regression prediction
+
+For a new design vector `x0`:
+
+```text
+fitted = x0' beta_hat
+Var_mean = x0' Cov(beta_hat) x0
+```
+
+Mean-effect intervals use the selected normal or `t_(k-p)` critical value. A
+mixed model additionally reports a true-effect prediction interval:
+
+```text
+fitted +/- critical * sqrt(tau^2 + Var_mean)
+```
+
+It does not include a sampling variance for a future observed effect.
+
 ## Binary study effects
 
 For a treatment/control 2-by-2 table:
