@@ -9,6 +9,10 @@ output <- if (length(args) >= 1) args[[1]] else {
   "tests/reference/meta_regression_metafor.json"
 }
 input <- read.csv("tests/reference/meta_regression_input.csv")
+boundary_input <- read.csv(
+  "tests/reference/meta_regression_boundary_input.csv",
+  na.strings = c("", "NA")
+)
 input$region <- factor(
   input$region,
   levels = c("North", "South", "East")
@@ -176,6 +180,61 @@ multivariable_prediction_matrix <- cbind(
   regionEast = as.numeric(prediction_rows$region == "East")
 )
 
+zero_tau2 <- rma.uni(
+  linear_effect,
+  variance,
+  mods = ~x,
+  data = boundary_input,
+  method = "REML",
+  test = "z",
+  control = iterative_control
+)
+zero_tau2_null <- rma.uni(
+  linear_effect,
+  variance,
+  data = boundary_input,
+  method = "REML",
+  test = "z",
+  control = iterative_control
+)
+missing_complete <- complete.cases(
+  boundary_input$observed_effect,
+  boundary_input$variance,
+  boundary_input$x_missing
+)
+missing_input <- data.frame(
+  effect = boundary_input$observed_effect,
+  variance = boundary_input$variance,
+  x = boundary_input$x_missing
+)
+missing_common <- rma.uni(
+  effect,
+  variance,
+  mods = ~x,
+  data = missing_input,
+  subset = missing_complete,
+  method = "EE",
+  test = "z"
+)
+small_input <- boundary_input[1:4, ]
+small_hk <- rma.uni(
+  observed_effect,
+  variance,
+  mods = ~x,
+  data = small_input,
+  method = "REML",
+  test = "knha",
+  control = iterative_control
+)
+small_null <- rma.uni(
+  observed_effect,
+  variance,
+  data = small_input,
+  method = "REML",
+  test = "z",
+  control = iterative_control
+)
+
 reference <- list(
   generated_by = "R metafor",
   r_version = R.version.string,
@@ -247,6 +306,25 @@ reference <- list(
         multivariable,
         multivariable_prediction_matrix
       )
+    )
+  ),
+  boundary_cases = list(
+    zero_tau2_reml = fit_summary(
+      zero_tau2,
+      c("intercept", "x"),
+      zero_tau2_null$tau2
+    ),
+    missing_common = c(
+      fit_summary(missing_common, c("intercept", "x")),
+      list(
+        included_rows = numeric_array(which(missing_complete) - 1),
+        excluded_rows = numeric_array(which(!missing_complete) - 1)
+      )
+    ),
+    small_sample_hartung_knapp = fit_summary(
+      small_hk,
+      c("intercept", "x"),
+      small_null$tau2
     )
   )
 )

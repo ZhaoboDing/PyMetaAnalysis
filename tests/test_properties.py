@@ -38,6 +38,39 @@ def study_vectors(draw: st.DrawFn) -> tuple[np.ndarray, np.ndarray]:
     return np.asarray(effects), np.asarray(variances)
 
 
+@st.composite
+def meta_regression_vectors(
+    draw: st.DrawFn,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    size = draw(st.integers(min_value=5, max_value=20))
+    effects = draw(
+        st.lists(
+            st.floats(
+                min_value=-5.0,
+                max_value=5.0,
+                allow_nan=False,
+                allow_infinity=False,
+            ),
+            min_size=size,
+            max_size=size,
+        )
+    )
+    variances = draw(
+        st.lists(
+            st.floats(
+                min_value=1e-3,
+                max_value=2.0,
+                allow_nan=False,
+                allow_infinity=False,
+            ),
+            min_size=size,
+            max_size=size,
+        )
+    )
+    moderator = np.linspace(-1.0, 1.0, size, dtype=np.float64)
+    return np.asarray(effects), np.asarray(variances), moderator
+
+
 @given(study_vectors())
 @settings(max_examples=75, deadline=None)
 def test_common_model_is_invariant_to_row_order(
@@ -113,4 +146,107 @@ def test_standard_error_and_variance_inputs_are_equivalent(
         from_variance.study_results["normalized_weight"],
         rtol=1e-12,
         atol=1e-12,
+    )
+
+
+@given(meta_regression_vectors())
+@settings(max_examples=50, deadline=None)
+def test_common_meta_regression_is_invariant_to_row_order(
+    vectors: tuple[np.ndarray, np.ndarray, np.ndarray],
+) -> None:
+    effect, variance, moderator = vectors
+    forward = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="common",
+    )
+    order = np.arange(len(effect))[::-1]
+    reverse = ma.meta_regression(
+        effect=effect[order],
+        variance=variance[order],
+        moderators={"x": moderator[order]},
+        model="common",
+    )
+
+    np.testing.assert_allclose(
+        reverse.coefficients["estimate"],
+        forward.coefficients["estimate"],
+        rtol=1e-11,
+        atol=1e-11,
+    )
+    np.testing.assert_allclose(
+        reverse.coefficient_covariance,
+        forward.coefficient_covariance,
+        rtol=1e-11,
+        atol=1e-11,
+    )
+    np.testing.assert_allclose(
+        reverse.study_results["fitted_value"].to_numpy()[::-1],
+        forward.study_results["fitted_value"],
+        rtol=1e-11,
+        atol=1e-11,
+    )
+    assert reverse.heterogeneity.q == pytest.approx(
+        forward.heterogeneity.q, rel=1e-10, abs=1e-10
+    )
+    assert reverse.global_test.statistic == pytest.approx(
+        forward.global_test.statistic, rel=1e-10, abs=1e-10
+    )
+
+
+@given(
+    meta_regression_vectors(),
+    st.floats(min_value=-20.0, max_value=20.0),
+    st.floats(min_value=0.2, max_value=5.0),
+)
+@settings(max_examples=50, deadline=None)
+def test_common_meta_regression_is_equivariant_to_location_and_scale(
+    vectors: tuple[np.ndarray, np.ndarray, np.ndarray],
+    effect_shift: float,
+    moderator_scale: float,
+) -> None:
+    effect, variance, moderator = vectors
+    original = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="common",
+    )
+    transformed = ma.meta_regression(
+        effect=effect + effect_shift,
+        variance=variance,
+        moderators={"x": moderator * moderator_scale},
+        model="common",
+    )
+
+    original_coefficients = original.coefficients.set_index("term")["estimate"]
+    transformed_coefficients = transformed.coefficients.set_index("term")["estimate"]
+    assert transformed_coefficients["intercept"] == pytest.approx(
+        original_coefficients["intercept"] + effect_shift,
+        rel=1e-10,
+        abs=1e-10,
+    )
+    assert transformed_coefficients["x"] == pytest.approx(
+        original_coefficients["x"] / moderator_scale,
+        rel=1e-10,
+        abs=1e-10,
+    )
+    np.testing.assert_allclose(
+        transformed.study_results["fitted_value"] - effect_shift,
+        original.study_results["fitted_value"],
+        rtol=1e-10,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        transformed.study_results["residual"],
+        original.study_results["residual"],
+        rtol=1e-10,
+        atol=1e-10,
+    )
+    assert transformed.heterogeneity.q == pytest.approx(
+        original.heterogeneity.q, rel=1e-10, abs=1e-10
+    )
+    assert transformed.global_test.statistic == pytest.approx(
+        original.global_test.statistic, rel=1e-10, abs=1e-10
     )

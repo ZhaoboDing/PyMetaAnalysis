@@ -53,7 +53,7 @@ The current fixture families cover:
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
-| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests and predictions |
+| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests, predictions, zero tau-squared, missing rows, and small samples |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -127,6 +127,7 @@ python tools/execute_notebooks.py
 python tools/check_release.py
 python -m build
 python tools/inspect_distribution.py dist
+python benchmarks/benchmark_core.py
 ```
 
 ## Validation boundary

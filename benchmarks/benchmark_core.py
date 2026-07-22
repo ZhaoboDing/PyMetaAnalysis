@@ -34,6 +34,8 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
 
     generic_effect = rng.normal(0.1, 0.25, size=studies)
     generic_variance = rng.uniform(0.01, 0.09, size=studies)
+    moderator = np.linspace(-1.0, 1.0, studies)
+    region = np.resize(np.array(["North", "South", "East"], dtype=object), studies)
 
     n_treat = rng.integers(60, 240, size=studies)
     n_control = rng.integers(60, 240, size=studies)
@@ -75,6 +77,14 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
             model="random",
             tau2_method="REML",
         ),
+        "meta_regression_multivariable_reml": lambda: ma.meta_regression(
+            effect=generic_effect,
+            variance=generic_variance,
+            moderators={"moderator": moderator, "region": region},
+            categorical={"region": ["North", "South", "East"]},
+            model="mixed",
+            tau2_method="REML",
+        ),
     }
 
 
@@ -102,8 +112,10 @@ def main() -> None:
     parser.add_argument("--number", type=int, default=5)
     parser.add_argument("--output", type=Path)
     arguments = parser.parse_args()
-    if min(arguments.studies, arguments.repeat, arguments.number) < 1:
-        parser.error("studies, repeat, and number must all be positive")
+    if arguments.studies < 5:
+        parser.error("studies must be at least 5 for the multivariable benchmark")
+    if min(arguments.repeat, arguments.number) < 1:
+        parser.error("repeat and number must both be positive")
 
     payload = _metadata(arguments)
     payload["cases"] = {
