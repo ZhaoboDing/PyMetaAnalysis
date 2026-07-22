@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.3.0 - 2026-07-22
+
 ### Added
 
 - pandas-first `meta_regression()` for numeric, explicitly encoded categorical,
@@ -14,9 +16,11 @@ Changes planned for the next release accumulate under `Unreleased`.
   REML residual tau-squared estimators;
 - normal, Hartung-Knapp, and safeguarded Hartung-Knapp coefficient inference,
   distribution-explicit moderator tests, residual heterogeneity, pseudo-R²,
-  prediction, provenance, and structured reports.
+  prediction, provenance, and structured reports;
 - optional weighted bubble plots for intercept-containing Meta-regression fits
-  with exactly one numeric moderator.
+  with exactly one numeric moderator;
+- independent R `metafor` fixtures covering numeric, categorical,
+  multivariable, zero-tau-squared, missing-row, and small-sample cases;
 - an executable Meta-regression notebook plus a multivariable performance
   baseline and expanded property, numerical-stability, and warning tests.
 
