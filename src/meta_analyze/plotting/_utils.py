@@ -59,9 +59,9 @@ def configure_log_axis(ax: Axes) -> None:
 
 
 def marker_areas(weights: NDArray[np.float64]) -> NDArray[np.float64]:
-    """Scale positive relative weights to readable forest-plot marker areas."""
+    """Scale positive relative weights to readable plot marker areas."""
 
     largest = float(np.max(weights))
     if not np.isfinite(largest) or largest <= 0.0:
-        raise ValueError("Forest plot weights must be finite and strictly positive.")
+        raise ValueError("Plot weights must be finite and strictly positive.")
     return 24.0 + 176.0 * weights / largest

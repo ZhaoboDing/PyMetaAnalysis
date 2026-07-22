@@ -157,6 +157,30 @@ in a new study with those moderators. The interval does not include an
 additional, unknown sampling variance for a future observed estimate. Unknown
 categories and missing prediction inputs are rejected.
 
+## Plot a single numeric moderator
+
+After installing the `plot` extra, an intercept-containing model with exactly
+one numeric moderator can be displayed as a weighted bubble plot:
+
+```python
+ax = result.bubble(
+    moderator_label="Mean age (years)",
+    effect_label="Treatment effect",
+    show_confidence_interval=True,
+    show_prediction_interval=True,
+)
+```
+
+Bubble area is proportional to normalized fitted precision weight. The fitted
+line and interval bands reuse `result.predict()`, including the selected normal
+or Hartung-Knapp covariance and critical value. A prediction band is available
+only for mixed-effects models.
+
+PyMetaAnalysis rejects bubble plots for categorical, multiple-moderator, or
+no-intercept fits. Drawing a marginal or partial-effect line for those models
+requires explicit choices for the other moderator values, and the library does
+not silently choose them.
+
 ## Residual heterogeneity and pseudo-R²
 
 The result reports residual `QE`, I-squared, H-squared, and tau-squared. For an
