@@ -216,6 +216,11 @@ all regression coefficients.
 confidence intervals. Mixed models add `pi_low`/`pi_high` for a new true
 effect. It reuses fitted categorical encoding and rejects unknown levels.
 
+`bubble()` returns a Matplotlib axes for an intercept-containing fit with
+exactly one numeric moderator. Bubble area represents normalized precision
+weight; fitted bands reuse `predict()`. Other design shapes are rejected rather
+than assigned an implicit marginalization rule.
+
 `summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
 copy semantics follow the same audit principles as `MetaAnalysisResult`.
 

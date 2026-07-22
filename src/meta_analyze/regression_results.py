@@ -17,7 +17,11 @@ from .provenance import AnalysisProvenance
 from .results import HeterogeneityResult
 
 if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
     from .reporting import ResultReport
+else:
+    Axes = Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -313,6 +317,34 @@ class MetaRegressionResult:
             payload["pi_low"] = estimates - prediction_margin
             payload["pi_high"] = estimates + prediction_margin
         return pd.DataFrame(payload, index=new_data.index.copy())
+
+    def bubble(
+        self,
+        *,
+        ax: Axes | None = None,
+        moderator_label: str | None = None,
+        effect_label: str = "Effect",
+        show_confidence_interval: bool = True,
+        show_prediction_interval: bool = False,
+    ) -> Axes:
+        """Draw a weighted single-numeric-moderator bubble plot.
+
+        Matplotlib is an optional dependency. Install ``PyMetaAnalysis[plot]``
+        before calling this method. Multivariable, categorical, and no-intercept
+        fits are rejected because a marginal plotting convention would require
+        additional user choices.
+        """
+
+        from .plotting import bubble_plot
+
+        return bubble_plot(
+            self,
+            ax=ax,
+            moderator_label=moderator_label,
+            effect_label=effect_label,
+            show_confidence_interval=show_confidence_interval,
+            show_prediction_interval=show_prediction_interval,
+        )
 
     def method_details(self) -> str:
         """Describe the fitted model and its interpretation constraints."""

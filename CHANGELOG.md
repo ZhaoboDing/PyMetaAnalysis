@@ -15,6 +15,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 - normal, Hartung-Knapp, and safeguarded Hartung-Knapp coefficient inference,
   distribution-explicit moderator tests, residual heterogeneity, pseudo-R²,
   prediction, provenance, and structured reports.
+- optional weighted bubble plots for intercept-containing Meta-regression fits
+  with exactly one numeric moderator.
 
 ### Changed
 

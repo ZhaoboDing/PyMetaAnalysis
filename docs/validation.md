@@ -29,6 +29,9 @@ Property-based and targeted tests check invariants such as:
 - Meta-regression is invariant to row order and moderator centering; changing a
   categorical reference preserves fitted values, residual heterogeneity, and
   joint tests.
+- Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
+  interval bands, exclusions, and optional Matplotlib behavior are tested with
+  a non-interactive backend.
 
 ### Numerical edge cases
 

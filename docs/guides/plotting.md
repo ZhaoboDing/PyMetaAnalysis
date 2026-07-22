@@ -1,6 +1,7 @@
 # Plotting
 
-Forest, subgroup forest, and funnel plots use optional Matplotlib support.
+Forest, subgroup forest, funnel, and Meta-regression bubble plots use optional
+Matplotlib support.
 Install it with:
 
 ```console
@@ -95,6 +96,36 @@ Funnel asymmetry can reflect small-study effects, heterogeneity, outcome
 selection, design differences, chance, or publication processes. It is not by
 itself evidence of publication bias. PyMetaAnalysis currently provides the
 plot but not formal asymmetry tests.
+
+## Meta-regression bubble plots
+
+An intercept-containing Meta-regression with exactly one numeric moderator
+provides:
+
+```python
+ax = regression.bubble(
+    moderator_label="Dose",
+    effect_label="Effect",
+    show_confidence_interval=True,
+    show_prediction_interval=False,
+)
+```
+
+Study marker area is proportional to normalized precision weight. The line,
+mean confidence band, and optional mixed-effects true-effect prediction band
+are obtained from the fitted model's `predict()` method.
+
+| Parameter | Meaning |
+| --- | --- |
+| `ax` | Existing axes; a new one is created when omitted |
+| `moderator_label` | X-axis label; defaults to the moderator name |
+| `effect_label` | Y-axis label; defaults to `"Effect"` |
+| `show_confidence_interval` | Draw the fitted mean confidence band |
+| `show_prediction_interval` | Draw a mixed-effects true-effect prediction band |
+
+Categorical, multivariable, and no-intercept fits are rejected because a
+marginal plot would require values or averaging rules for other terms. The
+function does not infer those scientific choices.
 
 ## Save or display
 

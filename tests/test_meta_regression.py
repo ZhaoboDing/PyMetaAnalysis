@@ -435,6 +435,29 @@ def test_invalid_moderator_declarations_are_explicit(
         )
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "intercept",
+        "study",
+        "effect",
+        "variance",
+        "included",
+        "fitted_value",
+        "precision_weight",
+        "leverage",
+    ],
+)
+def test_result_column_names_are_reserved_for_moderators(name: str) -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="reserved"):
+        ma.meta_regression(
+            effect=[0.1, 0.2, 0.3],
+            variance=[0.04, 0.05, 0.06],
+            moderators={name: [0.0, 1.0, 2.0]},
+            model="common",
+        )
+
+
 def test_absent_declared_level_after_exclusion_is_rejected() -> None:
     with pytest.raises(ma.InvalidStudyDataError, match="absent after exclusions"):
         ma.meta_regression(

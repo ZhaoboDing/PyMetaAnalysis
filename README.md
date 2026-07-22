@@ -140,6 +140,9 @@ ax = result.funnel()
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
 are descriptive small-study-effect diagnostics, not proof of publication bias.
+An eligible single-numeric-moderator Meta-regression result additionally
+provides `regression.bubble()` with fitted confidence and optional prediction
+bands.
 
 ## Documentation
 

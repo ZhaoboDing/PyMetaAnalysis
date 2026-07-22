@@ -21,7 +21,23 @@ from .exceptions import InsufficientStudiesError, InvalidStudyDataError
 ModeratorInput: TypeAlias = Sequence[str] | Mapping[str, ColumnOrArray]
 CategoricalInput: TypeAlias = Mapping[str, Sequence[Hashable]]
 
-_RESERVED_TERM_NAMES = frozenset({"intercept"})
+_RESERVED_TERM_NAMES = frozenset(
+    {
+        "intercept",
+        "row_id",
+        "study",
+        "effect",
+        "variance",
+        "standard_error",
+        "included",
+        "exclusion_reason",
+        "fitted_value",
+        "residual",
+        "precision_weight",
+        "normalized_precision_weight",
+        "leverage",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +132,7 @@ def _moderator_mapping(
             raise InvalidStudyDataError("Moderator names must be non-empty strings.")
         if name in _RESERVED_TERM_NAMES:
             raise InvalidStudyDataError(
-                f"Moderator name {name!r} is reserved for the model intercept."
+                f"Moderator name {name!r} is reserved for meta-regression results."
             )
         if name in names:
             raise InvalidStudyDataError(f"Duplicate moderator name {name!r}.")
