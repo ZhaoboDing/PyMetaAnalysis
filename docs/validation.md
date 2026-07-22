@@ -53,13 +53,18 @@ The current fixture families cover:
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
+| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests and predictions |
 
-The initial Meta-regression core is covered by hand-calculated weighted least
+Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
 with the independently validated pooling path, inference covariance checks,
-and encoding invariants. Dedicated committed `metafor::rma.uni()` moderator
-fixtures are required before the 0.3.0 release candidate and are not yet part
-of the fixture table above.
+and encoding invariants.
+
+The no-intercept `metafor` fixture validates coefficients, covariance, fitted
+values, residuals, weights, leverage, and the moderator test. Its `QE` is not
+used as a reference because `metafor` retains a different no-intercept `QE`
+reporting convention from the weighted residual sum of squares reported by
+PyMetaAnalysis.
 
 Every artifact records the R, `metafor`, and `jsonlite` versions used to
 produce it. Method-specific numerical tolerances distinguish closed-form from
@@ -80,6 +85,7 @@ Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
+Rscript tests/reference/generate_meta_regression_metafor.R
 ```
 
 Pass an optional output file to review regenerated values before replacement:
