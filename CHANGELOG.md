@@ -17,6 +17,8 @@ Changes planned for the next release accumulate under `Unreleased`.
   prediction, provenance, and structured reports.
 - optional weighted bubble plots for intercept-containing Meta-regression fits
   with exactly one numeric moderator.
+- an executable Meta-regression notebook plus a multivariable performance
+  baseline and expanded property, numerical-stability, and warning tests.
 
 ### Changed
 

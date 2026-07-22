@@ -2,7 +2,10 @@
 
 The [end-to-end quickstart notebook](quickstart.ipynb) demonstrates DataFrame
 input, a random-effects binary analysis, result inspection, provenance,
-reporting, sensitivity analysis, and a forest plot.
+reporting, sensitivity analysis, and a forest plot. The dedicated
+[Meta-regression notebook](meta_regression.ipynb) covers numeric and explicitly
+encoded categorical moderators, Hartung-Knapp inference, prediction, joint
+tests, row diagnostics, reporting, and a weighted bubble plot.
 
 All values in the notebook are synthetic and were created for documentation;
 they do not represent real participants or a published clinical question. The

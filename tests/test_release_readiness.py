@@ -56,23 +56,28 @@ def test_github_release_command_has_repository_context() -> None:
     )
 
 
-def test_quickstart_notebook_is_valid_unexecuted_json() -> None:
-    path = ROOT / "examples" / "quickstart.ipynb"
-    notebook = json.loads(path.read_text(encoding="utf-8"))
+def test_example_notebooks_are_valid_unexecuted_json() -> None:
+    paths = sorted((ROOT / "examples").glob("*.ipynb"))
 
-    assert notebook["nbformat"] == 4
-    assert any(cell["cell_type"] == "code" for cell in notebook["cells"])
-    assert all(
-        cell.get("execution_count") is None
-        for cell in notebook["cells"]
-        if cell["cell_type"] == "code"
-    )
-    markdown = "\n".join(
-        "".join(cell["source"])
-        for cell in notebook["cells"]
-        if cell["cell_type"] == "markdown"
-    )
-    assert "synthetic" in markdown.lower()
+    assert {path.name for path in paths} == {
+        "meta_regression.ipynb",
+        "quickstart.ipynb",
+    }
+    for path in paths:
+        notebook = json.loads(path.read_text(encoding="utf-8"))
+        assert notebook["nbformat"] == 4
+        assert any(cell["cell_type"] == "code" for cell in notebook["cells"])
+        assert all(
+            cell.get("execution_count") is None
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "code"
+        )
+        markdown = "\n".join(
+            "".join(cell["source"])
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "markdown"
+        )
+        assert "synthetic" in markdown.lower()
 
 
 def test_core_benchmark_smoke(tmp_path: Path) -> None:
@@ -101,4 +106,5 @@ def test_core_benchmark_smoke(tmp_path: Path) -> None:
         "generic_random_reml",
         "binary_rr_random_reml",
         "continuous_smd_random_reml",
+        "meta_regression_multivariable_reml",
     }

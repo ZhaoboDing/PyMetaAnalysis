@@ -43,7 +43,9 @@ single-study row so that this difference remains explicit and auditable.
 `meta_regression_metafor.json` covers common- and mixed-effects moderator
 models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit
 categorical coding, a no-intercept model, multivariable joint tests, fitted
-values, weights, leverage, coefficient covariance, and prediction intervals.
+values, weights, leverage, coefficient covariance, prediction intervals, zero
+residual tau-squared, explicit missing-row exclusion, and small-sample
+Hartung-Knapp inference.
 For the no-intercept case, Python comparisons use the coefficient and fitted-
 model fields but not `QE`: `metafor` retains a different no-intercept `QE`
 reporting convention from PyMetaAnalysis's weighted residual sum of squares.

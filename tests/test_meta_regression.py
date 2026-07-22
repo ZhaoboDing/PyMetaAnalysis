@@ -616,3 +616,19 @@ def test_centering_moderator_changes_intercept_not_slope_or_fit() -> None:
         original.study_results["fitted_value"], centered.study_results["fitted_value"]
     )
     assert original.tau2 == pytest.approx(centered.tau2)
+
+
+def test_small_mixed_meta_regression_reports_all_boundary_warnings() -> None:
+    result = ma.meta_regression(
+        effect=[0.1, 0.2, 0.3, 0.4],
+        variance=[0.04, 0.05, 0.06, 0.07],
+        moderators={"x": [0.0, 1.0, 2.0, 3.0]},
+        model="mixed",
+    )
+
+    warning_text = "\n".join(result.warnings)
+    assert "fewer than 10 studies" in warning_text
+    assert "Only 2 residual degree(s) of freedom" in warning_text
+    assert "zero boundary" in warning_text
+    assert "fewer than five studies" in warning_text
+    assert "Pseudo-R-squared is undefined" in warning_text

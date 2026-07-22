@@ -18,6 +18,9 @@ BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_input.csv")
 SPARSE_BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_sparse_input.csv")
 WORKFLOW_DATA = pd.read_csv(REFERENCE_DIR / "workflow_input.csv")
 META_REGRESSION_DATA = pd.read_csv(REFERENCE_DIR / "meta_regression_input.csv")
+META_REGRESSION_BOUNDARY_DATA = pd.read_csv(
+    REFERENCE_DIR / "meta_regression_boundary_input.csv"
+)
 
 
 def _load_reference(filename: str) -> dict[str, Any]:
@@ -145,12 +148,16 @@ def _assert_regression_fit(
         assert result.tau2_null == pytest.approx(
             expected["tau2_null"], rel=rtol, abs=atol
         )
-        assert result.pseudo_r2 == pytest.approx(
-            expected["pseudo_r2"], rel=derived_rtol, abs=derived_atol
-        )
-        assert result.pseudo_r2_raw == pytest.approx(
-            expected["pseudo_r2_raw"], rel=derived_rtol, abs=derived_atol
-        )
+        if expected["pseudo_r2"] is None:
+            assert result.pseudo_r2 is None
+            assert result.pseudo_r2_raw is None
+        else:
+            assert result.pseudo_r2 == pytest.approx(
+                expected["pseudo_r2"], rel=derived_rtol, abs=derived_atol
+            )
+            assert result.pseudo_r2_raw == pytest.approx(
+                expected["pseudo_r2_raw"], rel=derived_rtol, abs=derived_atol
+            )
 
     if compare_heterogeneity:
         heterogeneity = expected["residual_heterogeneity"]
@@ -190,7 +197,7 @@ def _assert_regression_fit(
         expected["residual_scale"], rel=rtol, abs=atol
     )
 
-    studies = result.study_results
+    studies = result.study_results.loc[lambda frame: frame["included"]]
     for column, reference_key in [
         ("normalized_precision_weight", "normalized_weights"),
         ("fitted_value", "fitted_values"),
@@ -745,3 +752,60 @@ def test_multivariable_meta_regression_and_predictions_match_metafor() -> None:
             rtol=ITERATIVE_DERIVED_RTOL,
             atol=ITERATIVE_DERIVED_ATOL,
         )
+
+
+def test_zero_tau2_meta_regression_boundary_matches_metafor() -> None:
+    expected = META_REGRESSION["boundary_cases"]["zero_tau2_reml"]
+    result = ma.meta_regression(
+        META_REGRESSION_BOUNDARY_DATA,
+        effect="linear_effect",
+        variance="variance",
+        study="study",
+        moderators=["x"],
+        model="mixed",
+        tau2_method="REML",
+    )
+
+    _assert_regression_fit(result, expected, iterative=True)
+    assert result.tau2 == 0.0
+    assert result.diagnostics.tau2_at_boundary is True
+    assert any("zero boundary" in warning for warning in result.warnings)
+
+
+def test_missing_row_meta_regression_fit_matches_metafor_subset() -> None:
+    expected = META_REGRESSION["boundary_cases"]["missing_common"]
+    result = ma.meta_regression(
+        META_REGRESSION_BOUNDARY_DATA,
+        effect="observed_effect",
+        variance="variance",
+        study="study",
+        moderators={"x": "x_missing"},
+        model="common",
+        missing="drop",
+    )
+
+    _assert_regression_fit(result, expected)
+    studies = result.study_results
+    assert np.flatnonzero(studies["included"]).tolist() == expected["included_rows"]
+    assert np.flatnonzero(~studies["included"]).tolist() == expected["excluded_rows"]
+    assert studies.loc[6, "exclusion_reason"] == "missing effect"
+    assert studies.loc[7, "exclusion_reason"] == "missing moderator 'x'"
+
+
+def test_small_sample_hartung_knapp_meta_regression_matches_metafor() -> None:
+    expected = META_REGRESSION["boundary_cases"]["small_sample_hartung_knapp"]
+    result = ma.meta_regression(
+        META_REGRESSION_BOUNDARY_DATA.iloc[:4],
+        effect="observed_effect",
+        variance="variance",
+        study="study",
+        moderators=["x"],
+        model="mixed",
+        tau2_method="REML",
+        inference_method="hartung_knapp",
+    )
+
+    _assert_regression_fit(result, expected, iterative=True)
+    assert result.residual_df == 2
+    assert any("fewer than 10 studies" in warning for warning in result.warnings)
+    assert any("fewer than five studies" in warning for warning in result.warnings)

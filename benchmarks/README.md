@@ -1,9 +1,10 @@
 # Core performance baseline
 
-`benchmark_core.py` measures representative generic, binary, and continuous
-random-effects fits using deterministic synthetic data. Correctness remains the
-primary performance requirement; this benchmark is intended to reveal large
-regressions, not to enforce a fragile wall-clock threshold.
+`benchmark_core.py` measures representative generic, binary, continuous, and
+multivariable Meta-regression random-effects fits using deterministic synthetic
+data. Correctness remains the primary performance requirement; this benchmark
+is intended to reveal large regressions, not to enforce a fragile wall-clock
+threshold.
 
 Run the default benchmark with:
 

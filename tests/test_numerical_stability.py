@@ -153,3 +153,88 @@ def test_continuous_effects_are_stable_after_a_large_location_shift(
     )
     assert shifted.estimate == pytest.approx(original.estimate, abs=1e-7)
     assert np.isfinite(shifted.standard_error)
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_mixed_meta_regression_is_stable_after_large_moderator_rescaling(
+    tau2_method: str,
+) -> None:
+    moderator = np.linspace(-2.0, 2.0, 12)
+    effect = np.array([0.2, 1.4, -0.3, 1.6, 0.1, 1.8, -0.2, 2.0, 0.3, 2.2, -0.1, 2.4])
+    variance = np.array(
+        [0.04, 0.06, 0.05, 0.08, 0.045, 0.07, 0.055, 0.09, 0.05, 0.075, 0.065, 0.06]
+    )
+    scale = 1e9
+    original = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="mixed",
+        tau2_method=tau2_method,
+    )
+    rescaled = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator * scale},
+        model="mixed",
+        tau2_method=tau2_method,
+    )
+
+    assert rescaled.coefficients.loc[0, "estimate"] == pytest.approx(
+        original.coefficients.loc[0, "estimate"], rel=1e-12, abs=1e-12
+    )
+    assert rescaled.coefficients.loc[1, "estimate"] * scale == pytest.approx(
+        original.coefficients.loc[1, "estimate"], rel=1e-12, abs=1e-12
+    )
+    assert rescaled.tau2 == pytest.approx(original.tau2, rel=1e-12, abs=1e-12)
+    assert rescaled.heterogeneity.q == pytest.approx(
+        original.heterogeneity.q, rel=1e-12, abs=1e-12
+    )
+    np.testing.assert_allclose(
+        rescaled.study_results["fitted_value"],
+        original.study_results["fitted_value"],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    assert any("high condition number" in warning for warning in rescaled.warnings)
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_mixed_meta_regression_is_stable_after_large_effect_shift(
+    tau2_method: str,
+) -> None:
+    moderator = np.linspace(-2.0, 2.0, 12)
+    effect = np.array([0.2, 1.4, -0.3, 1.6, 0.1, 1.8, -0.2, 2.0, 0.3, 2.2, -0.1, 2.4])
+    variance = np.array(
+        [0.04, 0.06, 0.05, 0.08, 0.045, 0.07, 0.055, 0.09, 0.05, 0.075, 0.065, 0.06]
+    )
+    shift = 1e9
+    original = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="mixed",
+        tau2_method=tau2_method,
+    )
+    shifted = ma.meta_regression(
+        effect=effect + shift,
+        variance=variance,
+        moderators={"x": moderator},
+        model="mixed",
+        tau2_method=tau2_method,
+    )
+
+    assert shifted.coefficients.loc[0, "estimate"] - shift == pytest.approx(
+        original.coefficients.loc[0, "estimate"], abs=5e-7
+    )
+    assert shifted.coefficients.loc[1, "estimate"] == pytest.approx(
+        original.coefficients.loc[1, "estimate"], rel=5e-7
+    )
+    assert shifted.tau2 == pytest.approx(original.tau2, rel=5e-8)
+    assert shifted.heterogeneity.q == pytest.approx(original.heterogeneity.q, rel=3e-8)
+    np.testing.assert_allclose(
+        shifted.study_results["fitted_value"] - shift,
+        original.study_results["fitted_value"],
+        rtol=0.0,
+        atol=5e-7,
+    )
