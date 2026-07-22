@@ -1,7 +1,7 @@
 # Report and provenance schemas
 
 `result.report()` returns a detached `ResultReport`. Its dictionary and JSON
-forms use report schema version `1.1`. Provenance nested within the report has
+forms use report schema version `1.2`. Provenance nested within the report has
 its own schema version, currently `1.0`.
 
 ## Export methods
@@ -20,11 +20,11 @@ other non-JSON study labels become stable strings.
 
 ## Single-analysis report
 
-Top-level keys in schema 1.1 are:
+Top-level keys in schema 1.2 for a single pooled analysis are:
 
 | Key | Meaning |
 | --- | --- |
-| `schema_version` | Report schema identifier (`"1.1"`) |
+| `schema_version` | Report schema identifier (`"1.2"`) |
 | `report_type` | `"meta_analysis"` |
 | `analysis` | Analysis identity and study counts |
 | `results` | Pooled results on model and display scales |
@@ -96,7 +96,7 @@ The nested `provenance` object contains:
 | --- | --- |
 | `package_version` | Version that fitted the result |
 | `schema_version` | Provenance schema identifier (`"1.0"`) |
-| `analysis_type` | `generic`, `binary`, or `continuous` |
+| `analysis_type` | `generic`, `binary`, `continuous`, or `meta_regression` |
 | `data_source` | `pandas_dataframe`, `array_like`, or `derived_subset` |
 | `input_fields` | Ordered input source records |
 | `column_mapping` | Public input roles mapped to DataFrame columns |
@@ -135,6 +135,37 @@ q, df, pvalue, i2, tau2_strategy, test_method, subgroup_missing
 ```
 
 The optional top-level `studies` table contains the combined subgroup column.
+
+## Meta-regression report
+
+For Meta-regression results, `report_type` is `"meta_regression"`. Top-level
+keys are:
+
+```text
+schema_version, report_type, analysis, coefficients,
+coefficient_covariance, residual_heterogeneity, global_moderator_test,
+design, method, diagnostics, provenance, warnings, method_details, studies
+```
+
+`coefficients` follows the table documented under
+[result objects](results.md#metaregressionresult). The covariance object
+contains its ordered `terms` and a square `values` matrix.
+
+`residual_heterogeneity` contains:
+
+```text
+qe, df, pvalue, i2, h2, i2_method,
+tau2, tau2_null, pseudo_r2, pseudo_r2_raw
+```
+
+`global_moderator_test` records the tested terms, statistic name,
+distribution, numerator and optional denominator degrees of freedom, and
+p-value. `design` records the intercept, ordered encoded terms, original
+moderators, categorical levels, and references.
+
+Meta-regression diagnostics add `rank`, `condition_number`, and
+`residual_scale`. Its optional study records include original moderators,
+fitted values, residuals, precision weights, and leverage.
 
 ## Markdown representation
 

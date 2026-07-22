@@ -6,6 +6,20 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- pandas-first `meta_regression()` for numeric, explicitly encoded categorical,
+  and multiple study-level moderators;
+- common- and mixed-effects weighted regression with generalized DL, PM, and
+  REML residual tau-squared estimators;
+- normal, Hartung-Knapp, and safeguarded Hartung-Knapp coefficient inference,
+  distribution-explicit moderator tests, residual heterogeneity, pseudo-R²,
+  prediction, provenance, and structured reports.
+
+### Changed
+
+- report schema 1.2 adds the `meta_regression` report type.
+
 ## 0.2.1 - 2026-07-17
 
 ### Fixed

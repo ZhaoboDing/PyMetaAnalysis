@@ -100,7 +100,7 @@ The payload contains:
 - provenance and warnings;
 - row-level study results.
 
-Report schema 1.1 records the resolved heterogeneity definition as
+Report schema 1.2 records the resolved heterogeneity definition as
 `heterogeneity.i2_method`.
 
 The complete key-level contract, including the separately versioned

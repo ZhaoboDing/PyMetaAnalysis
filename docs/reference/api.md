@@ -7,7 +7,7 @@ The distribution is named `PyMetaAnalysis` and the import package is
 import meta_analyze as ma
 ```
 
-The public surface consists of three analysis functions, immutable result and
+The public surface consists of four analysis functions, immutable result and
 configuration classes, provenance/report classes, sensitivity result classes,
 and domain exceptions exported from `meta_analyze`.
 
@@ -35,6 +35,7 @@ identity rules.
 | Binary OR/RR | Inverse variance | common, random | normal; HK variants for random |
 | Binary RD | Inverse variance | common, random | normal; HK variants for random |
 | Continuous MD/SMD | Inverse variance | common, random | normal; HK variants for random |
+| Generic Meta-regression | Inverse variance | common, mixed | normal; HK variants for mixed |
 
 Canonical values should be used in saved analysis code. Model aliases such as
 `fixed` and method aliases such as `IV`/`MH` are accepted for convenience but
@@ -82,6 +83,48 @@ Fits generic study effects using inverse-variance pooling.
 Supply exactly one of `variance` or `standard_error`. The selected argument
 supports the same DataFrame-column and array-like conventions as `effect`.
 Standard-error conversion is recorded in result provenance.
+
+## `meta_regression()`
+
+```text
+ma.meta_regression(
+    data=None,
+    *,
+    effect,
+    variance=None,
+    standard_error=None,
+    moderators,
+    categorical=None,
+    study=None,
+    model="mixed",
+    tau2_method="REML",
+    inference_method="normal",
+    intercept=True,
+    confidence_level=0.95,
+    missing="raise",
+    atol=1e-10,
+    max_iter=1000,
+)
+```
+
+Fits generic study effects on study-level moderators.
+
+| Parameter | Description |
+| --- | --- |
+| `moderators` | DataFrame column-name sequence, or name-to-column/array mapping |
+| `categorical` | Moderator-to-ordered-level mapping; first level is reference |
+| `model` | `"mixed"` (default) or `"common"`; random/fixed aliases are accepted |
+| `tau2_method` | `"REML"`, `"PM"`, or `"DL"` for residual tau-squared |
+| `inference_method` | `"normal"`, `"hartung_knapp"`, or `"hartung_knapp_adhoc"` |
+| `intercept` | Include an intercept; no-intercept currently requires all-numeric moderators |
+
+`effect`, uncertainty, `study`, numerical controls, and missing-value policy
+follow `meta_analysis()`. Missingness in any model field applies to the complete
+row. The encoded design must have full column rank and `k > p`.
+
+The result is a dedicated `MetaRegressionResult`, not a pooled
+`MetaAnalysisResult`. See the [Meta-regression guide](../guides/meta-regression.md)
+for encoding, testing, prediction, and interpretation.
 
 ## `meta_binary()`
 
@@ -176,8 +219,9 @@ g with the LS variance convention.
 
 ## Return types
 
-Without `subgroup=`, every entry point returns `MetaAnalysisResult`. Supplying
-`subgroup=` returns `SubgroupMetaAnalysisResult`.
+The three pooling entry points return `MetaAnalysisResult` without `subgroup=`
+and `SubgroupMetaAnalysisResult` with it. `meta_regression()` instead returns
+`MetaRegressionResult` and does not accept `subgroup=`.
 
 ```python
 result = ma.meta_analysis(...)
@@ -204,6 +248,11 @@ Every `MetaAnalysisResult` provides:
 
 `SubgroupMetaAnalysisResult` has the same methods except `funnel()`, and its
 sensitivity methods return subgroup composite result classes.
+
+`MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
+`to_dataframe()`, `predict(new_data)`, and `test_moderator(name)`. It does not
+provide a scalar pooled `estimate`, a forest plot, or repeated-fit sensitivity
+methods.
 
 ### `cumulative()` parameters
 
@@ -236,9 +285,20 @@ Stores the fully resolved `model`, `pooling_method`, `tau2_method`, `ci_method`,
 
 Stores `model`, `tau2_strategy`, `test_method`, and `subgroup_missing`.
 
+### `MetaRegressionMethodConfig`
+
+Stores resolved model, tau-squared and inference methods, confidence level,
+intercept choice, moderator/term names, categorical references, prediction-
+interval method, missing policy, and numerical controls.
+
 ### `FitDiagnostics`
 
 Stores `converged`, `iterations`, and `tau2_at_boundary`.
+
+### `MetaRegressionDiagnostics`
+
+Adds design rank, condition number, and the residual inference scale to
+convergence, iteration, and tau-squared boundary metadata.
 
 ### `HeterogeneityResult`
 

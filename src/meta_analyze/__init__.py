@@ -3,8 +3,9 @@
 from ._version import __version__
 from .api import meta_analysis
 from .binary_api import meta_binary
-from .config import MethodConfig, SubgroupMethodConfig
+from .config import MetaRegressionMethodConfig, MethodConfig, SubgroupMethodConfig
 from .continuous_api import meta_continuous
+from .design_matrix import DesignInfo, ModeratorSpec
 from .exceptions import (
     ConvergenceError,
     InsufficientStudiesError,
@@ -16,6 +17,13 @@ from .provenance import (
     AnalysisProvenance,
     InputFieldProvenance,
     TransformationRecord,
+)
+from .regression_api import meta_regression
+from .regression_results import (
+    MetaRegressionDiagnostics,
+    MetaRegressionResult,
+    MetaRegressionSummary,
+    ModeratorTestResult,
 )
 from .reporting import ResultReport
 from .results import (
@@ -37,6 +45,7 @@ __all__ = [
     "AnalysisProvenance",
     "ConvergenceError",
     "CumulativeMetaAnalysisResult",
+    "DesignInfo",
     "FitDiagnostics",
     "HeterogeneityResult",
     "InsufficientStudiesError",
@@ -46,7 +55,13 @@ __all__ = [
     "MetaAnalysisError",
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
+    "MetaRegressionDiagnostics",
+    "MetaRegressionMethodConfig",
+    "MetaRegressionResult",
+    "MetaRegressionSummary",
     "MethodConfig",
+    "ModeratorSpec",
+    "ModeratorTestResult",
     "ResultReport",
     "SubgroupMetaAnalysisResult",
     "SubgroupMetaAnalysisSummary",
@@ -58,5 +73,6 @@ __all__ = [
     "meta_analysis",
     "meta_binary",
     "meta_continuous",
+    "meta_regression",
     "__version__",
 ]

@@ -17,13 +17,16 @@ deferred functionality explicit.
 - independent subgroup fits and a formal subgroup-differences test;
 - leave-one-out and cumulative repeated-fit workflows;
 - forest and descriptive funnel plots;
-- structured provenance and reports.
+- structured provenance and reports;
+- study-level Meta-regression with numeric and explicitly encoded categorical
+  moderators, generalized DL/PM/REML, and normal/Hartung-Knapp inference.
 
 ## Not currently implemented
 
 - Peto odds ratios;
 - Mantel-Haenszel risk differences or random-effects MH pooling;
-- meta-regression or continuous/categorical moderator models;
+- formula parsing, automatic interactions/splines, stepwise moderator
+  selection, multiplicity correction, or arbitrary linear contrasts;
 - multilevel, multivariate, network, dose-response, diagnostic-accuracy, or
   individual-participant-data meta-analysis;
 - robust variance estimation or dependent-effect clustering;
@@ -51,8 +54,14 @@ of heterogeneity and should not be interpreted as interchangeable decision
 rules. A non-significant Q test is not evidence of homogeneity.
 
 Subgroup analyses estimate tau-squared independently within each random-
-effects subgroup. A common tau-squared strategy and meta-regression-based
-moderator tests are not yet available.
+effects subgroup. This differs from fitting a Meta-regression with categorical
+moderators and a single residual tau-squared.
+
+Meta-regression uses aggregate study-level moderators. Coefficients are
+susceptible to ecological bias, confounding, measurement error, low power, and
+post-hoc model selection. They do not establish individual-level associations
+or causal effects. The package warns below ten studies but does not prohibit a
+scientifically prespecified, full-rank model when `k > p`.
 
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
 squared, and asymmetry does not establish publication bias.

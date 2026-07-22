@@ -155,6 +155,70 @@ See [report schema](report-schema.md) for the complete serialized structure.
 Matplotlib is imported only when a plot is requested. Parameters and display-
 scale behavior are documented in [plotting](../guides/plotting.md).
 
+## `MetaRegressionResult`
+
+Meta-regression has no unique pooled effect, so this result deliberately omits
+the scalar `estimate`, `ci`, and top-level `prediction_interval` attributes of
+`MetaAnalysisResult`.
+
+### Model and coefficient outputs
+
+| Attribute | Meaning |
+| --- | --- |
+| `k`, `p`, `residual_df` | Included studies, fitted coefficients, and `k-p` |
+| `model` | Resolved `common` or `mixed` model |
+| `coefficients` | Defensive coefficient DataFrame |
+| `coefficient_covariance` | Labeled defensive covariance DataFrame |
+| `design_info` | Original moderators, categories, references, and terms |
+| `design_matrix` | Included-study encoded matrix |
+| `global_test` | Distribution-explicit joint test of all non-intercept terms |
+| `test_moderator(name)` | Joint test of one original moderator's encoded terms |
+
+Coefficient columns are:
+
+```text
+term, moderator, estimate, standard_error, statistic, statistic_name,
+df, pvalue, ci_low, ci_high
+```
+
+`df` is unavailable for normal/z inference and equals `k-p` for Hartung-Knapp
+t inference. `ModeratorTestResult` records `distribution`, `df_num`, optional
+`df_denom`, and every tested term, so chi-squared and F results are not
+conflated.
+
+### Residual heterogeneity
+
+| Attribute | Meaning |
+| --- | --- |
+| `tau2` | Residual between-study variance; zero for common models |
+| `tau2_null` | Intercept-only tau-squared on the same rows, when applicable |
+| `pseudo_r2`, `pseudo_r2_raw` | Truncated and raw reduction in tau-squared |
+| `heterogeneity` | Residual QE, df, p-value, I-squared, H-squared, and definition |
+
+Common models use `q_based_residual`; mixed models use
+`tau2_typical_variance_residual`. Pseudo-R² is unavailable for common,
+no-intercept, or zero-null-tau-squared fits.
+
+### Row table and prediction
+
+The row table contains the original moderators plus:
+
+```text
+fitted_value, residual, precision_weight, normalized_precision_weight,
+leverage
+```
+
+Excluded rows retain identifiers and reasons while fitted diagnostics remain
+unavailable. Precision weight is not a universal contribution percentage for
+all regression coefficients.
+
+`predict(new_data)` returns estimates, standard errors, and mean-effect
+confidence intervals. Mixed models add `pi_low`/`pi_high` for a new true
+effect. It reuses fitted categorical encoding and rejects unknown levels.
+
+`summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
+copy semantics follow the same audit principles as `MetaAnalysisResult`.
+
 ## Sensitivity results
 
 ### `LeaveOneOutResult`

@@ -41,6 +41,7 @@ nav:
       - Generic effects: guides/generic-effects.md
       - Binary outcomes: guides/binary-outcomes.md
       - Continuous outcomes: guides/continuous-outcomes.md
+      - Meta-regression: guides/meta-regression.md
       - Zero-event studies: guides/zero-events.md
       - Sensitivity analysis: guides/sensitivity-analysis.md
       - Plotting: guides/plotting.md
