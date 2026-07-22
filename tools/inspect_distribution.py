@@ -18,6 +18,7 @@ REQUIRED_SDIST_SUFFIXES = {
     "docs/guides/r-interoperability.md",
     "docs/releasing.md",
     "docs/validation.md",
+    "examples/meta_regression.ipynb",
     "examples/quickstart.ipynb",
     "tools/check_release.py",
 }
