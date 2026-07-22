@@ -1,0 +1,16 @@
+study,effect,variance,mean_age,dose,region
+Study 1,0.35,0.04,42,0.5,North
+Study 2,0.745,0.06,55,1.8,South
+Study 3,0.335,0.05,47,1.1,East
+Study 4,0.225,0.08,61,0.7,North
+Study 5,1.005,0.045,39,2.4,South
+Study 6,0.23,0.07,52,1.4,East
+Study 7,1.47,0.055,66,2.0,North
+Study 8,0.165,0.09,45,0.9,South
+Study 9,1.02,0.05,58,2.7,East
+Study 10,0.745,0.075,49,1.6,North
+Study 11,0.385,0.065,63,0.4,South
+Study 12,0.96,0.06,54,2.2,East
+Study 13,0.015,0.085,41,1.3,North
+Study 14,1.595,0.05,57,2.5,South
+Study 15,-0.17,0.07,50,0.6,East

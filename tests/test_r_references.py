@@ -17,6 +17,7 @@ GENERIC_DATA = pd.read_csv(REFERENCE_DIR / "generic_input.csv")
 BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_input.csv")
 SPARSE_BINARY_DATA = pd.read_csv(REFERENCE_DIR / "binary_sparse_input.csv")
 WORKFLOW_DATA = pd.read_csv(REFERENCE_DIR / "workflow_input.csv")
+META_REGRESSION_DATA = pd.read_csv(REFERENCE_DIR / "meta_regression_input.csv")
 
 
 def _load_reference(filename: str) -> dict[str, Any]:
@@ -27,11 +28,14 @@ GENERIC = _load_reference("generic_metafor.json")
 BINARY = _load_reference("binary_metafor.json")
 CONTINUOUS = _load_reference("continuous_metafor.json")
 WORKFLOW = _load_reference("workflow_metafor.json")
+META_REGRESSION = _load_reference("meta_regression_metafor.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
 ITERATIVE_RTOL = 2e-10
 ITERATIVE_ATOL = 2e-11
+ITERATIVE_DERIVED_RTOL = 2e-9
+ITERATIVE_DERIVED_ATOL = 1e-10
 
 
 def _binary_columns() -> dict[str, str]:
@@ -78,7 +82,7 @@ def _assert_fit(
 
 
 def test_reference_fixtures_record_a_consistent_r_environment() -> None:
-    fixtures = [GENERIC, BINARY, CONTINUOUS, WORKFLOW]
+    fixtures = [GENERIC, BINARY, CONTINUOUS, WORKFLOW, META_REGRESSION]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}
     assert len({fixture["r_version"] for fixture in fixtures}) == 1
@@ -90,6 +94,116 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
     }
     assert BINARY["iterative_control"] == GENERIC["iterative_control"]
     assert WORKFLOW["iterative_control"] == GENERIC["iterative_control"]
+    assert META_REGRESSION["iterative_control"] == GENERIC["iterative_control"]
+
+
+def _assert_regression_fit(
+    result: ma.MetaRegressionResult,
+    expected: dict[str, Any],
+    *,
+    iterative: bool = False,
+    compare_heterogeneity: bool = True,
+) -> None:
+    rtol = ITERATIVE_RTOL if iterative else CLOSED_RTOL
+    atol = ITERATIVE_ATOL if iterative else CLOSED_ATOL
+    derived_rtol = ITERATIVE_DERIVED_RTOL if iterative else CLOSED_RTOL
+    derived_atol = ITERATIVE_DERIVED_ATOL if iterative else CLOSED_ATOL
+    coefficients = result.coefficients
+    expected_coefficients = expected["coefficients"]
+
+    assert coefficients["term"].tolist() == expected["term_names"]
+    for column in [
+        "estimate",
+        "standard_error",
+        "statistic",
+        "pvalue",
+        "ci_low",
+        "ci_high",
+    ]:
+        np.testing.assert_allclose(
+            coefficients[column],
+            expected_coefficients[column],
+            rtol=rtol,
+            atol=atol,
+        )
+    np.testing.assert_allclose(
+        result.coefficient_covariance,
+        expected_coefficients["covariance"],
+        rtol=rtol,
+        atol=atol,
+    )
+
+    assert result.tau2 == pytest.approx(expected["tau2"], rel=rtol, abs=atol)
+    if result.model == "common":
+        assert expected["tau2_null"] is None
+        assert expected["pseudo_r2"] is None
+        assert expected["pseudo_r2_raw"] is None
+        assert result.tau2_null is None
+        assert result.pseudo_r2 is None
+        assert result.pseudo_r2_raw is None
+    else:
+        assert result.tau2_null == pytest.approx(
+            expected["tau2_null"], rel=rtol, abs=atol
+        )
+        assert result.pseudo_r2 == pytest.approx(
+            expected["pseudo_r2"], rel=derived_rtol, abs=derived_atol
+        )
+        assert result.pseudo_r2_raw == pytest.approx(
+            expected["pseudo_r2_raw"], rel=derived_rtol, abs=derived_atol
+        )
+
+    if compare_heterogeneity:
+        heterogeneity = expected["residual_heterogeneity"]
+        np.testing.assert_allclose(
+            [
+                result.heterogeneity.q,
+                result.heterogeneity.pvalue,
+            ],
+            [
+                heterogeneity["q"],
+                heterogeneity["pvalue"],
+            ],
+            rtol=rtol,
+            atol=atol,
+        )
+        np.testing.assert_allclose(
+            [result.heterogeneity.i2, result.heterogeneity.h2],
+            [
+                heterogeneity["i2"],
+                heterogeneity["h2"],
+            ],
+            rtol=derived_rtol,
+            atol=derived_atol,
+        )
+        assert result.heterogeneity.df == heterogeneity["df"]
+
+    moderator_test = expected["global_moderator_test"]
+    np.testing.assert_allclose(
+        [result.global_test.statistic, result.global_test.pvalue],
+        [moderator_test["statistic"], moderator_test["pvalue"]],
+        rtol=rtol,
+        atol=atol,
+    )
+    assert result.global_test.df_num == moderator_test["df_num"]
+    assert result.global_test.df_denom == moderator_test["df_denom"]
+    assert result.diagnostics.residual_scale == pytest.approx(
+        expected["residual_scale"], rel=rtol, abs=atol
+    )
+
+    studies = result.study_results
+    for column, reference_key in [
+        ("normalized_precision_weight", "normalized_weights"),
+        ("fitted_value", "fitted_values"),
+        ("residual", "residuals"),
+        ("leverage", "leverage"),
+    ]:
+        np.testing.assert_allclose(
+            studies[column],
+            expected[reference_key],
+            rtol=rtol,
+            atol=atol,
+        )
+    assert studies["normalized_precision_weight"].sum() == pytest.approx(1.0, abs=2e-15)
 
 
 def _assert_summary_values(
@@ -479,3 +593,155 @@ def test_cumulative_workflow_matches_metafor(
         rtol=ITERATIVE_RTOL if iterative else CLOSED_RTOL,
         atol=ITERATIVE_ATOL if iterative else CLOSED_ATOL,
     )
+
+
+def test_common_numeric_meta_regression_matches_metafor() -> None:
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="common",
+    )
+
+    _assert_regression_fit(result, META_REGRESSION["common_numeric"])
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_mixed_numeric_meta_regression_matches_metafor(
+    tau2_method: str,
+) -> None:
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="mixed",
+        tau2_method=tau2_method,
+    )
+
+    _assert_regression_fit(
+        result,
+        META_REGRESSION["mixed_numeric"][tau2_method],
+        iterative=tau2_method in {"PM", "REML"},
+    )
+
+
+@pytest.mark.parametrize(
+    "inference_method",
+    ["hartung_knapp", "hartung_knapp_adhoc"],
+)
+def test_meta_regression_hartung_knapp_variants_match_metafor(
+    inference_method: str,
+) -> None:
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="mixed",
+        tau2_method="REML",
+        inference_method=inference_method,
+    )
+
+    _assert_regression_fit(
+        result,
+        META_REGRESSION["mixed_numeric_inference"][inference_method],
+        iterative=True,
+    )
+
+
+def test_hartung_knapp_meta_regression_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["mixed_numeric_inference"]["hartung_knapp"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="mixed",
+        tau2_method="REML",
+        inference_method="hartung_knapp",
+    )
+    predictions = result.predict(
+        pd.DataFrame({"mean_age": expected["prediction_values"]})
+    )
+
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions"][column],
+            rtol=ITERATIVE_RTOL,
+            atol=ITERATIVE_ATOL,
+        )
+
+
+def test_no_intercept_meta_regression_fit_matches_metafor() -> None:
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="common",
+        intercept=False,
+    )
+
+    _assert_regression_fit(
+        result,
+        META_REGRESSION["common_no_intercept"],
+        compare_heterogeneity=False,
+    )
+
+
+def test_categorical_meta_regression_matches_metafor() -> None:
+    levels = META_REGRESSION["categorical_levels"]["region"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["region"],
+        categorical={"region": levels},
+        model="common",
+    )
+
+    _assert_regression_fit(result, META_REGRESSION["common_categorical"])
+
+
+def test_multivariable_meta_regression_and_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["mixed_multivariable_reml"]
+    levels = META_REGRESSION["categorical_levels"]["region"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age", "dose", "region"],
+        categorical={"region": levels},
+        model="mixed",
+        tau2_method="REML",
+    )
+
+    _assert_regression_fit(result, expected, iterative=True)
+
+    region_test = result.test_moderator("region")
+    np.testing.assert_allclose(
+        [region_test.statistic, region_test.pvalue],
+        [expected["region_test"]["statistic"], expected["region_test"]["pvalue"]],
+        rtol=ITERATIVE_RTOL,
+        atol=ITERATIVE_ATOL,
+    )
+    assert region_test.df_num == expected["region_test"]["df_num"]
+
+    predictions = result.predict(pd.DataFrame(expected["prediction_rows"]))
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions"][column],
+            rtol=ITERATIVE_DERIVED_RTOL,
+            atol=ITERATIVE_DERIVED_ATOL,
+        )

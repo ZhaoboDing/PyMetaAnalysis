@@ -14,6 +14,7 @@ Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
+Rscript tests/reference/generate_meta_regression_metafor.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
@@ -38,3 +39,11 @@ common- and random-effects leave-one-out and cumulative workflows. The random
 cumulative Python comparison begins at `k=2`, the minimum prefix for which the
 library fits a random-effects model; the committed R artifact retains its
 single-study row so that this difference remains explicit and auditable.
+
+`meta_regression_metafor.json` covers common- and mixed-effects moderator
+models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit
+categorical coding, a no-intercept model, multivariable joint tests, fitted
+values, weights, leverage, coefficient covariance, and prediction intervals.
+For the no-intercept case, Python comparisons use the coefficient and fitted-
+model fields but not `QE`: `metafor` retains a different no-intercept `QE`
+reporting convention from PyMetaAnalysis's weighted residual sum of squares.
