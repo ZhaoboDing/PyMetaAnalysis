@@ -9,8 +9,8 @@ corrections from the pooled Mantel-Haenszel correction.
 For study-level OR/RR effects, the default settings are:
 
 ```python
-continuity_correction=0.5
-correction_scope="only_zero_studies"
+continuity_correction = 0.5
+correction_scope = "only_zero_studies"
 ```
 
 The correction is added to every cell of an included study containing at least
@@ -43,7 +43,7 @@ variance. This includes double-zero, double-all, and opposite-boundary tables.
 The default policy retains these studies:
 
 ```python
-rd_zero_variance="correct"
+rd_zero_variance = "correct"
 ```
 
 The RD itself remains the raw treatment risk minus control risk. Corrected
@@ -51,7 +51,7 @@ counts are used only to form a positive sampling variance. To exclude all such
 studies before pooling, Q, tau-squared, and weight calculations, use:
 
 ```python
-rd_zero_variance="exclude"
+rd_zero_variance = "exclude"
 ```
 
 Excluded rows remain in `result.study_results` with
@@ -63,8 +63,8 @@ RD-specific; setting `exclude` for OR or RR is rejected.
 Exact common-effect Mantel-Haenszel OR/RR pooling uses raw tables by default:
 
 ```python
-mh_continuity_correction=None
-mh_correction_scope="only_zero_studies"
+mh_continuity_correction = None
+mh_correction_scope = "only_zero_studies"
 ```
 
 `continuity_correction` still controls the study-level effects used for display

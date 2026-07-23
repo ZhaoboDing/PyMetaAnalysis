@@ -71,7 +71,7 @@ result.ci
 result.standard_error
 result.tau2
 result.q
-result.i2       # a proportion from 0 to 1
+result.i2  # a proportion from 0 to 1
 result.h2
 result.i2_method
 ```
