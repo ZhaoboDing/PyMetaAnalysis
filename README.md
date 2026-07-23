@@ -133,6 +133,8 @@ Rows excluded by missing-value or sparse-data policies remain in
 ```python
 leave_one_out = result.leave_one_out().to_dataframe()
 cumulative = result.cumulative(order="publication_year").to_dataframe()
+regression_deleted = regression.leave_one_out()
+regression_coefficient_changes = regression_deleted.coefficients
 
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
@@ -140,9 +142,10 @@ ax = result.funnel()
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
 are descriptive small-study-effect diagnostics, not proof of publication bias.
-An eligible single-numeric-moderator Meta-regression result additionally
-provides `regression.bubble()` with fitted confidence and optional prediction
-bands.
+Meta-regression leave-one-out results also expose a long-form coefficient
+change table. An eligible single-numeric-moderator Meta-regression result
+additionally provides `regression.bubble()` with fitted confidence and optional
+prediction bands.
 
 ## Documentation
 

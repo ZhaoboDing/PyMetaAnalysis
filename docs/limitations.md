@@ -19,7 +19,8 @@ deferred functionality explicit.
 - forest and descriptive funnel plots;
 - structured provenance and reports;
 - study-level Meta-regression with numeric and explicitly encoded categorical
-  moderators, generalized DL/PM/REML, and normal/Hartung-Knapp inference.
+  moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
+  leave-one-out deleted-model refits.
 
 ## Not currently implemented
 
@@ -35,6 +36,7 @@ deferred functionality explicit.
 - alternative prediction-interval methods;
 - formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias
   procedures;
+- Meta-regression Cook's distance, DFBETAS, automatic influence flags, or VIF;
 - automatic conversion from confidence intervals, p-values, or raw papers to
   study effects;
 - risk-of-bias assessment, certainty grading, protocol management, or study

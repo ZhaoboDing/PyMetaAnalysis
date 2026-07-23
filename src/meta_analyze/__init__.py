@@ -25,6 +25,7 @@ from .regression_results import (
     MetaRegressionSummary,
     ModeratorTestResult,
 )
+from .regression_sensitivity import MetaRegressionLeaveOneOutResult
 from .reporting import ResultReport
 from .results import (
     FitDiagnostics,
@@ -56,6 +57,7 @@ __all__ = [
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
     "MetaRegressionDiagnostics",
+    "MetaRegressionLeaveOneOutResult",
     "MetaRegressionMethodConfig",
     "MetaRegressionResult",
     "MetaRegressionSummary",

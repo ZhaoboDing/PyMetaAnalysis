@@ -19,6 +19,7 @@ from .results import HeterogeneityResult
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
+    from .regression_sensitivity import MetaRegressionLeaveOneOutResult
     from .reporting import ResultReport
 else:
     Axes = Any
@@ -244,6 +245,13 @@ class MetaRegressionResult:
         """Return the row-level result table."""
 
         return self.study_results
+
+    def leave_one_out(self) -> MetaRegressionLeaveOneOutResult:
+        """Refit the model while omitting each included study once."""
+
+        from .regression_sensitivity import meta_regression_leave_one_out
+
+        return meta_regression_leave_one_out(self)
 
     def _test_terms(
         self, moderator: str, terms: tuple[str, ...]

@@ -6,6 +6,12 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- leave-one-out Meta-regression refits with model-level diagnostics,
+  coefficient changes, explicit unidentifiable-deletion records, and preserved
+  provenance.
+
 ## 0.3.0 - 2026-07-22
 
 ### Added

@@ -221,10 +221,39 @@ exactly one numeric moderator. Bubble area represents normalized precision
 weight; fitted bands reuse `predict()`. Other design shapes are rejected rather
 than assigned an implicit marginalization rule.
 
+`leave_one_out()` returns a `MetaRegressionLeaveOneOutResult` with exact
+deleted-model fits, a model-level table, and a long-form coefficient table. See
+[sensitivity analysis](../guides/sensitivity-analysis.md) for failure and
+minimum-study rules.
+
 `summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
 copy semantics follow the same audit principles as `MetaAnalysisResult`.
 
 ## Sensitivity results
+
+### `MetaRegressionLeaveOneOutResult`
+
+Contains `original`, an omission-aligned `results` tuple, workflow `warnings`,
+and defensive `table`, `coefficients`, and `failed` DataFrames. A `None` result
+and `refit_success=False` retain a deletion whose reduced design could not be
+estimated.
+
+The model table columns are:
+
+```text
+omitted_row_id, omitted_study, refit_success, error_type, error_message,
+k, tau2, residual_q, residual_q_df, residual_q_pvalue, residual_i2,
+residual_h2, global_statistic, global_statistic_name, global_df_num,
+global_df_denom, global_pvalue, condition_number, refit_warnings
+```
+
+The long-form coefficient table repeats omission identifiers and success state
+for each original term, followed by:
+
+```text
+term, moderator, estimate, estimate_change, standard_error, statistic,
+statistic_name, df, pvalue, ci_low, ci_high
+```
 
 ### `LeaveOneOutResult`
 

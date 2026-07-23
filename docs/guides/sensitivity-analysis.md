@@ -31,6 +31,37 @@ requires at least two included studies so each refit retains one. Random-effects
 analysis requires at least three so every refit retains the two studies needed
 to estimate tau-squared.
 
+### Meta-regression leave-one-out analysis
+
+`MetaRegressionResult.leave_one_out()` repeats the fitted regression while
+omitting each included study:
+
+```python
+diagnostics = regression.leave_one_out()
+
+print(diagnostics.table)
+print(diagnostics.coefficients)
+```
+
+The returned `MetaRegressionLeaveOneOutResult` retains `original` and a
+`results` tuple aligned with the omitted-study rows. Its model table reports
+the refitted residual heterogeneity, global moderator test, condition number,
+and warnings. Its long-form coefficient table reports every refitted term and
+`estimate_change`, defined as the deleted estimate minus the full-model
+estimate.
+
+Deleting a study can make a categorical level disappear or otherwise make the
+design matrix unidentifiable. That deletion is retained with
+`refit_success=False`, an exception type and message, unavailable numeric
+fields, and `None` in the matching `results` position. Other deletions continue
+to be fitted. Use `diagnostics.failed` to inspect these rows. A failed deletion
+does not by itself label that study as influential; it shows that the fitted
+design depends on the study for identifiability.
+
+The original model must have at least `k >= p + 2`, so deleting one study can
+still leave more studies than coefficients. Each successful refit re-estimates
+tau-squared and coefficient inference with the original model settings.
+
 ## Cumulative analysis
 
 By default, cumulative analysis follows input order:
@@ -80,6 +111,9 @@ Every refit reuses the original result's:
 - binary continuity corrections and RD zero-variance policy, or the continuous
   effect-size convention.
 
+Meta-regression refits additionally reuse the intercept choice, inference
+method, moderator order, and complete explicit categorical level definitions.
+
 Derived results retain provenance that maps their local calculations back to
 the original `row_id` values.
 
@@ -106,3 +140,7 @@ design, outcome definition, risk of bias, and numerical leverage. They are not
 by themselves a reason to exclude the study. Likewise, a cumulative trend can
 describe the historical evidence path but does not remove time-related changes
 in methods, populations, or publication processes.
+
+The current Meta-regression workflow reports exact deleted-model fits and
+coefficient changes. It does not yet calculate Cook's distance, DFBETAS, or an
+automatic influential-study flag.
