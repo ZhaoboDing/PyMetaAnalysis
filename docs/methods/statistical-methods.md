@@ -374,6 +374,41 @@ and more than 50% of the variance of at least two coefficients is concentrated
 in that dimension. These conventional references are descriptive screening
 heuristics; no term is removed or model refitted automatically.
 
+### Meta-regression linear contrasts
+
+Let `C` be a user-supplied, full-row-rank matrix with one column per fitted
+coefficient, and let `d` be the supplied `rhs` vector. With fitted coefficient
+vector `beta_hat` and its selected normal or Hartung-Knapp covariance `Sigma`:
+
+```text
+theta_hat = C beta_hat
+Cov(theta_hat) = C Sigma C'
+SE(theta_hat_j) = sqrt(Cov(theta_hat)[j,j])
+test_j = (theta_hat_j - d_j) / SE(theta_hat_j)
+```
+
+Individual tests use the same distribution as coefficient inference: standard
+normal for `inference_method="normal"` and `t_(k-p)` for either Hartung-Knapp
+choice. Confidence intervals are centered on `theta_hat`, not on
+`theta_hat - d`.
+
+For `q` contrast rows, the joint Wald quantity is:
+
+```text
+W = (C beta_hat - d)' (C Sigma C')^(-1) (C beta_hat - d)
+```
+
+Normal inference compares `W` with chi-squared on `q` degrees of freedom.
+Hartung-Knapp inference reports `W/q` against `F_(q,k-p)`. The implementation
+uses a linear solve and rejects a rank-deficient contrast matrix instead of
+using a pseudo-inverse.
+
+Term-name mappings and labeled DataFrames are expanded to the complete fitted
+term order with zero weight for unspecified terms. Individual p-values are
+reported without multiplicity adjustment. The joint test evaluates the whole
+prespecified set but is not a substitute for a protocol-appropriate
+multiplicity strategy.
+
 ## Binary study effects
 
 For a treatment/control 2-by-2 table:

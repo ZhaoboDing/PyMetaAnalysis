@@ -32,6 +32,9 @@ Property-based and targeted tests check invariants such as:
 - Meta-regression VIF/GVIF is invariant to positive moderator rescaling and row
   order; weighted condition indices match an independent singular-value
   decomposition and coefficient variance proportions sum to one.
+- Explicit linear contrasts match direct matrix calculations, preserve
+  scientifically equivalent hypotheses across category-reference and unit
+  changes, and reject ambiguous or rank-deficient contrast specifications.
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.
@@ -59,6 +62,7 @@ The current fixture families cover:
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests, predictions, zero tau-squared, missing rows, and small samples |
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
+| `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -93,6 +97,7 @@ Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
+Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 ```
 
 Pass an optional output file to review regenerated values before replacement:

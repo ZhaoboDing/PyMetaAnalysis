@@ -236,10 +236,41 @@ original result.
 diagnostics. It inspects the fitted design without changing the coefficients,
 terms, or included studies.
 
+`contrast(...)` returns a `MetaRegressionContrastResult` with individual and
+joint inference for explicitly supplied linear hypotheses. It uses the fitted
+coefficient covariance and inference method without refitting the model.
+
 `summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
 copy semantics follow the same audit principles as `MetaAnalysisResult`.
 
 ## Diagnostic and sensitivity results
+
+### `MetaRegressionContrastResult`
+
+Contains `original`, a `LinearContrastTestResult` in `joint_test`,
+`pvalue_adjustment="none"`, `warnings`, and defensive `table` and
+`contrast_matrix` DataFrames. `len(result)` is the number of contrast rows;
+`summary()` and `to_dataframe()` return the individual table.
+
+`contrast_matrix` has one named row per contrast and one column per fitted term,
+including the intercept when present. The inference table columns are:
+
+```text
+contrast, estimate, rhs, estimate_minus_rhs, standard_error, statistic,
+statistic_name, distribution, df, pvalue, ci_low, ci_high,
+confidence_level, pvalue_adjustment
+```
+
+The confidence interval is for the estimated linear combination `C beta`; the
+test statistic is for `C beta - rhs`. Normal inference produces z statistics
+and a joint chi-squared test. Both Hartung-Knapp choices produce t statistics
+with `k-p` degrees of freedom and a joint F test.
+
+`LinearContrastTestResult` records `contrasts`, `statistic`,
+`statistic_name`, `distribution`, `df_num`, optional `df_denom`, and `pvalue`,
+with a detached `to_dict()` view. Multi-row matrices must have full row rank.
+Individual p-values are unadjusted; the result warns rather than silently
+selecting a multiplicity procedure.
 
 ### `MetaRegressionCollinearityResult`
 

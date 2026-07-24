@@ -21,6 +21,7 @@ fixtures used by this project.
 | Leave-one-out | `result.leave_one_out()` | `leave1out()` for supported fits | `metainf()` |
 | Meta-regression influence | `regression.influence()` | `influence()`, `rstudent()`, `cooks.distance()`, `dfbetas()` | — |
 | Meta-regression collinearity | `regression.collinearity()` | `vif()` plus weighted design diagnostics | — |
+| Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.

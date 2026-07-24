@@ -274,6 +274,65 @@ more than half of the coefficient variance for at least two terms. The library
 does not attach automatic cutoffs to VIF/GVIF, remove variables, refit models,
 or turn these diagnostics into evidence for a preferred specification.
 
+## Test explicit linear contrasts
+
+Inspect `result.design_info.term_names`, then define a scientific comparison by
+term name rather than coefficient position:
+
+```python
+south_vs_east = result.contrast(
+    {
+        "region[South]": 1.0,
+        "region[East]": -1.0,
+    },
+    name="South - East",
+)
+
+south_vs_east.table
+south_vs_east.contrast_matrix
+south_vs_east.joint_test
+```
+
+The default null hypothesis is `C beta = 0`. Use `rhs=` for a nonzero null:
+
+```python
+age_threshold = result.contrast(
+    {"mean_age": 1.0},
+    name="Age slope equals 0.02",
+    rhs=0.02,
+)
+```
+
+For several prespecified hypotheses, pass a named mapping of mappings:
+
+```python
+contrasts = result.contrast(
+    {
+        "South - East": {
+            "region[South]": 1.0,
+            "region[East]": -1.0,
+        },
+        "Age slope": {"mean_age": 1.0},
+    },
+    rhs={
+        "South - East": 0.0,
+        "Age slope": 0.02,
+    },
+)
+```
+
+A DataFrame is also accepted: rows are named contrasts and columns are fitted
+term names. Unspecified fitted terms receive weight zero. Unknown terms,
+nonfinite weights, zero rows, duplicate names, and rank-deficient multi-row
+contrast matrices are errors rather than implicit repairs.
+
+Each row reports the contrast estimate, standard error, null value,
+estimate-minus-null, z or t statistic, unadjusted p-value, and confidence
+interval for `C beta`. A full-row-rank set also receives a joint chi-squared or
+F test in `joint_test`. Individual p-values are deliberately not adjusted for
+multiple testing; prespecify the contrast family and apply an external
+multiplicity procedure when the scientific protocol requires one.
+
 ## Missing values, provenance, and reports
 
 `missing="raise"` identifies every missing effect, uncertainty, study label,
