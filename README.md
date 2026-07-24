@@ -135,6 +135,8 @@ leave_one_out = result.leave_one_out().to_dataframe()
 cumulative = result.cumulative(order="publication_year").to_dataframe()
 regression_deleted = regression.leave_one_out()
 regression_coefficient_changes = regression_deleted.coefficients
+regression_influence = regression.influence()
+flagged_diagnostics = regression_influence.flagged
 
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
@@ -143,9 +145,11 @@ ax = result.funnel()
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
 are descriptive small-study-effect diagnostics, not proof of publication bias.
 Meta-regression leave-one-out results also expose a long-form coefficient
-change table. An eligible single-numeric-moderator Meta-regression result
-additionally provides `regression.bubble()` with fitted confidence and optional
-prediction bands.
+change table. Exact influence diagnostics add externally standardized
+residuals, Cook's distance, DFBETAS, and explicit heuristic screening
+thresholds without automatically excluding studies. An eligible
+single-numeric-moderator Meta-regression result additionally provides
+`regression.bubble()` with fitted confidence and optional prediction bands.
 
 ## Documentation
 

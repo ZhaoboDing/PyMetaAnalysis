@@ -19,7 +19,10 @@ from .results import HeterogeneityResult
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
-    from .regression_sensitivity import MetaRegressionLeaveOneOutResult
+    from .regression_sensitivity import (
+        MetaRegressionInfluenceResult,
+        MetaRegressionLeaveOneOutResult,
+    )
     from .reporting import ResultReport
 else:
     Axes = Any
@@ -252,6 +255,13 @@ class MetaRegressionResult:
         from .regression_sensitivity import meta_regression_leave_one_out
 
         return meta_regression_leave_one_out(self)
+
+    def influence(self) -> MetaRegressionInfluenceResult:
+        """Compute exact deletion residual and coefficient influence diagnostics."""
+
+        from .regression_sensitivity import meta_regression_influence
+
+        return meta_regression_influence(self)
 
     def _test_terms(
         self, moderator: str, terms: tuple[str, ...]

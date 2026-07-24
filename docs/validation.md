@@ -54,6 +54,7 @@ The current fixture families cover:
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests, predictions, zero tau-squared, missing rows, and small samples |
+| `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -86,6 +87,7 @@ Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
+Rscript tests/reference/generate_meta_regression_influence_metafor.R
 ```
 
 Pass an optional output file to review regenerated values before replacement:
