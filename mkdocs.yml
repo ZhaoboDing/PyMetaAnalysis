@@ -63,3 +63,4 @@ nav:
           - Decisions:
               - Optional Matplotlib: adr/0001-optional-matplotlib.md
               - Statistical defaults and boundary policies: adr/0002-statistical-policy.md
+              - Meta-regression prediction intervals: adr/0003-meta-regression-prediction-intervals.md

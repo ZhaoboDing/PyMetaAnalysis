@@ -35,6 +35,10 @@ Property-based and targeted tests check invariants such as:
 - Explicit linear contrasts match direct matrix calculations, preserve
   scientifically equivalent hypotheses across category-reference and unit
   changes, and reject ambiguous or rank-deficient contrast specifications.
+- Riley Meta-regression prediction intervals are symmetric around the fitted
+  effect, preserve mean-effect inference, use one fewer residual degree of
+  freedom than the default rule, and remain wider at the zero-tau-squared
+  boundary.
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.
@@ -59,7 +63,7 @@ The current fixture families cover:
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
-| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests, predictions, zero tau-squared, missing rows, and small samples |
+| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions; zero tau-squared, missing rows, and small samples |
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 | `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |

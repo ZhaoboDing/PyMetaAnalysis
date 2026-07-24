@@ -357,7 +357,12 @@ class MetaRegressionResult:
         }
         if self.model == "mixed":
             prediction_se = np.sqrt(np.maximum(0.0, self.tau2 + mean_variance))
-            prediction_margin = critical * prediction_se
+            prediction_critical = critical
+            if self.method.prediction_interval_method == "riley":
+                prediction_critical = float(
+                    t.ppf(1.0 - alpha / 2.0, df=self.residual_df - 1)
+                )
+            prediction_margin = prediction_critical * prediction_se
             payload["pi_low"] = estimates - prediction_margin
             payload["pi_high"] = estimates + prediction_margin
         return pd.DataFrame(payload, index=new_data.index.copy())
@@ -405,6 +410,23 @@ class MetaRegressionResult:
                 f"{self.method.tau2_method} (absolute tolerance "
                 f"{self.method.atol:g}; maximum {self.method.max_iter} iterations)."
             )
+            if self.method.prediction_interval_method == "riley":
+                sentences.append(
+                    "True-effect prediction intervals used the Riley t critical "
+                    f"value with {self.residual_df - 1} degrees of freedom."
+                )
+            else:
+                distribution = (
+                    "the standard normal critical value"
+                    if self.method.inference_method == "normal"
+                    else (
+                        f"a t critical value with {self.residual_df} degrees of freedom"
+                    )
+                )
+                sentences.append(
+                    "True-effect prediction intervals used "
+                    f"{distribution}, matching coefficient inference."
+                )
         sentences.append(
             f"Coefficient inference used {self.method.inference_method} at a "
             f"{100.0 * self.method.confidence_level:g}% confidence level."

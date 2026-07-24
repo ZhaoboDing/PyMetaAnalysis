@@ -101,6 +101,7 @@ ma.meta_regression(
     inference_method="normal",
     intercept=True,
     confidence_level=0.95,
+    prediction_interval_method="default",
     missing="raise",
     atol=1e-10,
     max_iter=1000,
@@ -117,10 +118,12 @@ Fits generic study effects on study-level moderators.
 | `tau2_method` | `"REML"`, `"PM"`, or `"DL"` for residual tau-squared |
 | `inference_method` | `"normal"`, `"hartung_knapp"`, or `"hartung_knapp_adhoc"` |
 | `intercept` | Include an intercept; no-intercept currently requires all-numeric moderators |
+| `prediction_interval_method` | `"default"` or opt-in `"riley"` for mixed-effects true-effect prediction intervals |
 
 `effect`, uncertainty, `study`, numerical controls, and missing-value policy
 follow `meta_analysis()`. Missingness in any model field applies to the complete
-row. The encoded design must have full column rank and `k > p`.
+row. The encoded design must have full column rank and `k > p`. Riley intervals
+additionally require `k-p >= 2`.
 
 The result is a dedicated `MetaRegressionResult`, not a pooled
 `MetaAnalysisResult`. See the [Meta-regression guide](../guides/meta-regression.md)

@@ -22,7 +22,9 @@ deferred functionality explicit.
   moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
   exact leave-one-out refits plus externally standardized residual, Cook's
   distance, DFBETAS, VIF/GVIF, weighted condition diagnostics, and explicit
-  linear contrasts.
+  linear contrasts;
+- default normal/`t_(k-p)` and opt-in Riley `t_(k-p-1)` true-effect
+  prediction intervals for mixed-effects Meta-regression.
 
 ## Not currently implemented
 
@@ -35,7 +37,7 @@ deferred functionality explicit.
 - robust variance estimation or dependent-effect clustering;
 - single proportions, incidence rates, correlations, or survival outcomes;
 - Knapp-Hartung variants beyond the two documented choices;
-- alternative prediction-interval methods;
+- prediction-interval methods beyond the documented default and Riley rules;
 - formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias
   procedures;
 - Meta-regression DFFITS, covariance ratios, influence plots, or simulated and

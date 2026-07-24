@@ -686,6 +686,36 @@ def test_hartung_knapp_meta_regression_predictions_match_metafor() -> None:
         )
 
 
+def test_hartung_knapp_riley_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["mixed_numeric_inference"]["hartung_knapp"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="mixed",
+        tau2_method="REML",
+        inference_method="hartung_knapp",
+        prediction_interval_method="riley",
+    )
+    predictions = result.predict(
+        pd.DataFrame({"mean_age": expected["prediction_values"]})
+    )
+
+    assert expected["predictions_riley"]["prediction_distribution"] == "t"
+    assert expected["predictions_riley"]["prediction_df"] == [
+        result.residual_df - 1
+    ] * len(predictions)
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions_riley"][column],
+            rtol=ITERATIVE_RTOL,
+            atol=ITERATIVE_ATOL,
+        )
+
+
 def test_no_intercept_meta_regression_fit_matches_metafor() -> None:
     result = ma.meta_regression(
         META_REGRESSION_DATA,
@@ -754,6 +784,36 @@ def test_multivariable_meta_regression_and_predictions_match_metafor() -> None:
         )
 
 
+def test_multivariable_riley_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["mixed_multivariable_reml"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age", "dose", "region"],
+        categorical={
+            "region": META_REGRESSION["categorical_levels"]["region"],
+        },
+        model="mixed",
+        tau2_method="REML",
+        prediction_interval_method="riley",
+    )
+    predictions = result.predict(pd.DataFrame(expected["prediction_rows"]))
+
+    assert expected["predictions_riley"]["prediction_distribution"] == "t"
+    assert expected["predictions_riley"]["prediction_df"] == [
+        result.residual_df - 1
+    ] * len(predictions)
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions_riley"][column],
+            rtol=ITERATIVE_DERIVED_RTOL,
+            atol=ITERATIVE_DERIVED_ATOL,
+        )
+
+
 def test_zero_tau2_meta_regression_boundary_matches_metafor() -> None:
     expected = META_REGRESSION["boundary_cases"]["zero_tau2_reml"]
     result = ma.meta_regression(
@@ -770,6 +830,34 @@ def test_zero_tau2_meta_regression_boundary_matches_metafor() -> None:
     assert result.tau2 == 0.0
     assert result.diagnostics.tau2_at_boundary is True
     assert any("zero boundary" in warning for warning in result.warnings)
+
+
+def test_zero_tau2_riley_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["boundary_cases"]["zero_tau2_reml"]
+    result = ma.meta_regression(
+        META_REGRESSION_BOUNDARY_DATA,
+        effect="linear_effect",
+        variance="variance",
+        study="study",
+        moderators=["x"],
+        model="mixed",
+        tau2_method="REML",
+        prediction_interval_method="riley",
+    )
+    predictions = result.predict(pd.DataFrame({"x": expected["prediction_values"]}))
+
+    assert result.tau2 == 0.0
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions_riley"][column],
+            rtol=ITERATIVE_DERIVED_RTOL,
+            atol=ITERATIVE_DERIVED_ATOL,
+        )
+    assert np.all(
+        predictions["pi_high"] - predictions["pi_low"]
+        > predictions["ci_high"] - predictions["ci_low"]
+    )
 
 
 def test_missing_row_meta_regression_fit_matches_metafor_subset() -> None:

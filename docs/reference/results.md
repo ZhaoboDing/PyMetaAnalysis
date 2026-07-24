@@ -214,7 +214,10 @@ all regression coefficients.
 
 `predict(new_data)` returns estimates, standard errors, and mean-effect
 confidence intervals. Mixed models add `pi_low`/`pi_high` for a new true
-effect. It reuses fitted categorical encoding and rejects unknown levels.
+effect. The fitted `method.prediction_interval_method` records either
+`normal_or_t_k_minus_p` for the default rule or `riley` for the opt-in
+`t_(k-p-1)` rule. Prediction reuses fitted categorical encoding and rejects
+unknown levels.
 
 `bubble()` returns a Matplotlib axes for an intercept-containing fit with
 exactly one numeric moderator. Bubble area represents normalized precision

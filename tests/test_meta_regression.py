@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.stats import chi2
+from scipy.stats import chi2, t
 
 import meta_analyze as ma
 from meta_analyze.estimators import fit_meta_regression
@@ -354,6 +354,83 @@ def test_common_prediction_omits_prediction_interval() -> None:
     assert "pi_high" not in prediction
 
 
+def test_riley_prediction_interval_uses_k_minus_p_minus_one_t_critical() -> None:
+    data = _regression_frame()
+    default = ma.meta_regression(
+        data,
+        effect="yi",
+        variance="vi",
+        moderators=["dose"],
+        model="mixed",
+    )
+    riley = ma.meta_regression(
+        data,
+        effect="yi",
+        variance="vi",
+        moderators=["dose"],
+        model="mixed",
+        prediction_interval_method="riley",
+    )
+    new_data = pd.DataFrame({"dose": [0.25, 1.75, 3.25]})
+
+    default_prediction = default.predict(new_data)
+    prediction = riley.predict(new_data)
+    prediction_se = np.sqrt(
+        riley.tau2 + np.square(prediction["standard_error"].to_numpy())
+    )
+    critical = t.ppf(
+        1.0 - (1.0 - riley.method.confidence_level) / 2.0,
+        df=riley.residual_df - 1,
+    )
+
+    assert riley.method.prediction_interval_method == "riley"
+    np.testing.assert_allclose(
+        prediction["pi_low"],
+        prediction["estimate"] - critical * prediction_se,
+    )
+    np.testing.assert_allclose(
+        prediction["pi_high"],
+        prediction["estimate"] + critical * prediction_se,
+    )
+    np.testing.assert_allclose(
+        prediction[["estimate", "standard_error", "ci_low", "ci_high"]],
+        default_prediction[["estimate", "standard_error", "ci_low", "ci_high"]],
+    )
+    assert np.all(
+        prediction["pi_high"] - prediction["pi_low"]
+        > default_prediction["pi_high"] - default_prediction["pi_low"]
+    )
+
+
+def test_prediction_interval_method_validation_is_explicit() -> None:
+    inputs = {
+        "effect": [0.1, 0.4, 0.9, 1.3],
+        "variance": [0.04, 0.05, 0.06, 0.07],
+        "moderators": {"x": [0.0, 1.0, 2.0, 3.0]},
+    }
+
+    with pytest.raises(
+        ma.UnsupportedMethodError, match="expected 'default' or 'riley'"
+    ):
+        ma.meta_regression(**inputs, prediction_interval_method="unknown")
+    with pytest.raises(ma.UnsupportedMethodError, match="mixed-effects model"):
+        ma.meta_regression(
+            **inputs,
+            model="common",
+            prediction_interval_method="riley",
+        )
+    with pytest.raises(
+        ma.InsufficientStudiesError,
+        match="two residual degrees of freedom",
+    ):
+        ma.meta_regression(
+            effect=inputs["effect"][:3],
+            variance=inputs["variance"][:3],
+            moderators={"x": inputs["moderators"]["x"][:3]},
+            prediction_interval_method="riley",
+        )
+
+
 def test_missing_drop_combines_reasons_and_preserves_excluded_rows() -> None:
     data = pd.DataFrame(
         {
@@ -565,6 +642,7 @@ def test_report_and_summary_include_auditable_regression_details() -> None:
         standard_error=np.sqrt(data["vi"]),
         moderators=["dose"],
         model="mixed",
+        prediction_interval_method="riley",
     )
     payload = result.report(include_studies=False).to_dict()
 
@@ -573,6 +651,8 @@ def test_report_and_summary_include_auditable_regression_details() -> None:
     assert "studies" not in payload
     assert payload["design"]["term_names"] == ["intercept", "dose"]
     assert payload["global_moderator_test"]["distribution"] == "chi_square"
+    assert payload["method"]["prediction_interval_method"] == "riley"
+    assert "Riley t critical value" in result.method_details()
     assert "study-level associations" in result.method_details()
     assert "individual-level causal effects" in str(result.summary())
     assert result.provenance.transformations[0].name == "standard_error_to_variance"
