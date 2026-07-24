@@ -136,6 +136,23 @@ precision weights, normalized precision weights, and leverage. A regression
 precision weight is not a universal percentage contribution to every
 coefficient.
 
+## Leave-one-out sensitivity
+
+Use exact deleted-model refits to inspect dependence on individual studies:
+
+```python
+diagnostics = result.leave_one_out()
+
+print(diagnostics.table)
+print(diagnostics.coefficients)
+```
+
+Every successful deletion re-estimates residual tau-squared, coefficients, and
+inference with the same resolved model configuration. Deletions that make the
+design unidentifiable are retained explicitly instead of aborting the other
+refits. See [sensitivity analysis](sensitivity-analysis.md) for the result
+contract and interpretation limits.
+
 ## Predict at moderator values
 
 Prediction replays the fitted numeric and categorical encoding:

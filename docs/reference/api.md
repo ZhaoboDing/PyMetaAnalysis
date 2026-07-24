@@ -250,9 +250,10 @@ Every `MetaAnalysisResult` provides:
 sensitivity methods return subgroup composite result classes.
 
 `MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
-`to_dataframe()`, `predict(new_data)`, `test_moderator(name)`, and `bubble()`
-for eligible single-numeric-moderator fits. It does not provide a scalar pooled
-`estimate`, a forest plot, or repeated-fit sensitivity methods.
+`to_dataframe()`, `predict(new_data)`, `test_moderator(name)`,
+`leave_one_out()`, and `bubble()` for eligible single-numeric-moderator fits.
+It does not provide a scalar pooled `estimate`, a forest plot, or cumulative
+Meta-regression.
 
 ### `cumulative()` parameters
 
