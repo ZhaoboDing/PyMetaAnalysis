@@ -14,6 +14,7 @@ from scipy.stats import chi2
 from .config import SubgroupMethodConfig
 from .data import ColumnOrArray, _resolve_vector
 from .exceptions import InsufficientStudiesError, InvalidStudyDataError
+from .heterogeneity import _scaled_q_components, _unscale_nonnegative, weighted_mean
 from .provenance import remap_provenance_rows
 from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
@@ -85,9 +86,16 @@ def _between_group_test(
     estimates = np.asarray(
         [group.estimate for group in groups.values()], dtype=np.float64
     )
-    weights = 1.0 / standard_errors**2
-    pooled = float(np.dot(weights, estimates) / np.sum(weights))
-    q_between = float(np.dot(weights, (estimates - pooled) ** 2))
+    variances = standard_errors * standard_errors
+    variance_scale = float(np.min(variances))
+    relative_weights = variance_scale / variances
+    pooled = weighted_mean(estimates, relative_weights)
+    numerator, scale = _scaled_q_components(
+        estimates,
+        variances,
+        estimate=pooled,
+    )
+    q_between = _unscale_nonnegative(numerator, scale)
     df = len(groups) - 1
     pvalue = float(chi2.sf(q_between, df))
     i2 = 0.0 if q_between <= 0.0 else max(0.0, (q_between - df) / q_between)

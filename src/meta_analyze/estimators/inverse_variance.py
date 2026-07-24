@@ -8,7 +8,11 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import norm, t
 
-from ..exceptions import InsufficientStudiesError, UnsupportedMethodError
+from ..exceptions import (
+    InsufficientStudiesError,
+    InvalidStudyDataError,
+    UnsupportedMethodError,
+)
 from ..heterogeneity import weighted_mean
 from .tau2 import Tau2Estimate, estimate_tau2
 
@@ -116,8 +120,18 @@ def fit_inverse_variance(
         )
         tau2_value = tau2.value
 
-    denominator = variance + tau2_value
-    weights = 1.0 / denominator
+    with np.errstate(over="ignore", invalid="ignore"):
+        denominator = variance + tau2_value
+    if np.any(~np.isfinite(denominator)) or np.any(denominator <= 0.0):
+        raise InvalidStudyDataError(
+            "Fitted inverse-variance denominators must be finite and positive."
+        )
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        weights = 1.0 / denominator
+    if np.any(~np.isfinite(weights)) or np.any(weights <= 0.0):
+        raise InvalidStudyDataError(
+            "Sampling variances are too small for finite inverse-variance weights."
+        )
     variance_scale = float(np.min(denominator))
     relative_weights = variance_scale / denominator
     relative_weight_sum = float(np.sum(relative_weights))

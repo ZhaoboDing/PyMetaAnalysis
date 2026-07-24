@@ -171,7 +171,11 @@ def meta_regression(
     )
 
     residual_df = len(included_effect) - design.shape[1]
-    qe, trace_p0 = residual_heterogeneity(included_effect, included_variance, design)
+    qe, trace_p0_scaled, variance_scale0 = residual_heterogeneity(
+        included_effect,
+        included_variance,
+        design,
+    )
     qe_pvalue = float(chi2.sf(qe, df=residual_df))
     tau2_value = 0.0 if fit.tau2 is None else fit.tau2.value
     if normalized_model == "common":
@@ -179,7 +183,7 @@ def meta_regression(
         residual_h2 = qe / residual_df
         i2_method = "q_based_residual"
     else:
-        typical_variance = residual_df / trace_p0
+        typical_variance = residual_df * variance_scale0 / trace_p0_scaled
         if tau2_value == 0.0:
             residual_i2 = 0.0
             residual_h2 = 1.0

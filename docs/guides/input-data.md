@@ -92,13 +92,19 @@ silently assigning or dropping them would change the subgroup definition.
 
 | Input family | Required validation |
 | --- | --- |
-| Generic | finite effect; finite, strictly positive sampling variance |
+| Generic | finite effect; finite, strictly positive sampling variance large enough for a finite float64 inverse weight |
 | Binary | integer event counts and totals; positive totals; `0 <= events <= total` |
 | Continuous | finite means/SDs; non-negative SDs; integer group sizes of at least 2 |
 
 Binary and continuous APIs preserve their raw input columns in
 `study_results`. Derived effects, variances, correction indicators, and
 weights appear alongside them.
+
+All numerical calculations use float64. Internally derived effects and
+variances must remain finite, and every included sampling variance must be
+large enough to produce a finite inverse-variance weight. Values outside that
+representable range raise `InvalidStudyDataError` instead of returning
+non-finite fitted results.
 
 ## Exclusion is visible
 

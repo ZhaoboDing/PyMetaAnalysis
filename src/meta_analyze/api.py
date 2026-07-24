@@ -93,8 +93,9 @@ def _fit_meta_analysis_single(
     variance, standard_error:
         Exactly one must be provided as a DataFrame column name or
         one-dimensional array-like. Values must be finite and strictly
-        positive. Standard errors are squared internally to obtain sampling
-        variances.
+        positive, and the resulting variance must produce a finite float64
+        inverse weight. Standard errors are squared internally to obtain
+        sampling variances.
     study:
         Optional study label column/array. DataFrame input defaults to its index;
         array-only input defaults to integer row labels.
@@ -346,7 +347,8 @@ def meta_analysis(
     ``effect`` and the selected uncertainty input accept DataFrame column names
     or one-dimensional array-like values. Supply exactly one of ``variance`` or
     ``standard_error``; standard errors are squared internally. Uncertainty
-    values must be finite and strictly positive. The default is a REML
+    values must be finite and strictly positive, and the resulting variance
+    must produce a finite float64 inverse weight. The default is a REML
     random-effects model with a normal confidence interval. ``subgroup``
     returns :class:`SubgroupMetaAnalysisResult` when supplied; otherwise the
     return value is :class:`MetaAnalysisResult`. Missing subgroup labels are

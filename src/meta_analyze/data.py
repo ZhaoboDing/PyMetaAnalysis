@@ -13,6 +13,9 @@ from .exceptions import InvalidStudyDataError
 
 ColumnOrArray: TypeAlias = str | ArrayLike
 MissingPolicy: TypeAlias = Literal["raise", "drop"]
+MIN_FINITE_PRECISION_VARIANCE = float(
+    np.nextafter(1.0 / np.finfo(np.float64).max, np.inf)
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +105,23 @@ def _select_uncertainty_input(
     if variance is None:  # pragma: no cover - guarded by the exclusive check
         raise RuntimeError("variance input unexpectedly missing")
     return variance, "variance", "variance"
+
+
+def _validate_finite_precision_variance(
+    variance: NDArray[np.float64],
+    *,
+    included: NDArray[np.bool_],
+    label: str = "Sampling variances",
+) -> None:
+    """Reject variances whose inverse cannot be represented by float64."""
+
+    too_small = included & (variance < MIN_FINITE_PRECISION_VARIANCE)
+    if np.any(too_small):
+        rows = np.flatnonzero(too_small).tolist()
+        raise InvalidStudyDataError(
+            f"{label} are too small for finite inverse-variance weights; "
+            f"invalid rows: {rows}."
+        )
 
 
 def normalize_studies(
@@ -199,6 +219,11 @@ def normalize_studies(
         variance_values = uncertainty_values
 
     included = ~any_missing
+    _validate_finite_precision_variance(
+        variance_values,
+        included=included,
+        label="Sampling variances",
+    )
     reasons = np.full(len(effect_values), None, dtype=object)
     for index in np.flatnonzero(any_missing):
         if effect_missing[index] and uncertainty_missing[index]:

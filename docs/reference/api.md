@@ -68,8 +68,8 @@ Fits generic study effects using inverse-variance pooling.
 | --- | --- |
 | `data` | Optional DataFrame used by string-valued input selectors |
 | `effect` | Study effect column or array on a consistent model scale |
-| `variance` | Finite, strictly positive sampling variances |
-| `standard_error` | Finite, strictly positive standard errors, squared internally |
+| `variance` | Finite, strictly positive sampling variances with finite float64 inverse weights |
+| `standard_error` | Finite, strictly positive standard errors whose squared values satisfy the variance requirement |
 | `study` | Optional label column/array; defaults to index or row number |
 | `subgroup` | Optional subgroup column/array |
 | `model` | `"common"` or `"random"` |

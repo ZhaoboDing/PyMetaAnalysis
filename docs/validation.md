@@ -46,8 +46,10 @@ Property-based and targeted tests check invariants such as:
 ### Numerical edge cases
 
 The test suite covers extreme sampling variances, identical effects, tau-
-squared boundary solutions, iterative convergence controls, zero cells,
-double-zero/double-all tables, missing rows, and minimum study counts.
+squared boundary solutions, iterative convergence controls, overflow-safe
+binary counts, nonrepresentable derived effects, explicit subnormal-variance
+rejection, zero cells, double-zero/double-all tables, missing rows, and minimum
+study counts.
 
 ### Cross-software references
 
