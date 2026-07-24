@@ -20,6 +20,7 @@ fixtures used by this project.
 | Subgroups | `subgroup=` on a high-level call | separate fits or a moderator model | `subgroup=` |
 | Leave-one-out | `result.leave_one_out()` | `leave1out()` for supported fits | `metainf()` |
 | Meta-regression influence | `regression.influence()` | `influence()`, `rstudent()`, `cooks.distance()`, `dfbetas()` | — |
+| Meta-regression collinearity | `regression.collinearity()` | `vif()` plus weighted design diagnostics | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.

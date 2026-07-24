@@ -21,7 +21,7 @@ deferred functionality explicit.
 - study-level Meta-regression with numeric and explicitly encoded categorical
   moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
   exact leave-one-out refits plus externally standardized residual, Cook's
-  distance, and DFBETAS diagnostics.
+  distance, DFBETAS, VIF/GVIF, and weighted condition diagnostics.
 
 ## Not currently implemented
 
@@ -37,7 +37,8 @@ deferred functionality explicit.
 - alternative prediction-interval methods;
 - formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias
   procedures;
-- Meta-regression DFFITS, covariance ratios, influence plots, or VIF/GVIF;
+- Meta-regression DFFITS, covariance ratios, influence plots, or simulated and
+  re-estimated VIF variants;
 - automatic conversion from confidence intervals, p-values, or raw papers to
   study effects;
 - risk-of-bias assessment, certainty grading, protocol management, or study

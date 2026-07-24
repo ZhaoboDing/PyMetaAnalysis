@@ -251,10 +251,12 @@ sensitivity methods return subgroup composite result classes.
 
 `MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
 `to_dataframe()`, `predict(new_data)`, `test_moderator(name)`,
-`leave_one_out()`, `influence()`, and `bubble()` for eligible
+`leave_one_out()`, `influence()`, `collinearity()`, and `bubble()` for eligible
 single-numeric-moderator fits. `influence()` returns exact deleted-model
-residual, Cook's-distance, and DFBETAS diagnostics. It does not provide a scalar
-pooled `estimate`, a forest plot, or cumulative Meta-regression.
+residual, Cook's-distance, and DFBETAS diagnostics. `collinearity()` returns
+term VIF, grouped moderator GVIF/GSIF, and weighted condition diagnostics. It
+does not provide a scalar pooled `estimate`, a forest plot, or cumulative
+Meta-regression.
 
 ### `cumulative()` parameters
 

@@ -19,6 +19,7 @@ from .provenance import (
     TransformationRecord,
 )
 from .regression_api import meta_regression
+from .regression_collinearity import MetaRegressionCollinearityResult
 from .regression_results import (
     MetaRegressionDiagnostics,
     MetaRegressionResult,
@@ -59,6 +60,7 @@ __all__ = [
     "MetaAnalysisError",
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
+    "MetaRegressionCollinearityResult",
     "MetaRegressionDiagnostics",
     "MetaRegressionInfluenceResult",
     "MetaRegressionLeaveOneOutResult",

@@ -239,6 +239,41 @@ authorize automatic exclusion, or correct for trying multiple model
 specifications. See [sensitivity analysis](sensitivity-analysis.md) for the
 full output and interpretation contract.
 
+## Inspect moderator collinearity
+
+Use `collinearity()` to inspect coefficient inflation and the geometry of the
+fitted weighted design:
+
+```python
+collinearity = result.collinearity()
+
+collinearity.term_vif
+collinearity.moderator_gvif
+collinearity.condition_indices
+collinearity.variance_proportions
+collinearity.concerning_dimensions
+```
+
+`term_vif` contains one VIF and its square-root standard-error inflation factor
+(`sif`) for every encoded non-intercept term. `moderator_gvif` keeps all dummy
+terms for one categorical moderator together and reports its GVIF plus the
+dimension-adjusted `gsif = gvif ** (1 / (2 * term_count))`. This grouping makes
+a multi-level moderator comparable without pretending that each treatment-
+coded term is a separate scientific variable.
+
+The condition table uses the fitted inverse-variance weights and normalizes
+each weighted design column before singular-value decomposition. It is
+therefore invariant to positive changes of moderator units. The result retains
+the original unweighted, scale-dependent design condition number separately as
+`raw_condition_number`.
+
+The fixed references of condition index greater than 30 and variance
+proportion greater than 0.5 are conventional screening heuristics. A
+`concerning` dimension must meet the condition-index reference and concentrate
+more than half of the coefficient variance for at least two terms. The library
+does not attach automatic cutoffs to VIF/GVIF, remove variables, refit models,
+or turn these diagnostics into evidence for a preferred specification.
+
 ## Missing values, provenance, and reports
 
 `missing="raise"` identifies every missing effect, uncertainty, study label,

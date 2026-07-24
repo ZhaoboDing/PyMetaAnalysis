@@ -332,6 +332,48 @@ DFBETAS flag: any abs(DFBETAS_ij) > 1
 They are heuristic review aids. The residual reference is pointwise rather
 than multiplicity-adjusted, and no flag automatically removes a study.
 
+### Meta-regression collinearity diagnostics
+
+VIF/GVIF uses the correlation matrix `R` of the classic coefficient covariance
+for non-intercept terms. A scalar Hartung-Knapp adjustment does not change this
+correlation matrix. For a term set `S` with `m` encoded coefficients:
+
+```text
+GVIF(S) = det(R_SS) det(R_notS,notS) / det(R)
+GSIF(S) = GVIF(S)^(1 / (2m))
+```
+
+For one coefficient, GVIF is the ordinary VIF and GSIF is its square-root
+standard-error inflation factor. Categorical terms are grouped by their
+original moderator. The library reports values without applying an automatic
+5-or-10 cutoff.
+
+Condition diagnostics use the actual fitted precision weights. Let `D` contain
+the Euclidean column norms of `W^(1/2) X`, and define:
+
+```text
+Z = W^(1/2) X D^(-1)
+Z = U diag(s_1, ..., s_p) V'
+condition_index_d = s_1 / s_d
+```
+
+For coefficient `j` and singular dimension `d`, the variance-decomposition
+proportion is:
+
+```text
+component_jd = V[j,d]^2 / s_d^2
+proportion_jd = component_jd / sum_l(component_jl)
+```
+
+Column normalization makes these condition indices invariant to positive
+changes of moderator units. The original unweighted design condition number is
+also returned separately and remains scale-dependent.
+
+A dimension is marked `concerning` only when its condition index exceeds 30
+and more than 50% of the variance of at least two coefficients is concentrated
+in that dimension. These conventional references are descriptive screening
+heuristics; no term is removed or model refitted automatically.
+
 ## Binary study effects
 
 For a treatment/control 2-by-2 table:

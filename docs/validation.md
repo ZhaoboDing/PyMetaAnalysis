@@ -29,6 +29,9 @@ Property-based and targeted tests check invariants such as:
 - Meta-regression is invariant to row order and moderator centering; changing a
   categorical reference preserves fitted values, residual heterogeneity, and
   joint tests.
+- Meta-regression VIF/GVIF is invariant to positive moderator rescaling and row
+  order; weighted condition indices match an independent singular-value
+  decomposition and coefficient variance proportions sum to one.
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.
@@ -55,6 +58,7 @@ The current fixture families cover:
 | `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests, predictions, zero tau-squared, missing rows, and small samples |
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
+| `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -88,6 +92,7 @@ Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R
+Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 ```
 
 Pass an optional output file to review regenerated values before replacement:

@@ -15,6 +15,8 @@ Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
+Rscript tests/reference/generate_meta_regression_influence_metafor.R
+Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
@@ -49,3 +51,8 @@ Hartung-Knapp inference.
 For the no-intercept case, Python comparisons use the coefficient and fitted-
 model fields but not `QE`: `metafor` retains a different no-intercept `QE`
 reporting convention from PyMetaAnalysis's weighted residual sum of squares.
+
+`meta_regression_influence_metafor.json` covers exact deletion residuals,
+Cook's distances, and DFBETAS. `meta_regression_collinearity_metafor.json`
+covers term VIF plus grouped categorical-moderator GVIF/GSIF for common and
+REML fits.
