@@ -91,6 +91,14 @@ Eligible random-effects fits include the documented HTS prediction interval.
 R packages offer additional prediction-interval choices, so matching the mean
 interval does not by itself guarantee a matching prediction interval.
 
+Meta-regression uses a separate prediction rule. Its default corresponds to
+`predict(fit)` in `metafor`: normal inference uses a normal critical value and
+Hartung-Knapp inference uses `t_(k-p)`. PyMetaAnalysis
+`prediction_interval_method="riley"` corresponds to
+`predict(fit, predtype="Riley")`, using `t_(k-p-1)` for the true-effect
+prediction interval while leaving the mean-effect confidence interval
+unchanged.
+
 ## Sparse binary studies
 
 The closest names are:
@@ -174,6 +182,7 @@ as numerically equivalent.
 ## Primary R references
 
 - [`metafor::rma.uni`](https://wviechtb.github.io/metafor/reference/rma.uni.html)
+- [`metafor::predict.rma`](https://wviechtb.github.io/metafor/reference/predict.rma.html)
 - [`metafor::rma.mh`](https://wviechtb.github.io/metafor/reference/rma.mh.html)
 - [`metafor::escalc`](https://wviechtb.github.io/metafor/reference/escalc.html)
 - [`meta::metagen`](https://search.r-project.org/CRAN/refmans/meta/html/metagen.html)

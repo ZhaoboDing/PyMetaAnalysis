@@ -174,6 +174,16 @@ in a new study with those moderators. The interval does not include an
 additional, unknown sampling variance for a future observed estimate. Unknown
 categories and missing prediction inputs are rejected.
 
+The default prediction rule follows coefficient inference: it uses a normal
+critical value with `inference_method="normal"` and `t_(k-p)` with either
+Hartung-Knapp method. Set `prediction_interval_method="riley"` while fitting to
+use a `t_(k-p-1)` prediction critical value instead. Riley therefore needs at
+least two residual degrees of freedom and is usually wider, especially in
+small samples. It is an explicit alternative approximation, not an automatic
+claim of superior coverage. The selected canonical method is retained in
+`result.method.prediction_interval_method` and reused by `predict()` and
+`bubble()`.
+
 ## Plot a single numeric moderator
 
 After installing the `plot` extra, an intercept-containing model with exactly
@@ -189,9 +199,9 @@ ax = result.bubble(
 ```
 
 Bubble area is proportional to normalized fitted precision weight. The fitted
-line and interval bands reuse `result.predict()`, including the selected normal
-or Hartung-Knapp covariance and critical value. A prediction band is available
-only for mixed-effects models.
+line and interval bands reuse `result.predict()`, including the selected
+coefficient covariance and prediction-interval rule. A prediction band is
+available only for mixed-effects models.
 
 PyMetaAnalysis rejects bubble plots for categorical, multiple-moderator, or
 no-intercept fits. Drawing a marginal or partial-effect line for those models

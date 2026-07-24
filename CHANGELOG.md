@@ -20,6 +20,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 - explicit named Meta-regression linear contrasts with nonzero null values,
   individual z/t inference, joint chi-squared/F tests, labeled coefficient
   matrices, and R `metafor` cross-software fixtures.
+- opt-in Riley Meta-regression true-effect prediction intervals using
+  `t_(k-p-1)`, with explicit residual-df validation, preserved refit
+  configuration, and fixed-version R `metafor` boundary references.
 
 ## 0.3.0 - 2026-07-22
 

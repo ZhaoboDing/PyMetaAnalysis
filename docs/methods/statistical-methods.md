@@ -280,7 +280,13 @@ mixed model additionally reports a true-effect prediction interval:
 fitted +/- critical * sqrt(tau^2 + Var_mean)
 ```
 
-It does not include a sampling variance for a future observed effect.
+The default critical value is standard normal for normal inference and
+`t_(k-p)` for either Hartung-Knapp mode. The optional Riley rule uses
+`t_(k-p-1)` and therefore requires `k-p >= 2`. Both are approximations because
+tau-squared is estimated; the Riley option is not selected automatically.
+Neither interval includes a sampling variance for a future observed effect.
+See [ADR 0003](../adr/0003-meta-regression-prediction-intervals.md) for the
+compatibility and validation decision.
 
 ### Meta-regression deletion diagnostics
 

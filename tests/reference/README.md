@@ -48,7 +48,10 @@ models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit
 categorical coding, a no-intercept model, multivariable joint tests, fitted
 values, weights, leverage, coefficient covariance, prediction intervals, zero
 residual tau-squared, explicit missing-row exclusion, and small-sample
-Hartung-Knapp inference.
+Hartung-Knapp inference. Prediction cases retain `metafor`'s prediction
+standard error, distribution, and degrees of freedom and compare both its
+default rule and the Riley `t_(k-p-1)` alternative, including at zero
+tau-squared.
 For the no-intercept case, Python comparisons use the coefficient and fitted-
 model fields but not `QE`: `metafor` retains a different no-intercept `QE`
 reporting convention from PyMetaAnalysis's weighted residual sum of squares.

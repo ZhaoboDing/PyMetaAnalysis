@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pandas as pd
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -249,4 +250,47 @@ def test_common_meta_regression_is_equivariant_to_location_and_scale(
     )
     assert transformed.global_test.statistic == pytest.approx(
         original.global_test.statistic, rel=1e-10, abs=1e-10
+    )
+
+
+@given(meta_regression_vectors())
+@settings(max_examples=50, deadline=None)
+def test_riley_prediction_intervals_are_symmetric_and_wider_than_default(
+    vectors: tuple[np.ndarray, np.ndarray, np.ndarray],
+) -> None:
+    effect, variance, moderator = vectors
+    default = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="mixed",
+        tau2_method="DL",
+    )
+    riley = ma.meta_regression(
+        effect=effect,
+        variance=variance,
+        moderators={"x": moderator},
+        model="mixed",
+        tau2_method="DL",
+        prediction_interval_method="riley",
+    )
+    prediction_points = np.asarray([-0.75, 0.25, 0.9])
+    default_prediction = default.predict(pd.DataFrame({"x": prediction_points}))
+    riley_prediction = riley.predict(pd.DataFrame({"x": prediction_points}))
+
+    np.testing.assert_allclose(
+        riley_prediction[["estimate", "standard_error", "ci_low", "ci_high"]],
+        default_prediction[["estimate", "standard_error", "ci_low", "ci_high"]],
+        rtol=1e-11,
+        atol=1e-11,
+    )
+    np.testing.assert_allclose(
+        (riley_prediction["pi_low"] + riley_prediction["pi_high"]) / 2.0,
+        riley_prediction["estimate"],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    assert np.all(
+        riley_prediction["pi_high"] - riley_prediction["pi_low"]
+        > default_prediction["pi_high"] - default_prediction["pi_low"]
     )

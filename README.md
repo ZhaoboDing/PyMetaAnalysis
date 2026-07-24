@@ -164,6 +164,8 @@ full-rank joint chi-squared/F tests without silently adjusting for multiple
 testing. An eligible
 single-numeric-moderator Meta-regression result additionally provides
 `regression.bubble()` with fitted confidence and optional prediction bands.
+Mixed-effects Meta-regression supports its documented default prediction rule
+and an explicit Riley `t_(k-p-1)` alternative.
 
 ## Documentation
 

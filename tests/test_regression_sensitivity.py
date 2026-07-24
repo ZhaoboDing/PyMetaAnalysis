@@ -72,6 +72,7 @@ def test_meta_regression_leave_one_out_preserves_mixed_model_configuration() -> 
         tau2_method="PM",
         inference_method="hartung_knapp_adhoc",
         confidence_level=0.9,
+        prediction_interval_method="riley",
         atol=1e-8,
         max_iter=321,
     )
@@ -84,6 +85,7 @@ def test_meta_regression_leave_one_out_preserves_mixed_model_configuration() -> 
         assert refit.method.tau2_method == "PM"
         assert refit.method.inference_method == "hartung_knapp_adhoc"
         assert refit.method.confidence_level == pytest.approx(0.9)
+        assert refit.method.prediction_interval_method == "riley"
         assert refit.method.atol == pytest.approx(1e-8)
         assert refit.method.max_iter == 321
     assert diagnostics.table["global_statistic_name"].eq("F").all()

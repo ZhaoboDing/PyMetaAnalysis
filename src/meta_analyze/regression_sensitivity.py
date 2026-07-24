@@ -157,6 +157,9 @@ def _refit_meta_regression(
         inference_method=result.method.inference_method,
         intercept=result.method.intercept,
         confidence_level=result.method.confidence_level,
+        prediction_interval_method=(
+            result.method.prediction_interval_method or "default"
+        ),
         missing=cast(MissingPolicy, result.method.missing),
         atol=result.method.atol,
         max_iter=result.method.max_iter,

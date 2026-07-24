@@ -21,7 +21,7 @@ from .estimators import (
     fit_meta_regression,
     residual_heterogeneity,
 )
-from .exceptions import UnsupportedMethodError
+from .exceptions import InsufficientStudiesError, UnsupportedMethodError
 from .provenance import TransformationRecord, build_analysis_provenance
 from .regression_results import (
     MetaRegressionDiagnostics,
@@ -62,6 +62,22 @@ def _normalize_inference_method(inference_method: str) -> str:
     return aliases.get(normalized, normalized)
 
 
+def _normalize_prediction_interval_method(method: str) -> str:
+    normalized = method.lower().replace("-", "_")
+    aliases = {
+        "default": "normal_or_t_k_minus_p",
+        "normal_or_t_k_minus_p": "normal_or_t_k_minus_p",
+        "riley": "riley",
+    }
+    try:
+        return aliases[normalized]
+    except KeyError as error:
+        raise UnsupportedMethodError(
+            "Unsupported prediction_interval_method="
+            f"{method!r}; expected 'default' or 'riley'."
+        ) from error
+
+
 def _moderator_inputs(
     moderators: ModeratorInput,
 ) -> tuple[tuple[str, ColumnOrArray], ...]:
@@ -86,6 +102,7 @@ def meta_regression(
     inference_method: str = "normal",
     intercept: bool = True,
     confidence_level: float = 0.95,
+    prediction_interval_method: str = "default",
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -97,7 +114,9 @@ def meta_regression(
     moderators must be declared explicitly as ordered level sequences; the
     first level is the treatment-coding reference. Coefficients describe
     study-level associations and do not establish individual-level or causal
-    effects.
+    effects. Mixed-effects true-effect prediction intervals use the fitted
+    inference distribution by default; ``prediction_interval_method="riley"``
+    selects a t critical value with ``k-p-1`` degrees of freedom.
     """
 
     confidence_level, atol, max_iter = _validate_analysis_controls(
@@ -107,7 +126,14 @@ def meta_regression(
     )
     normalized_model = _normalize_regression_model(model)
     normalized_inference = _normalize_inference_method(inference_method)
+    normalized_prediction_interval = _normalize_prediction_interval_method(
+        prediction_interval_method
+    )
     normalized_tau2 = tau2_method.upper().replace("-", "_")
+    if normalized_model == "common" and normalized_prediction_interval == "riley":
+        raise UnsupportedMethodError(
+            "prediction_interval_method='riley' requires a mixed-effects model."
+        )
 
     normalized = normalize_meta_regression_data(
         data=data,
@@ -123,6 +149,14 @@ def meta_regression(
     included_effect = normalized.included_effect
     included_variance = normalized.included_variance
     design = normalized.included_design_matrix
+    if (
+        normalized_prediction_interval == "riley"
+        and len(included_effect) - design.shape[1] <= 1
+    ):
+        raise InsufficientStudiesError(
+            "prediction_interval_method='riley' requires at least two residual "
+            "degrees of freedom (k-p >= 2)."
+        )
     fit = fit_meta_regression(
         included_effect,
         included_variance,
@@ -342,7 +376,7 @@ def meta_regression(
             if spec.kind == "categorical"
         ),
         prediction_interval_method=(
-            "normal_or_t_k_minus_p" if normalized_model == "mixed" else None
+            normalized_prediction_interval if normalized_model == "mixed" else None
         ),
         missing=missing,
         atol=atol,

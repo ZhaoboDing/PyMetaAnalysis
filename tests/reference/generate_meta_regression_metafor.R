@@ -99,8 +99,8 @@ fit_summary <- function(fit, term_names, tau2_null = NULL) {
   )
 }
 
-prediction_summary <- function(fit, newmods) {
-  prediction <- predict(fit, newmods = newmods)
+prediction_summary <- function(fit, newmods, predtype = "default") {
+  prediction <- predict(fit, newmods = newmods, predtype = predtype)
   result <- list(
     estimate = numeric_array(prediction$pred),
     standard_error = numeric_array(prediction$se),
@@ -110,6 +110,11 @@ prediction_summary <- function(fit, newmods) {
   if (!is.null(prediction$pi.lb)) {
     result$pi_low <- numeric_array(prediction$pi.lb)
     result$pi_high <- numeric_array(prediction$pi.ub)
+    result$prediction_standard_error <- numeric_array(prediction$pi.se)
+    result$prediction_distribution <- prediction$pi.dist
+    if (!is.null(prediction$pi.ddf)) {
+      result$prediction_df <- numeric_array(prediction$pi.ddf)
+    }
   }
   result
 }
@@ -197,6 +202,9 @@ zero_tau2_null <- rma.uni(
   test = "z",
   control = iterative_control
 )
+zero_prediction_values <- c(0.5, 2.5, 4.5)
+zero_prediction_matrix <- matrix(zero_prediction_values, ncol = 1)
+colnames(zero_prediction_matrix) <- "x"
 missing_complete <- complete.cases(
   boundary_input$observed_effect,
   boundary_input$variance,
@@ -265,7 +273,12 @@ reference <- list(
       fit_summary(reml_hk, numeric_terms, numeric_null_tau2[["REML"]]),
       list(
         prediction_values = numeric_array(numeric_prediction_values),
-        predictions = prediction_summary(reml_hk, numeric_prediction_matrix)
+        predictions = prediction_summary(reml_hk, numeric_prediction_matrix),
+        predictions_riley = prediction_summary(
+          reml_hk,
+          numeric_prediction_matrix,
+          predtype = "Riley"
+        )
       )
     ),
     hartung_knapp_adhoc = fit_summary(
@@ -305,14 +318,33 @@ reference <- list(
       predictions = prediction_summary(
         multivariable,
         multivariable_prediction_matrix
+      ),
+      predictions_riley = prediction_summary(
+        multivariable,
+        multivariable_prediction_matrix,
+        predtype = "Riley"
       )
     )
   ),
   boundary_cases = list(
-    zero_tau2_reml = fit_summary(
-      zero_tau2,
-      c("intercept", "x"),
-      zero_tau2_null$tau2
+    zero_tau2_reml = c(
+      fit_summary(
+        zero_tau2,
+        c("intercept", "x"),
+        zero_tau2_null$tau2
+      ),
+      list(
+        prediction_values = numeric_array(zero_prediction_values),
+        predictions = prediction_summary(
+          zero_tau2,
+          zero_prediction_matrix
+        ),
+        predictions_riley = prediction_summary(
+          zero_tau2,
+          zero_prediction_matrix,
+          predtype = "Riley"
+        )
+      )
     ),
     missing_common = c(
       fit_summary(missing_common, c("intercept", "x")),
