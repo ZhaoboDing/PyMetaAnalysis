@@ -17,6 +17,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 - Meta-regression term VIF, moderator-level GVIF/GSIF, and weighted,
   column-scaled condition diagnostics with variance-decomposition proportions,
   heuristic-only flags, and R `metafor` cross-software fixtures.
+- explicit named Meta-regression linear contrasts with nonzero null values,
+  individual z/t inference, joint chi-squared/F tests, labeled coefficient
+  matrices, and R `metafor` cross-software fixtures.
 
 ## 0.3.0 - 2026-07-22
 

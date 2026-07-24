@@ -20,6 +20,10 @@ from .provenance import (
 )
 from .regression_api import meta_regression
 from .regression_collinearity import MetaRegressionCollinearityResult
+from .regression_contrasts import (
+    LinearContrastTestResult,
+    MetaRegressionContrastResult,
+)
 from .regression_results import (
     MetaRegressionDiagnostics,
     MetaRegressionResult,
@@ -57,10 +61,12 @@ __all__ = [
     "InputFieldProvenance",
     "InvalidStudyDataError",
     "LeaveOneOutResult",
+    "LinearContrastTestResult",
     "MetaAnalysisError",
     "MetaAnalysisResult",
     "MetaAnalysisSummary",
     "MetaRegressionCollinearityResult",
+    "MetaRegressionContrastResult",
     "MetaRegressionDiagnostics",
     "MetaRegressionInfluenceResult",
     "MetaRegressionLeaveOneOutResult",

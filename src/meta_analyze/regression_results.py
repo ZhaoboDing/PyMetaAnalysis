@@ -20,6 +20,11 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
     from .regression_collinearity import MetaRegressionCollinearityResult
+    from .regression_contrasts import (
+        ContrastInput,
+        ContrastRHS,
+        MetaRegressionContrastResult,
+    )
     from .regression_sensitivity import (
         MetaRegressionInfluenceResult,
         MetaRegressionLeaveOneOutResult,
@@ -270,6 +275,19 @@ class MetaRegressionResult:
         from .regression_collinearity import meta_regression_collinearity
 
         return meta_regression_collinearity(self)
+
+    def contrast(
+        self,
+        contrasts: ContrastInput,
+        *,
+        name: str = "contrast",
+        rhs: ContrastRHS = 0.0,
+    ) -> MetaRegressionContrastResult:
+        """Evaluate one or more explicit linear coefficient contrasts."""
+
+        from .regression_contrasts import meta_regression_contrast
+
+        return meta_regression_contrast(self, contrasts, name=name, rhs=rhs)
 
     def _test_terms(
         self, moderator: str, terms: tuple[str, ...]

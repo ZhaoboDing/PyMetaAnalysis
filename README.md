@@ -128,7 +128,7 @@ Rows excluded by missing-value or sparse-data policies remain in
 `study_results` with a stable `row_id`, `included=False`, and an
 `exclusion_reason`.
 
-## Sensitivity and plots
+## Diagnostics, contrasts, and plots
 
 ```python
 leave_one_out = result.leave_one_out().to_dataframe()
@@ -141,6 +141,10 @@ collinearity = regression.collinearity()
 term_vif = collinearity.term_vif
 moderator_gvif = collinearity.moderator_gvif
 condition_indices = collinearity.condition_indices
+south_vs_east = regression.contrast(
+    {"region[South]": 1.0, "region[East]": -1.0},
+    name="South - East",
+)
 
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
@@ -155,7 +159,9 @@ thresholds without automatically excluding studies. Meta-regression
 collinearity diagnostics add `metafor`-compatible VIF/GVIF plus weighted,
 column-scaled condition indices and variance-decomposition proportions.
 Their documented references are review aids, not automatic variable-selection
-rules. An eligible
+rules. Explicit named linear contrasts provide individual z/t inference and
+full-rank joint chi-squared/F tests without silently adjusting for multiple
+testing. An eligible
 single-numeric-moderator Meta-regression result additionally provides
 `regression.bubble()` with fitted confidence and optional prediction bands.
 

@@ -21,14 +21,15 @@ deferred functionality explicit.
 - study-level Meta-regression with numeric and explicitly encoded categorical
   moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
   exact leave-one-out refits plus externally standardized residual, Cook's
-  distance, DFBETAS, VIF/GVIF, and weighted condition diagnostics.
+  distance, DFBETAS, VIF/GVIF, weighted condition diagnostics, and explicit
+  linear contrasts.
 
 ## Not currently implemented
 
 - Peto odds ratios;
 - Mantel-Haenszel risk differences or random-effects MH pooling;
 - formula parsing, automatic interactions/splines, stepwise moderator
-  selection, multiplicity correction, or arbitrary linear contrasts;
+  selection, automatic pairwise contrasts, or multiplicity correction;
 - multilevel, multivariate, network, dose-response, diagnostic-accuracy, or
   individual-participant-data meta-analysis;
 - robust variance estimation or dependent-effect clustering;
