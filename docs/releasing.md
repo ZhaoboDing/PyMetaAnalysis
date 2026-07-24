@@ -82,23 +82,23 @@ and the [validation status](validation.md) must accurately describe the
 evidence available for the released commit and must not imply that a formal
 audit has occurred when it has not.
 
-### Meta-regression 0.3.0 acceptance checks
+### Meta-regression 0.4.0 acceptance checks
 
-Before preparing the 0.3.0 version commit, confirm that:
+Before preparing the 0.4.0 version commit, confirm that:
 
-- numeric, explicitly encoded categorical, and multivariable examples execute
-  in `examples/meta_regression.ipynb`;
-- common/mixed, DL/PM/REML, normal/Hartung-Knapp/ad hoc inference, joint tests,
-  and predictions remain covered by the committed `metafor` fixture;
-- property and numerical-stability tests cover row order, effect translation,
-  moderator rescaling, high condition numbers, and small-study warnings;
+- exact leave-one-out refits and influence diagnostics preserve fitted
+  configuration and remain covered by fixed-version `metafor` references;
+- VIF/GVIF, weighted condition diagnostics, and explicit linear contrasts
+  retain their independent R references and invariance tests;
+- default and Riley prediction intervals remain covered for normal,
+  Hartung-Knapp, multivariable, and zero-tau-squared cases;
 - `meta_regression_multivariable_reml` is present in the release performance
   benchmark output;
 - the Meta-regression guide, methods, API, result, reporting, limitations, R
   mapping, and validation pages agree with the shipped behavior.
 
 Only after these checks pass should the release pull request change the package
-version to 0.3.0 and create the dated changelog heading.
+version to 0.4.0 and create the dated changelog heading.
 
 ## Tag and publish
 
