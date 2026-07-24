@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.4.0 - 2026-07-23
+
 ### Added
 
 - leave-one-out Meta-regression refits with model-level diagnostics,

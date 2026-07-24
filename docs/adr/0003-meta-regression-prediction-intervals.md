@@ -1,7 +1,7 @@
 # ADR 0003: Meta-regression prediction-interval choices
 
 - Status: Accepted
-- Date: 2026-07-24
+- Date: 2026-07-23
 
 ## Context
 

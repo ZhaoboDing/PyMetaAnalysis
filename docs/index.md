@@ -84,12 +84,12 @@ lists unsupported methods explicitly.
 
 ## Project status
 
-PyMetaAnalysis 0.3.0 adds study-level Meta-regression with numeric, explicitly
-encoded categorical, and multiple moderators; common- and mixed-effects
-models; coefficient inference and prediction; and optional bubble plots. The
-project has not undergone a formal external statistical audit. Pin the package
-version for consequential work and independently check important analyses.
-See the repository
+PyMetaAnalysis 0.4.0 extends Meta-regression with exact leave-one-out and
+influence diagnostics, VIF/GVIF and weighted condition diagnostics, explicit
+linear contrasts, and opt-in Riley prediction intervals. The project has not
+undergone a formal external statistical audit. Pin the package version for
+consequential work and independently check important analyses. See the
+repository
 [changelog](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md)
 and [contribution guide](development.md). For manuscripts and archived
 analyses, see [citing PyMetaAnalysis](citation.md).
