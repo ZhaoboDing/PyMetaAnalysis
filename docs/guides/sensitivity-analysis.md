@@ -62,6 +62,50 @@ The original model must have at least `k >= p + 2`, so deleting one study can
 still leave more studies than coefficients. Each successful refit re-estimates
 tau-squared and coefficient inference with the original model settings.
 
+### Meta-regression influence diagnostics
+
+`MetaRegressionResult.influence()` builds on the same exact deleted-model
+refits:
+
+```python
+influence = regression.influence()
+
+print(influence.table)
+print(influence.dfbetas)
+print(influence.flagged)
+```
+
+`MetaRegressionInfluenceResult` contains the underlying `leave_one_out`
+workflow and its omission-aligned `results`. The case-level `table` adds:
+
+- the deleted residual, its standard error, and the externally standardized
+  residual;
+- Cook's distance based on the full-model coefficient covariance;
+- the largest absolute DFBETAS value across fitted terms;
+- the original leverage and normalized precision weight;
+- separate outlier and influence screening flags.
+
+The long-form `dfbetas` table records the unstandardized `dfbeta` as
+full-model minus deleted-model coefficient, its deletion-based standard-error
+reference, the resulting DFBETAS value, and its threshold flag for each term.
+Failed deletion fits retain their exception type and message in `table`, use
+`NaN` diagnostics, and retain one unavailable row per term in `dfbetas`.
+
+The screening references are explicit in both the result attributes and table:
+
+- `abs(externally_standardized_residual) > z(0.975)` is a pointwise,
+  asymptotic potential-outlier reference;
+- Cook's distance is flagged above the median of a chi-squared distribution
+  with `p` degrees of freedom;
+- `abs(DFBETAS) > 1` flags a coefficient-specific change.
+
+`potentially_influential` combines only the Cook's-distance and DFBETAS rules;
+`flagged` also includes the residual outlier screen. These cutoffs are
+heuristic diagnostics, not hypothesis-test conclusions, multiplicity-adjusted
+decision rules, or instructions to exclude a study. Inspect subject-matter
+differences, data quality, protocol decisions, and model specification before
+acting on them.
+
 ## Cumulative analysis
 
 By default, cumulative analysis follows input order:

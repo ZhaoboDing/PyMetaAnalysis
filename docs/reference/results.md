@@ -226,10 +226,45 @@ deleted-model fits, a model-level table, and a long-form coefficient table. See
 [sensitivity analysis](../guides/sensitivity-analysis.md) for failure and
 minimum-study rules.
 
+`influence()` returns a `MetaRegressionInfluenceResult` with externally
+standardized deleted residuals, Cook's distances, DFBETAS, explicit screening
+thresholds, and the same exact deletion fits. It does not mutate or filter the
+original result.
+
 `summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
 copy semantics follow the same audit principles as `MetaAnalysisResult`.
 
 ## Sensitivity results
+
+### `MetaRegressionInfluenceResult`
+
+Contains `original`, the underlying `leave_one_out` workflow, its
+omission-aligned `results`, workflow `warnings`, and defensive `table`,
+`dfbetas`, `failed`, and `flagged` DataFrames. The scalar
+`studentized_residual_reference`, `cook_distance_threshold`, and
+`dfbetas_threshold` attributes expose the applied screening references.
+
+The case-level table columns are:
+
+```text
+omitted_row_id, omitted_study, refit_success, error_type, error_message,
+deleted_residual, deleted_residual_se, externally_standardized_residual,
+studentized_residual_reference, potential_outlier, cook_distance,
+cook_distance_threshold, cook_distance_flag, max_abs_dfbetas,
+dfbetas_threshold, dfbetas_flag, potentially_influential, flagged,
+leverage, normalized_precision_weight
+```
+
+The long-form DFBETAS table repeats omission identifiers, success state, term,
+and moderator, followed by:
+
+```text
+dfbeta, standard_error_reference, dfbetas, threshold, exceeds_threshold
+```
+
+`dfbeta` is the full-model coefficient minus the deleted-model coefficient.
+Failed refits retain rows with unavailable numeric diagnostics. Screening
+flags are heuristic review aids and never remove studies.
 
 ### `MetaRegressionLeaveOneOutResult`
 

@@ -11,6 +11,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 - leave-one-out Meta-regression refits with model-level diagnostics,
   coefficient changes, explicit unidentifiable-deletion records, and preserved
   provenance.
+- exact Meta-regression externally standardized residuals, Cook's distances,
+  DFBETAS, transparent screening thresholds, and fixed-version R `metafor`
+  cross-software fixtures.
 
 ## 0.3.0 - 2026-07-22
 

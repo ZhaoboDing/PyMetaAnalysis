@@ -214,6 +214,31 @@ the public value is truncated to zero and the negative raw value is retained
 with a warning. Pseudo-R² is not the proportion of outcome variance explained
 in ordinary individual-level regression.
 
+## Inspect deleted-study influence
+
+Use exact deletion diagnostics when a study appears unusual or the fitted
+association may depend strongly on one row:
+
+```python
+influence = result.influence()
+
+influence.table
+influence.dfbetas
+influence.flagged
+```
+
+Every included study is omitted once, with tau-squared and coefficient
+inference re-estimated under the original settings. The result reports the
+externally standardized deleted residual, Cook's distance, and term-specific
+DFBETAS values. Failed reduced models remain visible rather than being silently
+dropped.
+
+The result also exposes its numerical screening thresholds. These thresholds
+identify rows for review; they do not prove that a study is erroneous,
+authorize automatic exclusion, or correct for trying multiple model
+specifications. See [sensitivity analysis](sensitivity-analysis.md) for the
+full output and interpretation contract.
+
 ## Missing values, provenance, and reports
 
 `missing="raise"` identifies every missing effect, uncertainty, study label,

@@ -282,6 +282,56 @@ fitted +/- critical * sqrt(tau^2 + Var_mean)
 
 It does not include a sampling variance for a future observed effect.
 
+### Meta-regression deletion diagnostics
+
+For every included study `i`, `influence()` deletes that study and refits the
+model with the same configuration, including a fresh residual tau-squared
+estimate. Let `beta_(-i)`, `tau^2_(-i)`, and `q_(-i)` denote the deleted-model
+coefficient estimate, residual variance estimate, and inference scale. The
+deleted prediction and externally standardized residual are:
+
+```text
+pred_(-i) = x_i' beta_(-i)
+e_(-i) = y_i - pred_(-i)
+SE(e_(-i)) = sqrt(
+    q_(-i) * (v_i + tau^2_(-i))
+    + x_i' Cov(beta_(-i)) x_i
+)
+rstudent_i = e_(-i) / SE(e_(-i))
+```
+
+The inference scale is one for normal inference, the deleted-model
+Hartung-Knapp scale for unmodified Hartung-Knapp, and its lower-bounded value
+for the safeguarded variant.
+
+Let `delta_i = beta_hat - beta_(-i)`. Cook's distance is:
+
+```text
+Cook_i = delta_i' Cov(beta_hat)^(-1) delta_i
+```
+
+For DFBETAS, the deleted tau-squared is inserted into the full design matrix:
+
+```text
+B_i = (X' W(tau^2_(-i)) X)^(-1)
+DFBETAS_ij = delta_ij / sqrt(q_(-i) * B_i[j,j])
+```
+
+This matches the deletion definitions used by R `metafor` for the supported
+independent-effect models. The implementation uses linear solves and does not
+substitute a pseudo-inverse.
+
+The output provides three transparent screening references:
+
+```text
+potential outlier: abs(rstudent_i) > z(0.975)
+Cook's-distance flag: Cook_i > median(chi-square_p)
+DFBETAS flag: any abs(DFBETAS_ij) > 1
+```
+
+They are heuristic review aids. The residual reference is pointwise rather
+than multiplicity-adjusted, and no flag automatically removes a study.
+
 ## Binary study effects
 
 For a treatment/control 2-by-2 table:
