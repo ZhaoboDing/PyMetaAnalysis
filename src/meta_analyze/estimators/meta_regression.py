@@ -65,8 +65,10 @@ class _WeightedSolution:
     normalized_precision_weights: NDArray[np.float64]
     leverage: NDArray[np.float64]
     q: float
-    trace_p: float
-    weighted_square_residual: float
+    q_scaled: float
+    trace_p_scaled: float
+    weighted_square_residual_scaled: float
+    variance_scale: float
 
 
 def _weighted_solution(
@@ -75,7 +77,12 @@ def _weighted_solution(
     design_matrix: NDArray[np.float64],
     tau2: float,
 ) -> _WeightedSolution:
-    denominator = variance + tau2
+    with np.errstate(over="ignore", invalid="ignore"):
+        denominator = variance + tau2
+    if np.any(~np.isfinite(denominator)) or np.any(denominator <= 0.0):
+        raise InvalidStudyDataError(
+            "Fitted precision denominators must be finite and positive."
+        )
     variance_scale = float(np.min(denominator))
     relative_weights = variance_scale / denominator
     weighted_design = relative_weights[:, np.newaxis] * design_matrix
@@ -96,12 +103,23 @@ def _weighted_solution(
     covariance = variance_scale * inverse_gram
     fitted_values = design_matrix @ coefficients
     residuals = effect - fitted_values
-    precision_weights = 1.0 / denominator
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        precision_weights = 1.0 / denominator
+    if np.any(~np.isfinite(precision_weights)) or np.any(precision_weights <= 0.0):
+        raise InvalidStudyDataError(
+            "Sampling variances are too small for finite precision weights."
+        )
     normalized = relative_weights / float(np.sum(relative_weights))
     leverage = relative_weights * np.einsum(
         "ij,jk,ik->i", design_matrix, inverse_gram, design_matrix
     )
-    q = float(np.dot(precision_weights, residuals * residuals))
+    with np.errstate(over="ignore", invalid="ignore"):
+        q_scaled = float(np.dot(relative_weights, residuals * residuals))
+        q = float(q_scaled / variance_scale)
+    if np.isnan(q):
+        raise InvalidStudyDataError(
+            "The weighted residual sum of squares is undefined."
+        )
 
     squared_weight_crossproduct = design_matrix.T @ (
         (relative_weights * relative_weights)[:, np.newaxis] * design_matrix
@@ -109,10 +127,13 @@ def _weighted_solution(
     trace_relative_p = float(
         np.sum(relative_weights) - np.trace(inverse_gram @ squared_weight_crossproduct)
     )
-    trace_p = trace_relative_p / variance_scale
-    weighted_square_residual = float(
-        np.dot(precision_weights * precision_weights, residuals * residuals)
-    )
+    with np.errstate(over="ignore", invalid="ignore"):
+        weighted_square_residual_scaled = float(
+            np.dot(
+                relative_weights * relative_weights,
+                residuals * residuals,
+            )
+        )
     return _WeightedSolution(
         coefficients=coefficients,
         covariance=covariance,
@@ -122,8 +143,10 @@ def _weighted_solution(
         normalized_precision_weights=normalized,
         leverage=leverage,
         q=q,
-        trace_p=trace_p,
-        weighted_square_residual=weighted_square_residual,
+        q_scaled=q_scaled,
+        trace_p_scaled=trace_relative_p,
+        weighted_square_residual_scaled=weighted_square_residual_scaled,
+        variance_scale=variance_scale,
     )
 
 
@@ -166,22 +189,27 @@ def estimate_meta_regression_tau2(
     at_zero = _weighted_solution(effect, variance, design_matrix, 0.0)
 
     if normalized_method == "DL":
-        value = max(0.0, (at_zero.q - residual_df) / at_zero.trace_p)
+        value = max(
+            0.0,
+            (at_zero.q_scaled - residual_df * at_zero.variance_scale)
+            / at_zero.trace_p_scaled,
+        )
         return Tau2Estimate(value, "DL", True, 0, value == 0.0)
 
     if normalized_method == "PM":
 
         def equation(tau2: float) -> float:
-            return float(
-                _weighted_solution(effect, variance, design_matrix, tau2).q
-                - residual_df
-            )
+            solution = _weighted_solution(effect, variance, design_matrix, tau2)
+            return float(solution.q_scaled - residual_df * solution.variance_scale)
 
     else:
 
         def equation(tau2: float) -> float:
             solution = _weighted_solution(effect, variance, design_matrix, tau2)
-            return 0.5 * (solution.weighted_square_residual - solution.trace_p)
+            return 0.5 * (
+                solution.weighted_square_residual_scaled
+                - solution.variance_scale * solution.trace_p_scaled
+            )
 
     at_boundary = equation(0.0)
     if at_boundary <= 0.0:
@@ -225,11 +253,11 @@ def residual_heterogeneity(
     effect: NDArray[np.float64],
     variance: NDArray[np.float64],
     design_matrix: NDArray[np.float64],
-) -> tuple[float, float]:
-    """Return residual QE and the trace of its common-effect P matrix."""
+) -> tuple[float, float, float]:
+    """Return residual QE plus scaled trace and variance components."""
 
     solution = _weighted_solution(effect, variance, design_matrix, 0.0)
-    return solution.q, solution.trace_p
+    return solution.q, solution.trace_p_scaled, solution.variance_scale
 
 
 def _coefficient_statistics(

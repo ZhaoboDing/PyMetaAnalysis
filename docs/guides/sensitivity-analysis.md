@@ -184,7 +184,3 @@ design, outcome definition, risk of bias, and numerical leverage. They are not
 by themselves a reason to exclude the study. Likewise, a cumulative trend can
 describe the historical evidence path but does not remove time-related changes
 in methods, populations, or publication processes.
-
-The current Meta-regression workflow reports exact deleted-model fits and
-coefficient changes. It does not yet calculate Cook's distance, DFBETAS, or an
-automatic influential-study flag.

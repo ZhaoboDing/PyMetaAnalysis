@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from scipy.optimize import brentq
 
 from ..exceptions import ConvergenceError, UnsupportedMethodError
-from ..heterogeneity import generalized_q, weighted_mean
+from ..heterogeneity import _scaled_q_components, weighted_mean
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,14 +44,16 @@ def _find_upper_bound(
 def _dersimonian_laird(
     effect: NDArray[np.float64], variance: NDArray[np.float64]
 ) -> Tau2Estimate:
-    weights = 1.0 / variance
-    estimate = weighted_mean(effect, weights)
-    residual = effect - estimate
-    q = float(np.dot(weights, residual * residual))
+    variance_scale = float(np.min(variance))
+    relative_weights = variance_scale / variance
+    estimate = weighted_mean(effect, relative_weights)
+    q_scaled, _ = _scaled_q_components(effect, variance, estimate=estimate)
     df = len(effect) - 1
-    weight_sum = float(np.sum(weights))
-    c = weight_sum - float(np.dot(weights, weights)) / weight_sum
-    value = max(0.0, (q - df) / c)
+    relative_weight_sum = float(np.sum(relative_weights))
+    c_scaled = relative_weight_sum - (
+        float(np.dot(relative_weights, relative_weights)) / relative_weight_sum
+    )
+    value = max(0.0, (q_scaled - df * variance_scale) / c_scaled)
     return Tau2Estimate(
         value=value,
         method="DL",
@@ -71,7 +73,9 @@ def _paule_mandel(
     df = len(effect) - 1
 
     def equation(tau2: float) -> float:
-        return generalized_q(effect, variance, tau2) - df
+        denominator = variance + tau2
+        q_scaled, scale = _scaled_q_components(effect, denominator)
+        return q_scaled - df * scale
 
     at_zero = equation(0.0)
     if at_zero <= 0.0:
@@ -108,12 +112,20 @@ def _paule_mandel(
 def _reml_score(
     effect: NDArray[np.float64], variance: NDArray[np.float64], tau2: float
 ) -> float:
-    weights = 1.0 / (variance + tau2)
-    estimate = weighted_mean(effect, weights)
-    residual = effect - estimate
-    weighted_square_residual = float(np.dot(weights * weights, residual * residual))
-    trace_p = float(np.sum(weights) - np.dot(weights, weights) / np.sum(weights))
-    return 0.5 * (weighted_square_residual - trace_p)
+    denominator = variance + tau2
+    variance_scale = float(np.min(denominator))
+    relative_weights = variance_scale / denominator
+    estimate = weighted_mean(effect, relative_weights)
+    with np.errstate(over="ignore", invalid="ignore"):
+        residual = effect - estimate
+        weighted_square_scaled = float(
+            np.dot(relative_weights * relative_weights, residual * residual)
+        )
+    relative_weight_sum = float(np.sum(relative_weights))
+    trace_scaled = relative_weight_sum - (
+        float(np.dot(relative_weights, relative_weights)) / relative_weight_sum
+    )
+    return 0.5 * (weighted_square_scaled - variance_scale * trace_scaled)
 
 
 def _restricted_maximum_likelihood(

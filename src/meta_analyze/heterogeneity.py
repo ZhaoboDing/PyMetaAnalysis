@@ -19,7 +19,40 @@ def weighted_mean(effect: NDArray[np.float64], weights: NDArray[np.float64]) -> 
         raise ValueError("Weights must have a finite, strictly positive sum.")
     if bool(np.all(effect == effect[0])):
         return float(effect[0])
-    return float(np.dot(scaled, effect) / scaled_sum)
+    normalized = scaled / scaled_sum
+    estimate = float(np.dot(normalized, effect))
+    if not np.isfinite(estimate):
+        raise ValueError("The weighted mean is not representable as a finite float.")
+    return estimate
+
+
+def _scaled_q_components(
+    effect: NDArray[np.float64],
+    denominator: NDArray[np.float64],
+    *,
+    estimate: float | None = None,
+) -> tuple[float, float]:
+    """Return ``Q * scale`` and the positive denominator scale."""
+
+    scale = float(np.min(denominator))
+    relative_weights = scale / denominator
+    resolved_estimate = (
+        weighted_mean(effect, relative_weights) if estimate is None else estimate
+    )
+    with np.errstate(over="ignore", invalid="ignore"):
+        residual = effect - resolved_estimate
+        numerator = float(np.dot(relative_weights, residual * residual))
+    if np.isnan(numerator):
+        raise ValueError("The weighted residual sum of squares is undefined.")
+    return numerator, scale
+
+
+def _unscale_nonnegative(value: float, scale: float) -> float:
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = float(value / scale)
+    if np.isnan(result):
+        raise ValueError("The weighted statistic is undefined.")
+    return result
 
 
 def generalized_q(
@@ -27,10 +60,8 @@ def generalized_q(
 ) -> float:
     """Return the weighted residual Q statistic at a given tau-squared."""
 
-    weights = 1.0 / (variance + tau2)
-    estimate = weighted_mean(effect, weights)
-    residual = effect - estimate
-    return float(np.dot(weights, residual * residual))
+    numerator, scale = _scaled_q_components(effect, variance + tau2)
+    return _unscale_nonnegative(numerator, scale)
 
 
 def classical_heterogeneity(
@@ -42,9 +73,19 @@ def classical_heterogeneity(
     if k == 1:
         return 0.0, 0, float("nan"), float("nan"), float("nan")
 
-    weights = 1.0 / variance
-    estimate = weighted_mean(effect, weights)
-    return heterogeneity_at_estimate(effect, variance, estimate)
+    numerator, scale = _scaled_q_components(effect, variance)
+    q = _unscale_nonnegative(numerator, scale)
+    return _heterogeneity_from_q(q, k)
+
+
+def _heterogeneity_from_q(q: float, k: int) -> tuple[float, int, float, float, float]:
+    df = k - 1
+    if np.isinf(q):
+        return q, df, 0.0, 1.0, float("inf")
+    pvalue = float(chi2.sf(q, df))
+    i2 = 0.0 if q <= 0.0 else max(0.0, (q - df) / q)
+    h2 = q / df
+    return q, df, pvalue, i2, h2
 
 
 def heterogeneity_at_estimate(
@@ -58,14 +99,13 @@ def heterogeneity_at_estimate(
     if k == 1:
         return 0.0, 0, float("nan"), float("nan"), float("nan")
 
-    weights = 1.0 / variance
-    residual = effect - estimate
-    q = float(np.dot(weights, residual * residual))
-    df = k - 1
-    pvalue = float(chi2.sf(q, df))
-    i2 = 0.0 if q <= 0.0 else max(0.0, (q - df) / q)
-    h2 = q / df
-    return q, df, pvalue, i2, h2
+    numerator, scale = _scaled_q_components(
+        effect,
+        variance,
+        estimate=estimate,
+    )
+    q = _unscale_nonnegative(numerator, scale)
+    return _heterogeneity_from_q(q, k)
 
 
 def tau2_inconsistency(

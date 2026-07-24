@@ -15,7 +15,13 @@ import pandas as pd
 from numpy.typing import NDArray
 from scipy.special import gammaln
 
-from ..data import ColumnOrArray, MissingPolicy, _resolve_vector, _study_labels
+from ..data import (
+    ColumnOrArray,
+    MissingPolicy,
+    _resolve_vector,
+    _study_labels,
+    _validate_finite_precision_variance,
+)
 from ..exceptions import InvalidStudyDataError, UnsupportedMethodError
 
 
@@ -216,7 +222,8 @@ def calculate_continuous_effects(
     cohen_d = np.full(row_count, np.nan, dtype=np.float64)
     correction_factor = np.full(row_count, np.nan, dtype=np.float64)
 
-    difference = studies.mean_treat - studies.mean_control
+    with np.errstate(over="ignore", invalid="ignore"):
+        difference = studies.mean_treat - studies.mean_control
     if normalized_measure == "MD":
         effect[included] = difference[included]
         variance[included] = (
@@ -259,6 +266,18 @@ def calculate_continuous_effects(
             "Continuous sampling variances must be finite and strictly positive; "
             f"invalid rows: {rows}."
         )
+    invalid_effect = included & ~np.isfinite(effect)
+    if np.any(invalid_effect):
+        rows = np.flatnonzero(invalid_effect).tolist()
+        raise InvalidStudyDataError(
+            "Continuous effect sizes must be finite after calculation; "
+            f"invalid rows: {rows}."
+        )
+    _validate_finite_precision_variance(
+        variance,
+        included=included,
+        label="Continuous sampling variances",
+    )
 
     return ContinuousEffectData(
         studies=studies,

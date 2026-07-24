@@ -19,6 +19,7 @@ from ..data import (
     MissingPolicy,
     _resolve_vector,
     _study_labels,
+    _validate_finite_precision_variance,
 )
 from ..exceptions import InvalidStudyDataError, UnsupportedMethodError
 
@@ -297,13 +298,11 @@ def calculate_binary_effects(
     reasons = studies.exclusion_reason.copy()
     rd_zero_variance_mask = np.zeros_like(included)
     if normalized_measure == "RD":
+        treat_risk = studies.event_treat / studies.n_treat
+        control_risk = studies.event_control / studies.n_control
         raw_rd_variance = (
-            studies.event_treat
-            * (studies.n_treat - studies.event_treat)
-            / studies.n_treat**3
-            + studies.event_control
-            * (studies.n_control - studies.event_control)
-            / studies.n_control**3
+            treat_risk * (1.0 - treat_risk) / studies.n_treat
+            + control_risk * (1.0 - control_risk) / studies.n_control
         )
         rd_zero_variance_mask = np.asarray(
             included & (raw_rd_variance == 0.0), dtype=np.bool_
@@ -361,7 +360,12 @@ def calculate_binary_effects(
     variance = np.full(len(included), np.nan, dtype=np.float64)
     active = included
     if normalized_measure == "OR":
-        effect[active] = np.log((a[active] * d[active]) / (b[active] * c[active]))
+        effect[active] = (
+            np.log(a[active])
+            + np.log(d[active])
+            - np.log(b[active])
+            - np.log(c[active])
+        )
         variance[active] = (
             1.0 / a[active] + 1.0 / b[active] + 1.0 / c[active] + 1.0 / d[active]
         )
@@ -385,9 +389,11 @@ def calculate_binary_effects(
         )
         n1 = a + b
         n2 = c + d
+        treat_risk = a[active] / n1[active]
+        control_risk = c[active] / n2[active]
         variance[active] = (
-            a[active] * b[active] / n1[active] ** 3
-            + c[active] * d[active] / n2[active] ** 3
+            treat_risk * (1.0 - treat_risk) / n1[active]
+            + control_risk * (1.0 - control_risk) / n2[active]
         )
         effect_scale = "identity"
         display_scale = "identity"
@@ -399,6 +405,18 @@ def calculate_binary_effects(
             f"Non-positive binary sampling variance at row positions {rows}; "
             "use an appropriate positive continuity_correction."
         )
+    invalid_effect = active & ~np.isfinite(effect)
+    if np.any(invalid_effect):
+        rows = np.flatnonzero(invalid_effect).tolist()
+        raise InvalidStudyDataError(
+            "Binary effect sizes must be finite after calculation; "
+            f"invalid rows: {rows}."
+        )
+    _validate_finite_precision_variance(
+        variance,
+        included=active,
+        label="Binary sampling variances",
+    )
 
     return BinaryEffectData(
         studies=working_studies,

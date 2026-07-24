@@ -6,6 +6,18 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Fixed
+
+- inverse-variance means, heterogeneity statistics, and pooling and
+  meta-regression tau-squared equations now use overflow-safe relative-weight
+  calculations at the supported float64 boundary;
+- subnormal variances and non-finite derived effects now raise explicit domain
+  errors instead of leaking runtime warnings or returning invalid results;
+- binary OR, RD, and Mantel-Haenszel arithmetic now avoids intermediate
+  overflow for very large finite counts;
+- the sensitivity guide no longer incorrectly states that Meta-regression
+  Cook's distance and DFBETAS are unavailable.
+
 ## 0.4.0 - 2026-07-23
 
 ### Added

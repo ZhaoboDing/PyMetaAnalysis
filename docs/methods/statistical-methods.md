@@ -36,8 +36,10 @@ Var(mu_hat) = 1 / sum(w_i*)
 ```
 
 Reported `normalized_weight` values equal the selected raw weights divided by
-their sum. The pooled-estimate implementation rescales weights internally when
-necessary to avoid overflow without changing their ratios.
+their sum. Pooled estimates, Q statistics, and tau-squared estimating
+equations use relative weights internally when necessary to avoid overflow
+without changing their ratios or equation roots. A sampling variance too
+small to produce a finite float64 inverse weight is rejected explicitly.
 
 ## Between-study variance
 
@@ -67,11 +69,18 @@ If the equation is already non-positive at zero, the estimate is the zero
 boundary. Otherwise PyMetaAnalysis brackets the non-negative root and solves it
 with a bounded scalar root finder.
 
+The numerical root equation is multiplied by a positive variance scale before
+evaluation. This leaves its root unchanged while avoiding overflow from raw
+inverse weights.
+
 ### Restricted maximum likelihood
 
 REML solves the restricted-likelihood score equation over non-negative
 `tau^2`. As with PM, a non-positive score at zero produces a boundary estimate;
 otherwise a bracketed root is found iteratively.
+
+The implemented score is evaluated in an algebraically equivalent scaled form;
+the positive scale factor does not change its sign or root.
 
 `result.diagnostics` records convergence, iteration count, and whether the
 solution reached the zero boundary. Failure to bracket or converge raises

@@ -30,6 +30,40 @@ def test_common_model_scales_weights_at_float64_minimum_variance() -> None:
     assert result.q == 0.0
 
 
+def test_subnormal_variances_raise_a_domain_error_without_runtime_warnings() -> None:
+    subnormal = np.nextafter(0.0, 1.0)
+
+    with (
+        np.errstate(over="raise", divide="raise", invalid="raise"),
+        pytest.raises(
+            ma.InvalidStudyDataError,
+            match="too small for finite inverse-variance weights",
+        ),
+    ):
+        ma.meta_analysis(
+            effect=[1.0, 1.0],
+            variance=[subnormal, subnormal],
+            model="common",
+        )
+
+
+def test_common_model_uses_a_finite_convex_mean_near_float64_maximum() -> None:
+    maximum = np.finfo(np.float64).max
+
+    with np.errstate(over="raise", divide="raise", invalid="raise"):
+        result = ma.meta_analysis(
+            effect=[maximum, maximum / 2.0],
+            variance=[1.0, 1.0],
+            model="common",
+        )
+
+    assert result.estimate == pytest.approx(0.75 * maximum, rel=2e-16)
+    assert result.q == float("inf")
+    assert result.q_pvalue == 0.0
+    assert result.i2 == 1.0
+    assert result.h2 == float("inf")
+
+
 def test_common_model_handles_extreme_weight_imbalance() -> None:
     result = ma.meta_analysis(
         effect=[0.25, 10.0, -10.0],
@@ -65,6 +99,49 @@ def test_common_model_with_very_large_variances_matches_scaled_oracle() -> None:
     assert np.isfinite(result.standard_error)
     assert np.isfinite(result.ci_low)
     assert np.isfinite(result.ci_high)
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_random_models_scale_tau2_equations_at_float64_minimum_variance(
+    tau2_method: str,
+) -> None:
+    tiny = np.finfo(np.float64).tiny
+
+    with np.errstate(over="raise", divide="raise", invalid="raise", under="ignore"):
+        result = ma.meta_analysis(
+            effect=[0.2, 1.4, -0.3, 1.6, 0.1],
+            variance=tiny * np.arange(1.0, 6.0),
+            model="random",
+            tau2_method=tau2_method,
+        )
+
+    assert np.isfinite(result.estimate)
+    assert np.isfinite(result.tau2)
+    assert result.tau2 > 0.0
+    assert result.study_results["normalized_weight"].sum() == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_mixed_regression_scales_tau2_equations_at_float64_minimum_variance(
+    tau2_method: str,
+) -> None:
+    tiny = np.finfo(np.float64).tiny
+
+    with np.errstate(over="raise", divide="raise", invalid="raise", under="ignore"):
+        result = ma.meta_regression(
+            effect=[0.2, 1.4, -0.3, 1.6, 0.1, 1.8],
+            variance=tiny * np.arange(1.0, 7.0),
+            moderators={"x": np.arange(6.0)},
+            model="mixed",
+            tau2_method=tau2_method,
+        )
+
+    assert np.isfinite(result.tau2)
+    assert result.tau2 > 0.0
+    assert np.all(np.isfinite(result.coefficients["estimate"]))
+    assert result.study_results["normalized_precision_weight"].sum() == pytest.approx(
+        1.0
+    )
 
 
 @pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
@@ -123,6 +200,35 @@ def test_large_binary_counts_preserve_scale_invariant_estimates(
     )
 
 
+@pytest.mark.parametrize("method", ["IV", "MH"])
+def test_extreme_binary_counts_use_overflow_safe_or_arithmetic(method: str) -> None:
+    base = ma.meta_binary(
+        event_treat=[50.0, 60.0],
+        n_treat=[100.0, 100.0],
+        event_control=[40.0, 30.0],
+        n_control=[100.0, 100.0],
+        measure="OR",
+        method=method,
+        model="common",
+    )
+
+    with np.errstate(over="raise", divide="raise", invalid="raise"):
+        extreme = ma.meta_binary(
+            event_treat=[5e199, 6e199],
+            n_treat=[1e200, 1e200],
+            event_control=[4e199, 3e199],
+            n_control=[1e200, 1e200],
+            measure="OR",
+            method=method,
+            model="common",
+        )
+
+    assert extreme.estimate == pytest.approx(base.estimate, abs=2e-14)
+    assert np.isfinite(extreme.standard_error)
+    assert np.isfinite(extreme.q)
+    assert extreme.study_results["normalized_weight"].sum() == pytest.approx(1.0)
+
+
 @pytest.mark.parametrize("measure", ["MD", "SMD"])
 def test_continuous_effects_are_stable_after_a_large_location_shift(
     measure: str,
@@ -153,6 +259,28 @@ def test_continuous_effects_are_stable_after_a_large_location_shift(
     )
     assert shifted.estimate == pytest.approx(original.estimate, abs=1e-7)
     assert np.isfinite(shifted.standard_error)
+
+
+def test_nonrepresentable_continuous_effect_is_rejected_explicitly() -> None:
+    maximum = np.finfo(np.float64).max
+
+    with (
+        np.errstate(over="raise", divide="raise", invalid="raise"),
+        pytest.raises(
+            ma.InvalidStudyDataError,
+            match="effect sizes must be finite after calculation",
+        ),
+    ):
+        ma.meta_continuous(
+            mean_treat=[maximum, maximum],
+            sd_treat=[1.0, 1.0],
+            n_treat=[10, 10],
+            mean_control=[-maximum, -maximum],
+            sd_control=[1.0, 1.0],
+            n_control=[10, 10],
+            measure="MD",
+            model="common",
+        )
 
 
 @pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
