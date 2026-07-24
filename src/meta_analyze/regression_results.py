@@ -19,6 +19,7 @@ from .results import HeterogeneityResult
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
+    from .regression_collinearity import MetaRegressionCollinearityResult
     from .regression_sensitivity import (
         MetaRegressionInfluenceResult,
         MetaRegressionLeaveOneOutResult,
@@ -262,6 +263,13 @@ class MetaRegressionResult:
         from .regression_sensitivity import meta_regression_influence
 
         return meta_regression_influence(self)
+
+    def collinearity(self) -> MetaRegressionCollinearityResult:
+        """Compute VIF/GVIF and weighted condition diagnostics."""
+
+        from .regression_collinearity import meta_regression_collinearity
+
+        return meta_regression_collinearity(self)
 
     def _test_terms(
         self, moderator: str, terms: tuple[str, ...]

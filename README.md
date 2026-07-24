@@ -137,6 +137,10 @@ regression_deleted = regression.leave_one_out()
 regression_coefficient_changes = regression_deleted.coefficients
 regression_influence = regression.influence()
 flagged_diagnostics = regression_influence.flagged
+collinearity = regression.collinearity()
+term_vif = collinearity.term_vif
+moderator_gvif = collinearity.moderator_gvif
+condition_indices = collinearity.condition_indices
 
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
@@ -147,7 +151,11 @@ are descriptive small-study-effect diagnostics, not proof of publication bias.
 Meta-regression leave-one-out results also expose a long-form coefficient
 change table. Exact influence diagnostics add externally standardized
 residuals, Cook's distance, DFBETAS, and explicit heuristic screening
-thresholds without automatically excluding studies. An eligible
+thresholds without automatically excluding studies. Meta-regression
+collinearity diagnostics add `metafor`-compatible VIF/GVIF plus weighted,
+column-scaled condition indices and variance-decomposition proportions.
+Their documented references are review aids, not automatic variable-selection
+rules. An eligible
 single-numeric-moderator Meta-regression result additionally provides
 `regression.bubble()` with fitted confidence and optional prediction bands.
 

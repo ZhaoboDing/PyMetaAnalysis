@@ -231,10 +231,52 @@ standardized deleted residuals, Cook's distances, DFBETAS, explicit screening
 thresholds, and the same exact deletion fits. It does not mutate or filter the
 original result.
 
+`collinearity()` returns a `MetaRegressionCollinearityResult` with
+`metafor`-compatible VIF/GVIF and weighted, column-scaled condition
+diagnostics. It inspects the fitted design without changing the coefficients,
+terms, or included studies.
+
 `summary()`, `method_details()`, `report()`, provenance, warnings, and defensive
 copy semantics follow the same audit principles as `MetaAnalysisResult`.
 
-## Sensitivity results
+## Diagnostic and sensitivity results
+
+### `MetaRegressionCollinearityResult`
+
+Contains `original`, `raw_condition_number`,
+`weighted_scaled_condition_number`, `condition_index_reference`,
+`variance_proportion_reference`, `warnings`, and four defensive DataFrames.
+
+`term_vif` has one row per encoded non-intercept term:
+
+```text
+term, moderator, vif, sif
+```
+
+`moderator_gvif` groups the terms belonging to each original moderator:
+
+```text
+moderator, kind, terms, term_count, gvif, gsif
+```
+
+`condition_indices` contains:
+
+```text
+dimension, singular_value, eigenvalue, condition_index,
+high_condition_index, high_variance_term_count, concerning
+```
+
+`variance_proportions` is a long-form table with:
+
+```text
+dimension, condition_index, term, moderator, variance_proportion,
+high_variance_proportion
+```
+
+`concerning_dimensions` filters the condition table to dimensions with a
+condition index above 30 and variance proportions above 0.5 for at least two
+terms. These are fixed heuristic references, not hypothesis tests or automatic
+variable-selection rules. VIF/GVIF has no automatic cutoff.
 
 ### `MetaRegressionInfluenceResult`
 

@@ -14,6 +14,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 - exact Meta-regression externally standardized residuals, Cook's distances,
   DFBETAS, transparent screening thresholds, and fixed-version R `metafor`
   cross-software fixtures.
+- Meta-regression term VIF, moderator-level GVIF/GSIF, and weighted,
+  column-scaled condition diagnostics with variance-decomposition proportions,
+  heuristic-only flags, and R `metafor` cross-software fixtures.
 
 ## 0.3.0 - 2026-07-22
 
