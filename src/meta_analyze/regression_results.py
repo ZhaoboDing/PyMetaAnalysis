@@ -180,6 +180,9 @@ class MetaRegressionResult:
     warnings: tuple[str, ...]
     _coefficients: pd.DataFrame = field(repr=False, compare=False)
     _coefficient_covariance: NDArray[np.float64] = field(repr=False, compare=False)
+    _classic_coefficient_covariance: NDArray[np.float64] = field(
+        repr=False, compare=False
+    )
     _coefficient_vector: NDArray[np.float64] = field(repr=False, compare=False)
     _design_matrix: NDArray[np.float64] = field(repr=False, compare=False)
     _study_results: pd.DataFrame = field(repr=False, compare=False)
@@ -191,6 +194,11 @@ class MetaRegressionResult:
             self,
             "_coefficient_covariance",
             self._coefficient_covariance.copy(),
+        )
+        object.__setattr__(
+            self,
+            "_classic_coefficient_covariance",
+            self._classic_coefficient_covariance.copy(),
         )
         object.__setattr__(self, "_coefficient_vector", self._coefficient_vector.copy())
         object.__setattr__(self, "_design_matrix", self._design_matrix.copy())
@@ -210,6 +218,16 @@ class MetaRegressionResult:
 
         return pd.DataFrame(
             self._coefficient_covariance.copy(),
+            index=self.design_info.term_names,
+            columns=self.design_info.term_names,
+        )
+
+    @property
+    def classic_coefficient_covariance(self) -> pd.DataFrame:
+        """Return the labeled covariance before inference-scale adjustment."""
+
+        return pd.DataFrame(
+            self._classic_coefficient_covariance.copy(),
             index=self.design_info.term_names,
             columns=self.design_info.term_names,
         )
@@ -244,6 +262,36 @@ class MetaRegressionResult:
         """Return a defensive copy of the source DataFrame, when supplied."""
 
         return None if self._source_data is None else self._source_data.copy(deep=True)
+
+    def _study_results_view(self) -> pd.DataFrame:
+        """Borrow the internal study table; internal callers must not mutate it."""
+
+        return self._study_results
+
+    def _source_data_view(self) -> pd.DataFrame | None:
+        """Borrow the internal source table; internal callers must not mutate it."""
+
+        return self._source_data
+
+    def _design_matrix_view(self) -> NDArray[np.float64]:
+        """Borrow the internal full-row design; internal callers must not mutate it."""
+
+        return self._design_matrix
+
+    def _coefficient_vector_view(self) -> NDArray[np.float64]:
+        """Borrow fitted coefficients; internal callers must not mutate them."""
+
+        return self._coefficient_vector
+
+    def _coefficient_covariance_view(self) -> NDArray[np.float64]:
+        """Borrow selected covariance; internal callers must not mutate it."""
+
+        return self._coefficient_covariance
+
+    def _classic_coefficient_covariance_view(self) -> NDArray[np.float64]:
+        """Borrow classic covariance; internal callers must not mutate it."""
+
+        return self._classic_coefficient_covariance
 
     def summary(self) -> MetaRegressionSummary:
         """Return a printable and machine-readable summary."""

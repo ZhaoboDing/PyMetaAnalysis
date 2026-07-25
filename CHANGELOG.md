@@ -6,6 +6,14 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Changed
+
+- sensitivity and influence workflows now borrow internal fitted buffers during
+  refits instead of repeatedly materializing public defensive copies;
+- Meta-regression stores its classic coefficient covariance alongside the
+  selected inference covariance and reuses one shared precision-geometry
+  implementation across fitting and diagnostics.
+
 ### Fixed
 
 - inverse-variance means, heterogeneity statistics, and pooling and

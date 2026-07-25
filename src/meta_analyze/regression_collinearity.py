@@ -79,25 +79,6 @@ class MetaRegressionCollinearityResult:
         )
 
 
-def _classic_covariance(result: MetaRegressionResult) -> NDArray[np.float64]:
-    studies = result.study_results
-    included = studies["included"].to_numpy(dtype=np.bool_, copy=True)
-    variance = studies.loc[included, "variance"].to_numpy(dtype=np.float64, copy=True)
-    design = result.design_matrix.to_numpy(dtype=np.float64, copy=True)
-    denominator = variance + result.tau2
-    variance_scale = float(np.min(denominator))
-    relative_weights = variance_scale / denominator
-    gram = design.T @ (relative_weights[:, np.newaxis] * design)
-    try:
-        inverse = np.linalg.solve(gram, np.eye(gram.shape[0]))
-    except np.linalg.LinAlgError as error:  # pragma: no cover - fit is full rank
-        raise InvalidStudyDataError(
-            "Meta-regression coefficient covariance could not be reconstructed."
-        ) from error
-    inverse = 0.5 * (inverse + inverse.T)
-    return variance_scale * inverse
-
-
 def _covariance_correlation(
     covariance: NDArray[np.float64],
 ) -> NDArray[np.float64]:
@@ -192,10 +173,10 @@ def _condition_tables(
     condition_reference: float,
     variance_reference: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame, float]:
-    studies = result.study_results
+    studies = result._study_results_view()
     included = studies["included"].to_numpy(dtype=np.bool_, copy=True)
     variance = studies.loc[included, "variance"].to_numpy(dtype=np.float64, copy=True)
-    design = result.design_matrix.to_numpy(dtype=np.float64, copy=True)
+    design = result._design_matrix_view()[included]
     weights = 1.0 / (variance + result.tau2)
     weighted_design = np.sqrt(weights)[:, np.newaxis] * design
     column_norms = np.linalg.norm(weighted_design, axis=0)
@@ -271,7 +252,7 @@ def meta_regression_collinearity(
 
     condition_reference = 30.0
     variance_reference = 0.5
-    covariance = _classic_covariance(result)
+    covariance = result._classic_coefficient_covariance_view()
     term_vif, moderator_gvif = _vif_tables(result, covariance)
     condition_indices, variance_proportions, condition_number = _condition_tables(
         result,

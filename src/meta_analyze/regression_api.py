@@ -435,6 +435,7 @@ def meta_regression(
         warnings=tuple(warnings),
         _coefficients=coefficients,
         _coefficient_covariance=fit.covariance,
+        _classic_coefficient_covariance=fit.classic_covariance,
         _coefficient_vector=fit.coefficients,
         _design_matrix=normalized.design_matrix,
         _study_results=study_results,

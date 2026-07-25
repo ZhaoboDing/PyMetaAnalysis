@@ -194,7 +194,7 @@ def _refit(
     from .binary_api import meta_binary
     from .continuous_api import meta_continuous
 
-    studies = result.study_results
+    studies = result._study_results_view()
     selected = studies.iloc[positions]
     options = dict(result.method.options)
     atol, max_iter = _numeric_controls(result)
@@ -283,10 +283,11 @@ def _refit(
             f"Cannot reconstruct inputs for measure={result.measure!r}."
         )
 
-    refitted_studies = fitted.study_results
-    refitted_studies["row_id"] = selected["row_id"].to_numpy(copy=True)
-    source = result.source_data
-    selected_source = None if source is None else source.iloc[positions].copy(deep=True)
+    refitted_studies = fitted._study_results_view().assign(
+        row_id=selected["row_id"].to_numpy(copy=True)
+    )
+    source = result._source_data_view()
+    selected_source = None if source is None else source.iloc[positions]
     return replace(
         fitted,
         provenance=remap_provenance_rows(
@@ -342,7 +343,7 @@ def _unavailable_fit_summary(*, k: int) -> dict[str, Any]:
 def leave_one_out(result: MetaAnalysisResult) -> LeaveOneOutResult:
     """Refit the same model while omitting each included study once."""
 
-    studies = result.study_results
+    studies = result._study_results_view()
     included = np.flatnonzero(
         studies["included"].to_numpy(dtype=np.bool_, copy=True)
     ).astype(np.int64, copy=False)
@@ -410,12 +411,12 @@ def _order_values(
     result: MetaAnalysisResult,
     order: ColumnOrArray | None,
 ) -> NDArray[np.object_]:
-    studies = result.study_results
+    studies = result._study_results_view()
     row_count = len(studies)
     if order is None:
         return np.asarray(np.arange(row_count), dtype=object)
     if isinstance(order, str):
-        source = result.source_data
+        source = result._source_data_view()
         in_source = source is not None and order in source.columns
         in_results = order in studies.columns
         if in_source and in_results:
@@ -461,7 +462,7 @@ def _ordered_batches(
     if collapse and order is None:
         raise InvalidStudyDataError("collapse=True requires an explicit order.")
 
-    studies = result.study_results
+    studies = result._study_results_view()
     included = np.flatnonzero(
         studies["included"].to_numpy(dtype=np.bool_, copy=True)
     ).astype(np.int64, copy=False)
@@ -517,7 +518,7 @@ def cumulative(
         ascending=ascending,
         collapse=collapse,
     )
-    studies = result.study_results
+    studies = result._study_results_view()
     minimum = 2 if result.model == "random" else 1
     warnings: list[str] = []
     if minimum == 2:
@@ -606,7 +607,9 @@ def subgroup_cumulative(
         elif isinstance(order, str):
             group_order = order
         else:
-            row_ids = group.study_results["row_id"].to_numpy(dtype=np.int64, copy=True)
+            row_ids = group._study_results_view()["row_id"].to_numpy(
+                dtype=np.int64, copy=True
+            )
             group_order = full_order[row_ids]
         groups[label] = cumulative(
             group,

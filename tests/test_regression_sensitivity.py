@@ -62,6 +62,31 @@ def test_meta_regression_leave_one_out_matches_direct_common_refits() -> None:
     np.testing.assert_allclose(first_deleted["estimate_change"], expected_change)
 
 
+def test_meta_regression_influence_borrows_large_internal_buffers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inputs = _numeric_inputs()
+    result = ma.meta_regression(
+        effect=inputs["effect"],
+        variance=inputs["variance"],
+        moderators={"dose": inputs["dose"]},
+        model="common",
+    )
+
+    def reject_public_copy(_: object) -> None:
+        raise AssertionError("influence must not request a public defensive copy")
+
+    for attribute in (
+        "study_results",
+        "source_data",
+        "design_matrix",
+        "coefficient_covariance",
+    ):
+        monkeypatch.setattr(type(result), attribute, property(reject_public_copy))
+
+    assert len(result.influence()) == len(inputs["effect"])
+
+
 def test_meta_regression_leave_one_out_preserves_mixed_model_configuration() -> None:
     inputs = _numeric_inputs()
     result = ma.meta_regression(

@@ -304,6 +304,16 @@ class MetaAnalysisResult:
             return None
         return self._source_data.copy(deep=True)
 
+    def _study_results_view(self) -> pd.DataFrame:
+        """Borrow the internal study table; internal callers must not mutate it."""
+
+        return self._study_results
+
+    def _source_data_view(self) -> pd.DataFrame | None:
+        """Borrow the internal source table; internal callers must not mutate it."""
+
+        return self._source_data
+
     def summary(self) -> MetaAnalysisSummary:
         return MetaAnalysisSummary(self)
 

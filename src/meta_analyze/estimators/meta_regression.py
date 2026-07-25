@@ -57,6 +57,16 @@ class MetaRegressionFit:
 
 
 @dataclass(frozen=True, slots=True)
+class _PrecisionGeometry:
+    denominator: NDArray[np.float64]
+    variance_scale: float
+    relative_weights: NDArray[np.float64]
+    gram: NDArray[np.float64]
+    inverse_gram: NDArray[np.float64]
+    covariance: NDArray[np.float64]
+
+
+@dataclass(frozen=True, slots=True)
 class _WeightedSolution:
     coefficients: NDArray[np.float64]
     covariance: NDArray[np.float64]
@@ -72,12 +82,13 @@ class _WeightedSolution:
     variance_scale: float
 
 
-def _weighted_solution(
-    effect: NDArray[np.float64],
+def _precision_geometry(
     variance: NDArray[np.float64],
     design_matrix: NDArray[np.float64],
     tau2: float,
-) -> _WeightedSolution:
+) -> _PrecisionGeometry:
+    """Return the shared precision geometry for a supplied tau-squared value."""
+
     with np.errstate(over="ignore", invalid="ignore"):
         denominator = variance + tau2
     if np.any(~np.isfinite(denominator)) or np.any(denominator <= 0.0):
@@ -90,8 +101,44 @@ def _weighted_solution(
     gram = design_matrix.T @ weighted_design
     try:
         inverse_gram = np.linalg.solve(gram, np.eye(gram.shape[0]))
+    except (
+        np.linalg.LinAlgError
+    ) as error:  # pragma: no cover - rank checked at boundary
+        raise InvalidStudyDataError(
+            "Meta-regression design matrix could not be solved stably."
+        ) from error
+    inverse_gram = 0.5 * (inverse_gram + inverse_gram.T)
+    return _PrecisionGeometry(
+        denominator=denominator,
+        variance_scale=variance_scale,
+        relative_weights=relative_weights,
+        gram=gram,
+        inverse_gram=inverse_gram,
+        covariance=variance_scale * inverse_gram,
+    )
+
+
+def coefficient_covariance_at_tau2(
+    variance: NDArray[np.float64],
+    design_matrix: NDArray[np.float64],
+    tau2: float,
+) -> NDArray[np.float64]:
+    """Return the classic coefficient covariance at a supplied tau-squared."""
+
+    return _precision_geometry(variance, design_matrix, tau2).covariance
+
+
+def _weighted_solution(
+    effect: NDArray[np.float64],
+    variance: NDArray[np.float64],
+    design_matrix: NDArray[np.float64],
+    tau2: float,
+) -> _WeightedSolution:
+    geometry = _precision_geometry(variance, design_matrix, tau2)
+    try:
         coefficients = np.linalg.solve(
-            gram, design_matrix.T @ (relative_weights * effect)
+            geometry.gram,
+            design_matrix.T @ (geometry.relative_weights * effect),
         )
     except (
         np.linalg.LinAlgError
@@ -100,44 +147,44 @@ def _weighted_solution(
             "Meta-regression design matrix could not be solved stably."
         ) from error
 
-    inverse_gram = 0.5 * (inverse_gram + inverse_gram.T)
-    covariance = variance_scale * inverse_gram
     fitted_values = design_matrix @ coefficients
     residuals = effect - fitted_values
     with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
-        precision_weights = 1.0 / denominator
+        precision_weights = 1.0 / geometry.denominator
     if np.any(~np.isfinite(precision_weights)) or np.any(precision_weights <= 0.0):
         raise InvalidStudyDataError(
             "Sampling variances are too small for finite precision weights."
         )
-    normalized = relative_weights / float(np.sum(relative_weights))
-    leverage = relative_weights * np.einsum(
-        "ij,jk,ik->i", design_matrix, inverse_gram, design_matrix
+    normalized = geometry.relative_weights / float(np.sum(geometry.relative_weights))
+    leverage = geometry.relative_weights * np.einsum(
+        "ij,jk,ik->i", design_matrix, geometry.inverse_gram, design_matrix
     )
     with np.errstate(over="ignore", invalid="ignore"):
-        q_scaled = float(np.dot(relative_weights, residuals * residuals))
-        q = float(q_scaled / variance_scale)
+        q_scaled = float(np.dot(geometry.relative_weights, residuals * residuals))
+        q = float(q_scaled / geometry.variance_scale)
     if np.isnan(q):
         raise InvalidStudyDataError(
             "The weighted residual sum of squares is undefined."
         )
 
     squared_weight_crossproduct = design_matrix.T @ (
-        (relative_weights * relative_weights)[:, np.newaxis] * design_matrix
+        (geometry.relative_weights * geometry.relative_weights)[:, np.newaxis]
+        * design_matrix
     )
     trace_relative_p = float(
-        np.sum(relative_weights) - np.trace(inverse_gram @ squared_weight_crossproduct)
+        np.sum(geometry.relative_weights)
+        - np.trace(geometry.inverse_gram @ squared_weight_crossproduct)
     )
     with np.errstate(over="ignore", invalid="ignore"):
         weighted_square_residual_scaled = float(
             np.dot(
-                relative_weights * relative_weights,
+                geometry.relative_weights * geometry.relative_weights,
                 residuals * residuals,
             )
         )
     return _WeightedSolution(
         coefficients=coefficients,
-        covariance=covariance,
+        covariance=geometry.covariance,
         fitted_values=fitted_values,
         residuals=residuals,
         precision_weights=precision_weights,
@@ -147,7 +194,7 @@ def _weighted_solution(
         q_scaled=q_scaled,
         trace_p_scaled=trace_relative_p,
         weighted_square_residual_scaled=weighted_square_residual_scaled,
-        variance_scale=variance_scale,
+        variance_scale=geometry.variance_scale,
     )
 
 
