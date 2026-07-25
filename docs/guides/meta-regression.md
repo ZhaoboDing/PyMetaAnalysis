@@ -67,6 +67,10 @@ This produces terms such as `region[Asia]` and `region[North America]`, each
 relative to `Europe`. The reference never depends on row order. Undeclared
 levels, levels absent after exclusions, and string moderators omitted from
 `categorical=` are errors rather than implicit recoding decisions.
+Categorical matching preserves scalar kinds: Python and NumPy integers are
+equivalent, for example, but booleans do not match integer levels and
+floating-point values do not match integer levels. Declare levels using the
+same scalar kind as the observed moderator values.
 
 Formula parsing, automatic interactions, splines, and polynomial terms are not
 implemented. Construct those columns explicitly before fitting when they are

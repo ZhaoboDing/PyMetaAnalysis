@@ -158,6 +158,7 @@ def test_dataframe_input_defaults_to_index_and_supports_random_iv() -> None:
     assert result.model == "random"
     assert result.method.tau2_method == "PM"
     assert result.prediction_interval is not None
+    assert result.method.prediction_interval_method == "HTS"
     assert result.display_prediction_interval is not None
 
 

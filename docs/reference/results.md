@@ -57,7 +57,7 @@ The definition differs by model and is specified under
 | `tau2_method` | `REML`, `PM`, `DL`, or `None` |
 | `ci_method` | Resolved mean confidence-interval method |
 | `confidence_level` | Fitted confidence level |
-| `prediction_interval_method` | `HTS`, `HK-PR`, or `None` |
+| `prediction_interval_method` | `HTS` or `HK-PR` when an interval was calculated; otherwise `None` |
 | `missing` | Resolved missing-value policy |
 | `atol`, `max_iter` | Numerical controls |
 | `options` | Immutable outcome-specific key/value pairs |

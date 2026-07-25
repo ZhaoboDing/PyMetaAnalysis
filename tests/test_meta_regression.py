@@ -553,6 +553,38 @@ def test_invalid_moderator_declarations_are_explicit(
 
 
 @pytest.mark.parametrize(
+    ("values", "levels"),
+    [
+        ([False, True, False], [0, 1]),
+        ([0.0, 1.0, 0.0], [0, 1]),
+    ],
+)
+def test_categorical_levels_do_not_use_cross_kind_numeric_equality(
+    values: list[object], levels: list[object]
+) -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="undeclared levels"):
+        ma.meta_regression(
+            effect=[0.1, 0.2, 0.3],
+            variance=[0.04, 0.05, 0.06],
+            moderators={"group": values},
+            categorical={"group": levels},
+            model="common",
+        )
+
+
+def test_categorical_levels_accept_python_and_numpy_integer_scalars() -> None:
+    result = ma.meta_regression(
+        effect=[0.1, 0.2, 0.3],
+        variance=[0.04, 0.05, 0.06],
+        moderators={"group": np.asarray([0, 1, 0], dtype=np.int64)},
+        categorical={"group": [0, 1]},
+        model="common",
+    )
+
+    assert result.method.categorical_references == (("group", "0"),)
+
+
+@pytest.mark.parametrize(
     "name",
     [
         "intercept",

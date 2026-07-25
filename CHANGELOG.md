@@ -57,6 +57,13 @@ Changes planned for the next release accumulate under `Unreleased`.
   errors;
 - the Mantel-Haenszel estimator now rejects empty and zero-total strata before
   division, preventing NaN propagation and misleading variance diagnostics.
+- prediction-interval metadata is now `None` when too few studies prevent an
+  interval from being calculated;
+- categorical moderator encoding no longer conflates booleans, integers, and
+  floating-point values through Python's cross-type numeric equality;
+- CI now covers Python 3.14, Pages deployments are not cancelled mid-flight,
+  and the credential-bearing PyPI publisher action is pinned to an immutable
+  commit.
 
 ## 0.4.0 - 2026-07-23
 
