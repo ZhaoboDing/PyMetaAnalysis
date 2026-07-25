@@ -17,6 +17,15 @@ Changes planned for the next release accumulate under `Unreleased`.
   overflow for very large finite counts;
 - the sensitivity guide no longer incorrectly states that Meta-regression
   Cook's distance and DFBETAS are unavailable.
+- subgroup-differences tests now use classic model variances independently of
+  Hartung-Knapp confidence-interval adjustments;
+- leave-one-out and cumulative workflows now retain or skip, respectively,
+  reduced Mantel-Haenszel fits that are not estimable instead of aborting the
+  complete sensitivity analysis;
+- forest and subgroup-forest plots now reject non-positive displayed
+  coordinates before enabling a logarithmic axis;
+- uncorrected risk-ratio analyses now accept a zero non-event cell when the
+  study effect and sampling variance remain well defined.
 
 ## 0.4.0 - 2026-07-23
 

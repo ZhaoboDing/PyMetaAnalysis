@@ -81,6 +81,28 @@ def test_mantel_haenszel_leave_one_out_matches_direct_refits() -> None:
         assert refit.method.pooling_method == "mantel_haenszel"
 
 
+def test_mantel_haenszel_leave_one_out_retains_an_unestimable_deletion() -> None:
+    result = ma.meta_binary(
+        event_treat=[0, 5],
+        n_treat=[10, 10],
+        event_control=[1, 2],
+        n_control=[10, 10],
+        study=["zero-treatment-events", "informative"],
+        measure="RR",
+        method="MH",
+    )
+
+    influence = result.leave_one_out()
+
+    assert len(influence) == 2
+    assert influence.results[0] is not None
+    assert influence.results[1] is None
+    assert influence.table["refit_success"].tolist() == [True, False]
+    assert influence.failed["omitted_study"].tolist() == ["informative"]
+    assert influence.failed["error_type"].tolist() == ["InvalidStudyDataError"]
+    assert "could not be estimated" in influence.warnings[0]
+
+
 def test_risk_difference_leave_one_out_preserves_zero_variance_policy() -> None:
     result = ma.meta_binary(
         event_treat=[0, 4, 6, 8],
@@ -232,6 +254,28 @@ def test_random_cumulative_starts_at_first_estimable_prefix() -> None:
     assert "begins at k=2" in cumulative.warnings[0]
     assert all(refit.model == "random" for refit in cumulative.results)
     assert all(refit.method.tau2_method == "PM" for refit in cumulative.results)
+
+
+def test_mantel_haenszel_cumulative_skips_an_unestimable_prefix() -> None:
+    result = ma.meta_binary(
+        event_treat=[0, 5],
+        n_treat=[10, 10],
+        event_control=[1, 2],
+        n_control=[10, 10],
+        study=["zero-treatment-events", "informative"],
+        measure="RR",
+        method="MH",
+    )
+
+    cumulative = result.cumulative()
+
+    assert len(cumulative) == 1
+    assert cumulative.final.estimate == pytest.approx(result.estimate)
+    assert cumulative.table["added_row_ids"].tolist() == [(0, 1)]
+    assert cumulative.table["added_studies"].tolist() == [
+        ("zero-treatment-events", "informative")
+    ]
+    assert "Skipped unestimable cumulative prefix" in cumulative.warnings[0]
 
 
 def test_excluded_order_values_are_filtered_before_missing_validation() -> None:

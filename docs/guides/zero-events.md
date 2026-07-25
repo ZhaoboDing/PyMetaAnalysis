@@ -28,6 +28,11 @@ Available scopes are:
 Setting the correction to zero or the scope to `none` is rejected when it
 leaves an OR/RR undefined or an effect variance non-positive.
 
+For RR, a zero non-event cell is allowed when both arms still have positive
+event counts and the sampling variance is positive. For example, a study with
+events in every participant of one arm can be analyzed without correction.
+OR still requires all four cells to be positive.
+
 ## Double-zero and double-all studies
 
 A study with no events in either group, or events in every participant in both

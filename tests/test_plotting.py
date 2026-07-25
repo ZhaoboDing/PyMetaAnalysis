@@ -161,6 +161,17 @@ def test_log_axis_rejects_nonpositive_null_value() -> None:
         result.forest(null_value=0.0)
 
 
+def test_identity_forest_rejects_nonpositive_log_coordinates() -> None:
+    result = ma.meta_analysis(
+        effect=[-1.0, 0.5],
+        variance=[0.01, 0.01],
+        model="common",
+    )
+
+    with pytest.raises(ValueError, match="displayed effects and interval bounds"):
+        result.forest(log_scale=True, null_value=1.0)
+
+
 def test_missing_plot_extra_has_actionable_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

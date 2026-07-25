@@ -20,25 +20,31 @@ Property-based and targeted tests check invariants such as:
 - normalized included-study weights sum to one;
 - swapping treatment and control inverts OR/RR and changes the sign of
   difference measures;
+- uncorrected RR accepts a zero non-event cell when the effect and variance
+  remain defined, while zero event cells still require correction;
 - ratio confidence limits transform consistently between log and display
   scales;
 - the ad hoc Hartung-Knapp variance is never below the classic variance;
 - excluded rows do not contribute weights or heterogeneity;
 - result DataFrames and reports are defensive copies;
-- subgroup and repeated-fit row IDs map back to original input positions.
+- subgroup and repeated-fit row IDs map back to original input positions;
+- subgroup-differences tests are invariant to the confidence-interval method,
+  including Hartung-Knapp adjustments;
+- unestimable repeated Mantel-Haenszel refits remain visible without aborting
+  other leave-one-out or cumulative fits;
 - Meta-regression is invariant to row order and moderator centering; changing a
   categorical reference preserves fitted values, residual heterogeneity, and
-  joint tests.
+  joint tests;
 - Meta-regression VIF/GVIF is invariant to positive moderator rescaling and row
   order; weighted condition indices match an independent singular-value
-  decomposition and coefficient variance proportions sum to one.
+  decomposition and coefficient variance proportions sum to one;
 - Explicit linear contrasts match direct matrix calculations, preserve
   scientifically equivalent hypotheses across category-reference and unit
-  changes, and reject ambiguous or rank-deficient contrast specifications.
+  changes, and reject ambiguous or rank-deficient contrast specifications;
 - Riley Meta-regression prediction intervals are symmetric around the fitted
   effect, preserve mean-effect inference, use one fewer residual degree of
   freedom than the default rule, and remain wider at the zero-tau-squared
-  boundary.
+  boundary;
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.

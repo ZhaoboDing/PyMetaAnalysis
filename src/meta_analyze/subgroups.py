@@ -70,16 +70,41 @@ def _restore_global_rows(
     )
 
 
+def _subgroup_test_standard_error(group: MetaAnalysisResult) -> float:
+    """Return the classic model SE used by the subgroup Wald test."""
+
+    if group.method.pooling_method != "inverse_variance":
+        return group.standard_error
+
+    studies = group.study_results
+    included = studies["included"].to_numpy(dtype=np.bool_, copy=True)
+    variance = studies.loc[included, "variance"].to_numpy(
+        dtype=np.float64,
+        copy=True,
+    )
+    with np.errstate(over="ignore", invalid="ignore"):
+        denominator = variance + group.tau2
+    if np.any(~np.isfinite(denominator)) or np.any(denominator <= 0.0):
+        return float("nan")
+    variance_scale = float(np.min(denominator))
+    relative_weights = variance_scale / denominator
+    relative_weight_sum = float(np.sum(relative_weights))
+    if not np.isfinite(relative_weight_sum) or relative_weight_sum <= 0.0:
+        return float("nan")
+    return float(np.sqrt(variance_scale / relative_weight_sum))
+
+
 def _between_group_test(
     groups: dict[Hashable, MetaAnalysisResult],
 ) -> tuple[float, int, float, float, tuple[str, ...]]:
     standard_errors = np.asarray(
-        [group.standard_error for group in groups.values()], dtype=np.float64
+        [_subgroup_test_standard_error(group) for group in groups.values()],
+        dtype=np.float64,
     )
     if np.any(~np.isfinite(standard_errors)) or np.any(standard_errors <= 0.0):
         warning = (
             "The subgroup-differences test is unavailable because at least one "
-            "subgroup has a non-finite or non-positive pooled standard error."
+            "subgroup has a non-finite or non-positive classic model standard error."
         )
         return float("nan"), len(groups) - 1, float("nan"), float("nan"), (warning,)
 
@@ -112,9 +137,11 @@ def fit_subgroup_analysis(
     """Fit subgroups and compare their pooled effects using a Wald Q test.
 
     The comparison follows the RevMan formulation: subgroup summary effects
-    are weighted by the inverse square of their pooled standard errors and
-    synthesized under a fixed-effect model. Random-effects tau-squared values
-    are estimated independently within each subgroup.
+    are weighted by the inverse square of their classic model standard errors
+    and synthesized under a fixed-effect model. The comparison variance is
+    independent of any Hartung-Knapp method selected for subgroup confidence
+    intervals. Random-effects tau-squared values are estimated independently
+    within each subgroup.
     """
 
     overall_studies = overall.study_results

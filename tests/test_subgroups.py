@@ -56,6 +56,41 @@ def test_subgroup_test_uses_pooled_standard_errors() -> None:
     assert result.q_between == pytest.approx(expected)
 
 
+@pytest.mark.parametrize("ci_method", ["hartung_knapp", "hartung_knapp_adhoc"])
+def test_subgroup_test_uses_classic_model_variance_independent_of_ci_method(
+    ci_method: str,
+) -> None:
+    inputs = {
+        "effect": [-13.5558, -9.4451, -0.8739, -2.1110, 1.0682, 1.0866],
+        "variance": [0.0291, 3.1186, 12.7859, 2.8315, 46.6864, 0.0144],
+        "subgroup": ["A", "A", "A", "B", "B", "B"],
+        "model": "random",
+        "tau2_method": "DL",
+    }
+    classic = ma.meta_analysis(**inputs, ci_method="normal")
+    adjusted = ma.meta_analysis(**inputs, ci_method=ci_method)
+
+    assert adjusted.q_between == pytest.approx(classic.q_between, rel=1e-13)
+    assert adjusted.q_between_pvalue == pytest.approx(
+        classic.q_between_pvalue,
+        rel=1e-13,
+    )
+
+
+def test_zero_hk_variance_does_not_disable_subgroup_test() -> None:
+    result = ma.meta_analysis(
+        effect=[1.0, 1.0, 2.0, 2.0],
+        variance=[1.0, 1.0, 1.0, 1.0],
+        subgroup=["A", "A", "B", "B"],
+        model="random",
+        ci_method="hartung_knapp",
+    )
+
+    assert result.q_between == pytest.approx(1.0)
+    assert result.q_between_pvalue == pytest.approx(chi2.sf(1.0, 1))
+    assert result.warnings == ()
+
+
 def test_dataframe_column_preserves_group_order_labels_and_global_row_ids() -> None:
     data = pd.DataFrame(
         {
@@ -279,6 +314,13 @@ def test_ratio_subgroup_forest_uses_log_display_axis() -> None:
 
     assert axes.get_xscale() == "log"
     plt.close(axes.figure)
+
+
+def test_identity_subgroup_forest_rejects_nonpositive_log_coordinates() -> None:
+    result = _generic_subgroups()
+
+    with pytest.raises(ValueError, match="displayed effects and interval bounds"):
+        result.forest(log_scale=True, null_value=1.0)
 
 
 def test_missing_plot_extra_has_actionable_subgroup_error(

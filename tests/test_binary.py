@@ -310,6 +310,19 @@ def test_zero_correction_can_be_disabled_only_when_effect_remains_defined() -> N
             correction_scope="none",
         )
 
+    with pytest.raises(ma.InvalidStudyDataError, match="RR study effects"):
+        ma.meta_binary(
+            event_treat=[0, 4],
+            n_treat=[20, 20],
+            event_control=[2, 5],
+            n_control=[20, 20],
+            measure="RR",
+            method="IV",
+            model="common",
+            continuity_correction=0.0,
+            correction_scope="none",
+        )
+
     with pytest.raises(ma.InvalidStudyDataError, match="Non-positive binary"):
         ma.meta_binary(
             event_treat=[0, 4],
@@ -322,6 +335,28 @@ def test_zero_correction_can_be_disabled_only_when_effect_remains_defined() -> N
             continuity_correction=0.0,
             correction_scope="none",
         )
+
+
+@pytest.mark.parametrize("method", ["IV", "MH"])
+def test_rr_without_correction_accepts_an_all_event_arm(method: str) -> None:
+    result = ma.meta_binary(
+        event_treat=[20, 5],
+        n_treat=[20, 20],
+        event_control=[5, 20],
+        n_control=[20, 20],
+        measure="RR",
+        method=method,
+        model="common",
+        continuity_correction=0.0,
+        correction_scope="none",
+    )
+
+    studies = result.study_results
+    assert studies["included"].tolist() == [True, True]
+    assert studies["continuity_corrected"].tolist() == [False, False]
+    assert np.all(np.isfinite(studies["effect"]))
+    assert np.all(studies["variance"] > 0.0)
+    assert np.isfinite(result.estimate)
 
 
 def test_correction_scope_controls_which_studies_are_adjusted() -> None:
