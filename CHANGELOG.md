@@ -49,6 +49,14 @@ Changes planned for the next release accumulate under `Unreleased`.
 - empty inputs now report that at least one study row is required, and binary
   zero-cell errors identify when `correction_scope="none"` disables an
   otherwise positive correction.
+- iterative tau-squared estimators now mark only an exact constrained zero as
+  a boundary solution, rather than treating every positive root below `atol`
+  as zero;
+- the exported pooling and Meta-regression tau-squared estimators now reject
+  insufficient study or residual degrees of freedom with domain-specific
+  errors;
+- the Mantel-Haenszel estimator now rejects empty and zero-total strata before
+  division, preventing NaN propagation and misleading variance diagnostics.
 
 ## 0.4.0 - 2026-07-23
 

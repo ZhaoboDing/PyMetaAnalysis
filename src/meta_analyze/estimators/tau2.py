@@ -9,7 +9,11 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import brentq
 
-from ..exceptions import ConvergenceError, UnsupportedMethodError
+from ..exceptions import (
+    ConvergenceError,
+    InsufficientStudiesError,
+    UnsupportedMethodError,
+)
 from ..heterogeneity import _scaled_q_components, weighted_mean
 
 
@@ -100,12 +104,13 @@ def _paule_mandel(
         raise ConvergenceError("Paule-Mandel tau-squared estimation failed.") from error
     if not result.converged:
         raise ConvergenceError("Paule-Mandel tau-squared estimation did not converge.")
+    value = max(0.0, float(root))
     return Tau2Estimate(
-        value=max(0.0, float(root)),
+        value=value,
         method="PM",
         converged=True,
         iterations=expansions + result.iterations,
-        boundary=root <= atol,
+        boundary=value == 0.0,
     )
 
 
@@ -161,12 +166,13 @@ def _restricted_maximum_likelihood(
         raise ConvergenceError("REML tau-squared estimation failed.") from error
     if not result.converged:
         raise ConvergenceError("REML tau-squared estimation did not converge.")
+    value = max(0.0, float(root))
     return Tau2Estimate(
-        value=max(0.0, float(root)),
+        value=value,
         method="REML",
         converged=True,
         iterations=expansions + result.iterations,
-        boundary=root <= atol,
+        boundary=value == 0.0,
     )
 
 
@@ -180,6 +186,10 @@ def estimate_tau2(
 ) -> Tau2Estimate:
     """Estimate between-study variance using DL, PM, or REML."""
 
+    if len(effect) < 2:
+        raise InsufficientStudiesError(
+            "Tau-squared estimation requires at least two studies."
+        )
     normalized_method = method.upper().replace("-", "_")
     if normalized_method == "DL":
         return _dersimonian_laird(effect, variance)

@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
 import meta_analyze as ma
+import meta_analyze.estimators.meta_regression as meta_regression_module
+import meta_analyze.estimators.tau2 as tau2_module
+from meta_analyze.estimators import (
+    estimate_meta_regression_tau2,
+    estimate_tau2,
+    fit_mantel_haenszel,
+)
 
 EFFECT = np.array([-0.4, 0.1, 0.5, 1.2, 1.8], dtype=float)
 VARIANCE = np.array([0.04, 0.09, 0.05, 0.16, 0.08], dtype=float)
@@ -73,6 +82,97 @@ def test_tau_estimators_return_zero_at_boundary() -> None:
         )
         assert result.tau2 == pytest.approx(0.0)
         assert result.diagnostics.tau2_at_boundary
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+def test_tau2_estimator_rejects_a_single_study(method: str) -> None:
+    with pytest.raises(ma.InsufficientStudiesError, match="at least two"):
+        estimate_tau2(
+            np.asarray([0.2]),
+            np.asarray([0.1]),
+            method=method,
+        )
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+def test_meta_regression_tau2_requires_positive_residual_df(method: str) -> None:
+    with pytest.raises(
+        ma.InsufficientStudiesError,
+        match="positive residual degrees of freedom",
+    ):
+        estimate_meta_regression_tau2(
+            np.asarray([0.1, 0.2]),
+            np.asarray([0.04, 0.05]),
+            np.eye(2),
+            method=method,
+            atol=1e-10,
+            max_iter=1000,
+        )
+
+
+def _positive_small_root(
+    *_: object,
+    **__: object,
+) -> tuple[float, SimpleNamespace]:
+    return 5e-11, SimpleNamespace(converged=True, iterations=3)
+
+
+def test_positive_tau2_root_below_atol_is_not_a_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(tau2_module, "brentq", _positive_small_root)
+
+    estimate = estimate_tau2(
+        EFFECT,
+        VARIANCE,
+        method="PM",
+        atol=1e-10,
+    )
+
+    assert estimate.value == pytest.approx(5e-11)
+    assert estimate.boundary is False
+
+
+def test_positive_meta_regression_tau2_root_below_atol_is_not_a_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(meta_regression_module, "brentq", _positive_small_root)
+    design = np.column_stack([np.ones(5), np.arange(5.0)])
+
+    estimate = estimate_meta_regression_tau2(
+        np.asarray([0.0, 3.0, -1.0, 4.0, 0.0]),
+        VARIANCE,
+        design,
+        method="PM",
+        atol=1e-10,
+        max_iter=1000,
+    )
+
+    assert estimate.value == pytest.approx(5e-11)
+    assert estimate.boundary is False
+
+
+def test_mantel_haenszel_rejects_empty_and_all_zero_strata() -> None:
+    empty = np.asarray([], dtype=np.float64)
+    with pytest.raises(ma.InsufficientStudiesError, match="at least one"):
+        fit_mantel_haenszel(
+            empty,
+            empty,
+            empty,
+            empty,
+            measure="RR",
+            confidence_level=0.95,
+        )
+
+    with pytest.raises(ma.InvalidStudyDataError, match="zero total.*row positions.*1"):
+        fit_mantel_haenszel(
+            np.asarray([1.0, 0.0]),
+            np.asarray([2.0, 0.0]),
+            np.asarray([1.0, 0.0]),
+            np.asarray([2.0, 0.0]),
+            measure="RR",
+            confidence_level=0.95,
+        )
 
 
 def test_hartung_knapp_adhoc_never_has_smaller_se_than_classic() -> None:

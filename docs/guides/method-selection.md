@@ -56,6 +56,9 @@ Random-effects inverse-variance models provide:
 
 REML and PM are iterative. Convergence, iteration count, and whether the
 solution reached the zero boundary are recorded in `result.diagnostics`.
+The boundary flag means the constrained estimate is exactly zero; a positive
+root remains a positive estimate even when it is smaller than the configured
+root-finding tolerance.
 Failure to converge raises `ConvergenceError`; it does not silently fall back
 to DL.
 
