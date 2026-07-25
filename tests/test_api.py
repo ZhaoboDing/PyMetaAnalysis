@@ -393,3 +393,12 @@ def test_missing_reason_variants_and_all_dropped_error() -> None:
             missing="drop",
             model="common",
         )
+
+
+def test_empty_generic_input_has_a_distinct_error() -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="At least one study row"):
+        ma.meta_analysis(
+            effect=[],
+            variance=[],
+            model="common",
+        )

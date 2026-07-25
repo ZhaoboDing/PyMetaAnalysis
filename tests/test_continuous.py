@@ -277,6 +277,19 @@ def test_missing_policy_errors_and_all_missing_data() -> None:
         ma.meta_continuous(**base, missing="drop")
 
 
+def test_empty_continuous_input_has_a_distinct_error() -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="At least one study row"):
+        ma.meta_continuous(
+            mean_treat=[],
+            sd_treat=[],
+            n_treat=[],
+            mean_control=[],
+            sd_control=[],
+            n_control=[],
+            model="common",
+        )
+
+
 @pytest.mark.parametrize("measure", ["MD", "SMD"])
 def test_swapping_groups_negates_effect_and_reverses_interval(measure: str) -> None:
     forward = ma.meta_continuous(DATA, **_columns(), measure=measure, model="common")

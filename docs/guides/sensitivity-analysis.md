@@ -129,6 +129,11 @@ cumulative = result.cumulative(
 )
 ```
 
+A string selector must identify exactly one namespace. If the same column name
+exists in both the original source data and the result study table, it is
+ambiguous and raises `InvalidStudyDataError`. Pass the intended Series or array
+explicitly, for example `order=studies["publication_year"]`.
+
 `CumulativeMetaAnalysisResult.results` contains the estimable prefix fits, and
 `final` returns the last fit. Its table records the rows and study labels added
 at each step together with the same principal statistics as leave-one-out.

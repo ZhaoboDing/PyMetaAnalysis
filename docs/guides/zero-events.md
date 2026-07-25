@@ -52,8 +52,14 @@ rd_zero_variance = "correct"
 ```
 
 The RD itself remains the raw treatment risk minus control risk. Corrected
-counts are used only to form a positive sampling variance. To exclude all such
-studies before pooling, Q, tau-squared, and weight calculations, use:
+counts affect only its sampling variance. Under the default
+`correction_scope="only_zero_studies"`, the corrected variance is used for
+every retained RD table containing at least one zero cell, including
+single-zero tables whose uncorrected variance was already positive. The
+`rd_zero_variance` policy separately decides whether tables whose raw RD
+variance is exactly zero are retained or excluded. To exclude all such
+zero-variance studies before pooling, Q, tau-squared, and weight calculations,
+use:
 
 ```python
 rd_zero_variance = "exclude"

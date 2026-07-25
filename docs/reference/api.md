@@ -41,6 +41,17 @@ Canonical values should be used in saved analysis code. Model aliases such as
 `fixed` and method aliases such as `IV`/`MH` are accepted for convenience but
 resolved values are stored in `result.method`.
 
+The entry points do not share one implicit model default:
+
+| Function | Default |
+| --- | --- |
+| `meta_analysis()` | random-effects inverse variance with REML |
+| `meta_continuous()` | random-effects inverse variance with REML |
+| `meta_binary()` | common-effect Mantel-Haenszel |
+| `meta_regression()` | mixed-effects inverse variance with REML |
+
+Set `model` and binary `method` explicitly when code may switch outcome types.
+
 ## `meta_analysis()`
 
 ```text
@@ -270,9 +281,13 @@ plot, or cumulative Meta-regression.
 
 | Parameter | Default | Meaning |
 | --- | ---: | --- |
-| `order` | `None` | Column/array defining order; input order when omitted |
+| `order` | `None` | Unambiguous column/array defining order; input order when omitted |
 | `ascending` | `True` | Sort direction |
 | `collapse` | `False` | Add tied order values in one step |
+
+When a string `order` exists in both the source DataFrame and the result study
+table, pass the intended Series or array explicitly instead of relying on a
+namespace priority.
 
 ### `forest()` parameters
 

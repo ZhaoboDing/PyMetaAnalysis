@@ -41,6 +41,14 @@ Changes planned for the next release accumulate under `Unreleased`.
   `row_id` as the unique audit key;
 - report JSON now serializes `pd.NaT` study labels as `null` rather than the
   string `"NaT"`.
+- Meta-regression with `missing="drop"` now determines complete-row exclusions
+  before validating moderator values, so invalid values in already excluded
+  rows cannot abort the analysis;
+- cumulative analysis now rejects ambiguous string `order` selectors that
+  exist in both source data and study results;
+- empty inputs now report that at least one study row is required, and binary
+  zero-cell errors identify when `correction_scope="none"` disables an
+  otherwise positive correction.
 
 ## 0.4.0 - 2026-07-23
 

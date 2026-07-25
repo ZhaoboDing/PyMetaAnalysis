@@ -416,9 +416,18 @@ def _order_values(
         return np.asarray(np.arange(row_count), dtype=object)
     if isinstance(order, str):
         source = result.source_data
-        if source is not None and order in source.columns:
+        in_source = source is not None and order in source.columns
+        in_results = order in studies.columns
+        if in_source and in_results:
+            raise InvalidStudyDataError(
+                f"Order column {order!r} is ambiguous because it exists in both "
+                "the source data and study results; pass the intended column as "
+                "an explicit array-like value."
+            )
+        if in_source:
+            assert source is not None
             values = source[order].to_numpy(copy=True)
-        elif order in studies.columns:
+        elif in_results:
             values = studies[order].to_numpy(copy=True)
         else:
             raise InvalidStudyDataError(

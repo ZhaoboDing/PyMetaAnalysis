@@ -488,6 +488,23 @@ def test_missing_drop_combines_reasons_and_preserves_excluded_rows() -> None:
     assert result.provenance.excluded_rows == (1, 2)
 
 
+@pytest.mark.parametrize("invalid_moderator", [np.inf, "not numeric"])
+def test_missing_drop_does_not_validate_moderators_on_excluded_rows(
+    invalid_moderator: object,
+) -> None:
+    result = ma.meta_regression(
+        effect=[0.1, np.nan, 0.4, 0.7],
+        variance=[0.04, 0.05, 0.06, 0.07],
+        moderators={"x": np.asarray([0.0, invalid_moderator, 2.0, 3.0], dtype=object)},
+        model="common",
+        missing="drop",
+    )
+
+    assert result.k == 3
+    assert result.study_results.loc[1, "included"] == np.False_
+    assert result.study_results.loc[1, "exclusion_reason"] == "missing effect"
+
+
 def test_missing_raise_reports_moderator_fields() -> None:
     with pytest.raises(ma.InvalidStudyDataError, match="moderator 'x'"):
         ma.meta_regression(
