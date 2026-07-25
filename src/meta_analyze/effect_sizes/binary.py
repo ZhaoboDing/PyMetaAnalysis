@@ -148,6 +148,8 @@ def normalize_binary_studies(
             "Array-like binary inputs used with data must have exactly one value "
             "per DataFrame row."
         )
+    if length == 0:
+        raise InvalidStudyDataError("At least one study row is required.")
     labels = _study_labels(study, data=data, length=length)
 
     try:
@@ -357,10 +359,15 @@ def calculate_binary_effects(
         undefined = np.zeros_like(included)
     if np.any(undefined):
         rows = np.flatnonzero(undefined).tolist()
+        correction_guidance = (
+            "set correction_scope to a value other than 'none' and use a positive "
+            "continuity_correction"
+            if correction_scope == "none"
+            else "use a positive continuity_correction"
+        )
         raise InvalidStudyDataError(
             f"{normalized_measure} study effects are undefined with remaining zero "
-            f"cells at row positions {rows}; use a positive "
-            "continuity_correction."
+            f"cells at row positions {rows}; {correction_guidance}."
         )
 
     effect = np.full(len(included), np.nan, dtype=np.float64)
@@ -388,8 +395,9 @@ def calculate_binary_effects(
         effect_scale = "log"
         display_scale = "exp"
     else:
-        # RD remains on the uncorrected natural scale. Corrected counts are used
-        # only for its sampling variance when zero cells would make it degenerate.
+        # RD remains on the uncorrected natural scale. Its variance uses corrected
+        # counts for every study selected by correction_scope; under the default
+        # scope this means every table containing at least one zero cell.
         effect[active] = (
             studies.event_treat[active] / studies.n_treat[active]
             - studies.event_control[active] / studies.n_control[active]
@@ -408,9 +416,17 @@ def calculate_binary_effects(
     invalid_variance = active & (~np.isfinite(variance) | (variance <= 0.0))
     if np.any(invalid_variance):
         rows = np.flatnonzero(invalid_variance).tolist()
+        correction_guidance = (
+            "set correction_scope to a value other than 'none' and use a positive "
+            "continuity_correction"
+            if correction_scope == "none"
+            else "use an appropriate positive continuity_correction"
+        )
+        if normalized_measure == "RD":
+            correction_guidance += " or set rd_zero_variance='exclude'"
         raise InvalidStudyDataError(
             f"Non-positive binary sampling variance at row positions {rows}; "
-            "use an appropriate positive continuity_correction."
+            f"{correction_guidance}."
         )
     invalid_effect = active & ~np.isfinite(effect)
     if np.any(invalid_effect):

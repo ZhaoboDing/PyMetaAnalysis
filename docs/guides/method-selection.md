@@ -17,6 +17,20 @@ variation is part of the estimand. A small number of studies makes
 between-study variance and interval estimation uncertain; it does not turn a
 random-effects question into a common-effect question.
 
+The high-level APIs intentionally have outcome-specific defaults:
+
+| API | Default model and pooling |
+| --- | --- |
+| `meta_analysis()` | random-effects inverse variance, REML |
+| `meta_continuous()` | random-effects inverse variance, REML |
+| `meta_binary()` | common-effect Mantel-Haenszel |
+| `meta_regression()` | mixed-effects inverse variance, REML |
+
+These defaults reflect common entry-point conventions, not an automatic model
+choice. Switching outcome APIs can therefore switch the model family; set
+`model` and, for binary data, `method` explicitly in analysis code and
+protocols.
+
 ## Pooling methods
 
 | Data and model | Available pooling method |

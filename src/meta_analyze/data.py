@@ -168,6 +168,8 @@ def normalize_studies(
             "Array-like inputs used with data must have exactly one value per "
             "DataFrame row."
         )
+    if len(raw_effect) == 0:
+        raise InvalidStudyDataError("At least one study row is required.")
 
     labels = _study_labels(
         study,

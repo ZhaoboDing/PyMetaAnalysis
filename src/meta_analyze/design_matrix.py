@@ -108,6 +108,7 @@ class _RawModerator:
     values: NDArray[Any]
     missing: NDArray[np.bool_]
     levels: tuple[Hashable, ...] | None
+    numeric_values: NDArray[np.float64] | None = None
 
 
 def _moderator_mapping(
@@ -195,10 +196,15 @@ def _equal(value: Any, level: Hashable) -> bool:
 
 
 def _category_codes(
-    values: NDArray[Any], levels: tuple[Hashable, ...]
+    values: NDArray[Any],
+    levels: tuple[Hashable, ...],
+    *,
+    included: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int64]:
     codes = np.full(len(values), -1, dtype=np.int64)
     for position, value in enumerate(values):
+        if included is not None and not included[position]:
+            continue
         if _scalar_is_missing(value):
             continue
         for code, level in enumerate(levels):
@@ -208,20 +214,27 @@ def _category_codes(
     return codes
 
 
-def _numeric_values(name: str, values: NDArray[Any]) -> NDArray[np.float64]:
-    nonmissing = values[~_is_missing(values)]
-    if any(isinstance(value, str | bytes) for value in nonmissing):
+def _numeric_values(
+    name: str,
+    values: NDArray[Any],
+    *,
+    included: NDArray[np.bool_] | None = None,
+) -> NDArray[np.float64]:
+    missing = _is_missing(values)
+    active = ~missing if included is None else included & ~missing
+    active_values = values[active]
+    if any(isinstance(value, str | bytes) for value in active_values):
         raise InvalidStudyDataError(
             f"Moderator {name!r} contains string values; declare it in categorical."
         )
+    numeric = np.full(len(values), np.nan, dtype=np.float64)
     try:
-        numeric = np.asarray(values, dtype=np.float64)
+        numeric[active] = np.asarray(active_values, dtype=np.float64)
     except (TypeError, ValueError) as error:
         raise InvalidStudyDataError(
             f"Numeric moderator {name!r} must contain numeric values."
         ) from error
-    missing = np.isnan(numeric)
-    invalid = (~missing) & (~np.isfinite(numeric))
+    invalid = active & (~np.isfinite(numeric))
     if np.any(invalid):
         rows = np.flatnonzero(invalid).tolist()
         raise InvalidStudyDataError(
@@ -295,18 +308,6 @@ def normalize_meta_regression_data(
         levels = (
             _validate_levels(name, categorical[name]) if name in categorical else None
         )
-        if levels is None:
-            raw = _numeric_values(name, raw)
-        else:
-            codes = _category_codes(raw, levels)
-            unknown_levels = (~missing_values) & (codes < 0)
-            if np.any(unknown_levels):
-                rows = np.flatnonzero(unknown_levels).tolist()
-                raise InvalidStudyDataError(
-                    f"Categorical moderator {name!r} contains undeclared levels "
-                    f"at rows {rows}."
-                )
-            raw = np.asarray(raw, dtype=object)
         raw_moderators.append(_RawModerator(name, raw, missing_values, levels))
 
     study_missing = _is_missing(studies.study)
@@ -345,6 +346,40 @@ def normalize_meta_regression_data(
             "No studies remain after applying the missing-value policy."
         )
 
+    validated_moderators: list[_RawModerator] = []
+    for moderator in raw_moderators:
+        if moderator.levels is None:
+            numeric_values = _numeric_values(
+                moderator.name,
+                moderator.values,
+                included=included,
+            )
+            validated_moderators.append(
+                _RawModerator(
+                    moderator.name,
+                    moderator.values,
+                    moderator.missing,
+                    moderator.levels,
+                    numeric_values,
+                )
+            )
+            continue
+
+        codes = _category_codes(
+            moderator.values,
+            moderator.levels,
+            included=included,
+        )
+        unknown_levels = included & (codes < 0)
+        if np.any(unknown_levels):
+            rows = np.flatnonzero(unknown_levels).tolist()
+            raise InvalidStudyDataError(
+                f"Categorical moderator {moderator.name!r} contains undeclared "
+                f"levels at rows {rows}."
+            )
+        validated_moderators.append(moderator)
+    raw_moderators = validated_moderators
+
     specs: list[ModeratorSpec] = []
     columns: list[NDArray[np.float64]] = []
     term_names: list[str] = []
@@ -354,13 +389,18 @@ def normalize_meta_regression_data(
 
     for moderator in raw_moderators:
         if moderator.levels is None:
+            assert moderator.numeric_values is not None
             terms: tuple[str, ...] = (moderator.name,)
-            columns.append(np.asarray(moderator.values[included], dtype=np.float64))
+            columns.append(moderator.numeric_values[included])
             term_names.extend(terms)
             specs.append(ModeratorSpec(moderator.name, "numeric", terms))
             continue
 
-        codes = _category_codes(moderator.values, moderator.levels)
+        codes = _category_codes(
+            moderator.values,
+            moderator.levels,
+            included=included,
+        )
         included_codes = codes[included]
         absent = [
             level

@@ -364,6 +364,23 @@ def test_zero_correction_can_be_disabled_only_when_effect_remains_defined() -> N
         )
 
 
+def test_rd_zero_variance_error_explains_disabled_correction_scope() -> None:
+    with pytest.raises(
+        ma.InvalidStudyDataError,
+        match="correction_scope.*other than 'none'",
+    ):
+        ma.meta_binary(
+            event_treat=[0, 4],
+            n_treat=[20, 20],
+            event_control=[0, 5],
+            n_control=[20, 20],
+            measure="RD",
+            method="IV",
+            model="common",
+            correction_scope="none",
+        )
+
+
 @pytest.mark.parametrize("method", ["IV", "MH"])
 def test_rr_without_correction_accepts_an_all_event_arm(method: str) -> None:
     result = ma.meta_binary(
@@ -476,6 +493,18 @@ def test_all_missing_or_all_uninformative_binary_data_raise() -> None:
             event_control=[0, 10],
             n_control=[10, 10],
             measure="RR",
+            method="IV",
+            model="common",
+        )
+
+
+def test_empty_binary_input_has_a_distinct_error() -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="At least one study row"):
+        ma.meta_binary(
+            event_treat=[],
+            n_treat=[],
+            event_control=[],
+            n_control=[],
             method="IV",
             model="common",
         )

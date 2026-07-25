@@ -87,6 +87,13 @@ result = ma.meta_analysis(
 result.excluded_studies[["row_id", "study", "exclusion_reason"]]
 ```
 
+For Meta-regression, missingness is resolved across the outcome, uncertainty,
+study label, and every moderator before moderator values are validated.
+Consequently, a moderator value in an already excluded row is retained for
+audit but cannot abort or influence the fitted design matrix. Moderator values
+in included rows must still satisfy the declared numeric or categorical
+contract.
+
 Dropped rows do not contribute to pooled estimates, Q, tau-squared, prediction
 intervals, or weights. Missing subgroup labels are always rejected because
 silently assigning or dropping them would change the subgroup definition.

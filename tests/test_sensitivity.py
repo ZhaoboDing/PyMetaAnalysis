@@ -212,6 +212,28 @@ def test_cumulative_uses_dataframe_order_column_and_stable_row_ids() -> None:
     assert cumulative.final.q == pytest.approx(result.q)
 
 
+def test_cumulative_rejects_ambiguous_order_column_name() -> None:
+    data = pd.DataFrame(
+        {
+            "yi": [0.0, 0.2, 0.8],
+            "vi": [0.04, 0.04, 0.04],
+            "weight": [3, 1, 2],
+        }
+    )
+    result = ma.meta_analysis(
+        data,
+        effect="yi",
+        variance="vi",
+        model="common",
+    )
+
+    with pytest.raises(ma.InvalidStudyDataError, match="ambiguous"):
+        result.cumulative(order="weight")
+
+    cumulative = result.cumulative(order=data["weight"])
+    assert cumulative.table["added_row_ids"].tolist() == [(1,), (2,), (0,)]
+
+
 def test_cumulative_defaults_to_input_order_and_can_sort_descending() -> None:
     result = _ordered_dataframe_result()
     natural = result.cumulative()
