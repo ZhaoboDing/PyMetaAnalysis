@@ -34,6 +34,13 @@ Changes planned for the next release accumulate under `Unreleased`.
   analysis;
 - tagged releases now rerun the full branch-coverage test suite before
   distributions can be built and published.
+- tau-squared methods and SMD variance conventions now use `None` as the
+  context-sensitive default, so explicitly inapplicable settings raise domain
+  errors instead of being silently ignored;
+- duplicate study labels now add a row-position warning while preserving
+  `row_id` as the unique audit key;
+- report JSON now serializes `pd.NaT` study labels as `null` rather than the
+  string `"NaT"`.
 
 ## 0.4.0 - 2026-07-23
 

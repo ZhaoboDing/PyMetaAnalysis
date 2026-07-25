@@ -16,7 +16,8 @@ markdown = report.to_markdown()
 
 `to_dict()` returns a defensive copy. JSON uses standard values only:
 unavailable or non-finite statistical numbers become `null`, and timestamps or
-other non-JSON study labels become stable strings.
+other non-JSON study labels become stable strings. Missing pandas timestamps
+(`pd.NaT`) are unavailable values and therefore also become `null`.
 
 ## Single-analysis report
 

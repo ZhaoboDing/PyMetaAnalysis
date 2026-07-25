@@ -92,6 +92,19 @@ def _study_labels(
     return np.asarray(labels, dtype=object)
 
 
+def _duplicate_study_warning(labels: NDArray[np.object_]) -> str | None:
+    """Describe duplicate labels while preserving row IDs as unique keys."""
+
+    duplicated = pd.Series(labels, dtype=object).duplicated(keep=False).to_numpy()
+    if not np.any(duplicated):
+        return None
+    positions = np.flatnonzero(duplicated).tolist()
+    return (
+        "Duplicate study labels were found at row positions "
+        f"{positions}; row_id remains the unique row identifier."
+    )
+
+
 def _select_uncertainty_input(
     variance: ColumnOrArray | None,
     standard_error: ColumnOrArray | None,

@@ -27,7 +27,7 @@ def _generic_result(*, model: str = "common") -> ma.MetaAnalysisResult:
         variance=variance,
         study=[f"Study {index}" for index in range(1, 11)],
         model=model,
-        tau2_method="PM",
+        tau2_method="PM" if model == "random" else None,
     )
 
 

@@ -45,6 +45,11 @@ solution reached the zero boundary are recorded in `result.diagnostics`.
 Failure to converge raises `ConvergenceError`; it does not silently fall back
 to DL.
 
+The public default is `tau2_method=None`: it resolves to REML for a random- or
+mixed-effects fit. Common-effect and Mantel-Haenszel fits reject an explicitly
+supplied tau-squared method so analysis code cannot appear to request an
+estimator that was not used.
+
 ## Confidence intervals
 
 `ci_method="normal"` is the stable default and uses the classic normal

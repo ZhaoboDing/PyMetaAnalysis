@@ -32,7 +32,7 @@ def _numeric_result(*, model: str = "mixed") -> ma.MetaRegressionResult:
         moderators={"dose": moderator},
         study=[f"Study {index}" for index in range(1, 11)],
         model=model,
-        tau2_method="PM",
+        tau2_method="PM" if model == "mixed" else None,
     )
 
 

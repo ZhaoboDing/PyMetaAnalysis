@@ -368,9 +368,9 @@ def test_markdown_report_separates_display_and_model_scales() -> None:
 
 def test_report_serializes_timestamp_study_labels() -> None:
     result = ma.meta_analysis(
-        effect=[0.1, 0.2],
-        variance=[0.01, 0.02],
-        study=[pd.Timestamp("2024-01-01"), pd.Timestamp("2024-02-01")],
+        effect=[0.1, 0.2, 0.3],
+        variance=[0.01, 0.02, 0.03],
+        study=[pd.Timestamp("2024-01-01"), pd.Timestamp("2024-02-01"), pd.NaT],
         model="common",
     )
 
@@ -378,6 +378,7 @@ def test_report_serializes_timestamp_study_labels() -> None:
 
     assert studies[0]["study"] == "2024-01-01T00:00:00"
     assert studies[1]["study"] == "2024-02-01T00:00:00"
+    assert studies[2]["study"] is None
 
 
 def test_subgroup_report_records_mapping_groups_and_test_assumptions() -> None:

@@ -601,7 +601,7 @@ def test_leave_one_out_workflow_matches_metafor(
         variance="variance",
         study="study",
         model=model,
-        tau2_method="REML",
+        tau2_method="REML" if model == "random" else None,
     )
     table = result.leave_one_out().to_dataframe()
 
@@ -635,7 +635,7 @@ def test_cumulative_workflow_matches_metafor(
         variance="variance",
         study="study",
         model=model,
-        tau2_method="REML",
+        tau2_method="REML" if model == "random" else None,
     )
     table = result.cumulative(order="year").to_dataframe()
     selected = slice(start, None)

@@ -174,6 +174,39 @@ def test_fixed_alias_and_ci_aliases_are_resolved() -> None:
     assert result.method.ci_method == "normal"
 
 
+def test_common_effect_rejects_explicit_tau2_method() -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_analysis(
+            effect=[0.1, 0.2],
+            variance=[0.01, 0.02],
+            model="common",
+            tau2_method="REML",
+        )
+
+
+def test_non_string_tau2_method_raises_domain_error() -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="string or None"):
+        ma.meta_analysis(
+            effect=[0.1, 0.2],
+            variance=[0.01, 0.02],
+            model="random",
+            tau2_method=1,  # type: ignore[arg-type]
+        )
+
+
+def test_duplicate_study_labels_warn_and_row_ids_remain_unique() -> None:
+    result = ma.meta_analysis(
+        effect=[0.1, 0.2],
+        variance=[0.01, 0.02],
+        study=["duplicate", "duplicate"],
+        model="common",
+    )
+
+    assert result.study_results["row_id"].tolist() == [0, 1]
+    assert "Duplicate study labels" in result.warnings[-1]
+    assert "row positions [0, 1]" in result.warnings[-1]
+
+
 @pytest.mark.parametrize(
     ("kwargs", "match"),
     [

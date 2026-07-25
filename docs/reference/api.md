@@ -53,7 +53,7 @@ ma.meta_analysis(
     study=None,
     subgroup=None,
     model="random",
-    tau2_method="REML",
+    tau2_method=None,
     ci_method="normal",
     confidence_level=0.95,
     missing="raise",
@@ -73,7 +73,7 @@ Fits generic study effects using inverse-variance pooling.
 | `study` | Optional label column/array; defaults to index or row number |
 | `subgroup` | Optional subgroup column/array |
 | `model` | `"common"` or `"random"` |
-| `tau2_method` | `"REML"`, `"PM"`, or `"DL"` for random effects |
+| `tau2_method` | `None` selects `"REML"` for random effects; explicit `"REML"`, `"PM"`, or `"DL"` values are valid only for random effects |
 | `ci_method` | `"normal"`, `"hartung_knapp"`, or `"hartung_knapp_adhoc"` |
 | `confidence_level` | Number strictly between 0 and 1 |
 | `missing` | `"raise"` or `"drop"` |
@@ -97,7 +97,7 @@ ma.meta_regression(
     categorical=None,
     study=None,
     model="mixed",
-    tau2_method="REML",
+    tau2_method=None,
     inference_method="normal",
     intercept=True,
     confidence_level=0.95,
@@ -115,7 +115,7 @@ Fits generic study effects on study-level moderators.
 | `moderators` | DataFrame column-name sequence, or name-to-column/array mapping |
 | `categorical` | Moderator-to-ordered-level mapping; first level is reference |
 | `model` | `"mixed"` (default) or `"common"`; random/fixed aliases are accepted |
-| `tau2_method` | `"REML"`, `"PM"`, or `"DL"` for residual tau-squared |
+| `tau2_method` | `None` selects `"REML"` for mixed effects; explicit `"REML"`, `"PM"`, or `"DL"` values are valid only for mixed effects |
 | `inference_method` | `"normal"`, `"hartung_knapp"`, or `"hartung_knapp_adhoc"` |
 | `intercept` | Include an intercept; no-intercept currently requires all-numeric moderators |
 | `prediction_interval_method` | `"default"` or opt-in `"riley"` for mixed-effects true-effect prediction intervals |
@@ -144,7 +144,7 @@ ma.meta_binary(
     measure="RR",
     method="MH",
     model="common",
-    tau2_method="REML",
+    tau2_method=None,
     ci_method="normal",
     confidence_level=0.95,
     continuity_correction=0.5,
@@ -178,6 +178,7 @@ Calculates and pools two-group binary effects.
 MH supports common-effect OR/RR and normal intervals only. Random-effects
 binary analysis and every RD analysis require inverse-variance pooling. Sparse
 table behavior is specified in [zero-event studies](../guides/zero-events.md).
+An explicit `tau2_method` is rejected for common-effect and MH fits.
 
 ## `meta_continuous()`
 
@@ -195,10 +196,10 @@ ma.meta_continuous(
     subgroup=None,
     measure="MD",
     model="random",
-    tau2_method="REML",
+    tau2_method=None,
     ci_method="normal",
     confidence_level=0.95,
-    smd_variance="LS",
+    smd_variance=None,
     missing="raise",
     atol=1e-10,
     max_iter=1000,
@@ -214,11 +215,12 @@ and sample sizes.
 | `sd_treat`, `sd_control` | Finite, non-negative sample standard deviations |
 | `n_treat`, `n_control` | Integer sample sizes of at least 2 |
 | `measure` | `"MD"` or `"SMD"` |
-| `smd_variance` | `"LS"`; currently the only SMD variance convention |
+| `smd_variance` | `None` selects `"LS"` for SMD; explicit `"LS"` is valid only for SMD |
 
 The remaining shared parameters have the same meanings as in
 `meta_analysis()`. MD uses an unpooled variance. SMD is exact-corrected Hedges'
-g with the LS variance convention.
+g with the LS variance convention. An explicit `smd_variance` is rejected for
+MD rather than silently ignored.
 
 ## Return types
 

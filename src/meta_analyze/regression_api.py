@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import chi2
 
-from .api import _validate_analysis_controls
+from .api import _resolve_tau2_method, _validate_analysis_controls
 from .config import MetaRegressionMethodConfig
-from .data import ColumnOrArray, MissingPolicy
+from .data import ColumnOrArray, MissingPolicy, _duplicate_study_warning
 from .design_matrix import (
     CategoricalInput,
     ModeratorInput,
@@ -98,7 +98,7 @@ def meta_regression(
     categorical: CategoricalInput | None = None,
     study: ColumnOrArray | None = None,
     model: str = "mixed",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     inference_method: str = "normal",
     intercept: bool = True,
     confidence_level: float = 0.95,
@@ -117,6 +117,8 @@ def meta_regression(
     effects. Mixed-effects true-effect prediction intervals use the fitted
     inference distribution by default; ``prediction_interval_method="riley"``
     selects a t critical value with ``k-p-1`` degrees of freedom.
+    ``tau2_method=None`` selects REML for mixed-effects models; explicit
+    tau-squared methods are rejected for common-effect regression.
     """
 
     confidence_level, atol, max_iter = _validate_analysis_controls(
@@ -129,7 +131,10 @@ def meta_regression(
     normalized_prediction_interval = _normalize_prediction_interval_method(
         prediction_interval_method
     )
-    normalized_tau2 = tau2_method.upper().replace("-", "_")
+    normalized_tau2 = _resolve_tau2_method(
+        tau2_method,
+        applicable=normalized_model == "mixed",
+    )
     if normalized_model == "common" and normalized_prediction_interval == "riley":
         raise UnsupportedMethodError(
             "prediction_interval_method='riley' requires a mixed-effects model."
@@ -316,6 +321,9 @@ def meta_regression(
     study_results = pd.DataFrame(study_payload)
 
     excluded_count = int(np.count_nonzero(~normalized.included))
+    duplicate_warning = _duplicate_study_warning(normalized.study)
+    if duplicate_warning is not None:
+        warnings.append(duplicate_warning)
     if excluded_count:
         warnings.append(
             f"Excluded {excluded_count} study row(s) under missing={missing!r}."
