@@ -67,10 +67,10 @@ The current fixture families cover:
 
 | Fixture | Coverage |
 | --- | --- |
-| `generic_metafor.json` | Common effects, DL/PM/REML random effects, HK variants, HTS prediction interval |
+| `generic_metafor.json` | Common effects, DL/PM/REML random effects, HK variants, HTS and HK-PR prediction intervals |
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
-| `workflow_metafor.json` | Subgroups, leave-one-out, and cumulative common/random fits |
+| `workflow_metafor.json` | Common subgroups, random singleton fallback, leave-one-out, and cumulative common/random fits |
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions; zero tau-squared, missing rows, and small samples |
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |

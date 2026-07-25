@@ -51,6 +51,12 @@ def _normalize_ci_method(ci_method: str) -> str:
     return aliases.get(normalized, normalized)
 
 
+def _prediction_interval_method(model: str, ci_method: str) -> str | None:
+    if model != "random":
+        return None
+    return "HTS" if ci_method == "normal" else "HK-PR"
+
+
 def _validate_analysis_controls(
     *, confidence_level: float, atol: float, max_iter: int
 ) -> tuple[float, float, int]:
@@ -196,7 +202,10 @@ def _fit_meta_analysis_single(
         tau2_method=None if normalized_model == "common" else normalized_tau2,
         ci_method=normalized_ci,
         confidence_level=confidence_level,
-        prediction_interval_method="HTS" if normalized_model == "random" else None,
+        prediction_interval_method=_prediction_interval_method(
+            normalized_model,
+            normalized_ci,
+        ),
         missing=missing,
         atol=atol,
         max_iter=max_iter,
@@ -382,15 +391,18 @@ def meta_analysis(
         ),
     )
 
-    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+    def fit_group(
+        positions: np.ndarray,
+        singleton_random: bool,
+    ) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]
         return _fit_meta_analysis_single(
             effect=rows["effect"].to_numpy(dtype=np.float64, copy=True),
             variance=rows["variance"].to_numpy(dtype=np.float64, copy=True),
             study=rows["study"].to_numpy(dtype=object, copy=True),
-            model=model,
+            model="common" if singleton_random else model,
             tau2_method=tau2_method,
-            ci_method=ci_method,
+            ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             missing=missing,
             atol=atol,

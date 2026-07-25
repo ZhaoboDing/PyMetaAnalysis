@@ -367,6 +367,43 @@ def test_generic_hts_prediction_interval_matches_metafor_formula() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("ci_method", "reference_key"),
+    [
+        (
+            "hartung_knapp",
+            "reml_prediction_interval_hartung_knapp",
+        ),
+        (
+            "hartung_knapp_adhoc",
+            "reml_prediction_interval_hartung_knapp_adhoc",
+        ),
+    ],
+)
+def test_generic_hartung_knapp_prediction_intervals_match_metafor(
+    ci_method: str,
+    reference_key: str,
+) -> None:
+    result = ma.meta_analysis(
+        GENERIC_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        model="random",
+        tau2_method="REML",
+        ci_method=ci_method,
+    )
+
+    assert result.method.prediction_interval_method == "HK-PR"
+    assert result.prediction_interval is not None
+    np.testing.assert_allclose(
+        result.prediction_interval,
+        GENERIC[reference_key],
+        rtol=ITERATIVE_RTOL,
+        atol=ITERATIVE_ATOL,
+    )
+
+
 @pytest.mark.parametrize("measure", ["OR", "RR", "RD"])
 def test_clean_binary_inverse_variance_models_match_metafor(measure: str) -> None:
     expected = BINARY["clean"][measure]
@@ -524,6 +561,28 @@ def test_common_effect_subgroups_match_metafor_moderator_model() -> None:
         atol=CLOSED_ATOL,
     )
     assert result.q_between_df == expected["q_between_df"]
+
+
+def test_random_singleton_subgroup_estimate_matches_metafor() -> None:
+    result = ma.meta_analysis(
+        WORKFLOW_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        subgroup=["singleton", "rest", "rest", "rest", "rest", "rest"],
+        model="random",
+        tau2_method="REML",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    singleton = result.groups["singleton"]
+    _assert_summary_values(
+        singleton,
+        WORKFLOW["singleton_random"],
+        iterative=True,
+    )
+    assert singleton.model == "common"
+    assert "one included study" in singleton.warnings[-1]
 
 
 @pytest.mark.parametrize(

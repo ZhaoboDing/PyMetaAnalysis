@@ -123,17 +123,20 @@ apply the safeguard to an unmodified Hartung-Knapp request.
 ## Prediction interval
 
 Random-effects inverse-variance models with at least three included studies
-use the Higgins-Thompson-Spiegelhalter form:
+use a `k - 2` prediction rule:
 
 ```text
 mu_hat +/- t_(k - 2, 1 - alpha/2)
-          * sqrt(tau^2 + Var_classic(mu_hat))
+          * sqrt(tau^2 + Var_selected(mu_hat))
 ```
 
-The classic pooled-mean variance is used even when the confidence interval for
-the mean uses Hartung-Knapp. No interval is returned below three studies. An
-interval calculated with three or four studies carries an explicit uncertainty
-warning.
+For `ci_method="normal"`, `Var_selected` is the classic pooled-mean variance
+and the method is recorded as `HTS`. For either Hartung-Knapp choice, it is the
+same unmodified or safeguarded HK variance used by the mean interval, and the
+prediction method is recorded as `HK-PR`. This matches
+`metafor::predict(..., predtype="Riley")`. No interval is returned below three
+studies. An interval calculated with three or four studies carries an explicit
+uncertainty warning.
 
 ## Heterogeneity and inconsistency
 
@@ -526,7 +529,10 @@ v_i = 1/n_treat + 1/n_control + g^2 / (2 (n_treat + n_control))
 
 Subgroup fits use the same selected model independently within each group. For
 random effects, tau-squared is estimated separately for every subgroup and the
-overall analysis.
+overall analysis whenever a subgroup contains at least two included studies.
+A single-study subgroup cannot identify tau-squared or Hartung-Knapp
+inference, so it is retained as that study's common-effect estimate and normal
+interval with an explicit warning. The overall fit remains random effects.
 
 The formal subgroup-differences test weights subgroup pooled estimates by the
 inverse square of their classic model standard errors:

@@ -243,14 +243,66 @@ def test_group_with_no_included_studies_is_not_silently_discarded() -> None:
         )
 
 
-def test_random_subgroup_requires_two_included_studies_per_group() -> None:
-    with pytest.raises(ma.InsufficientStudiesError, match="Subgroup 'A'.*at least two"):
-        ma.meta_analysis(
-            effect=[0.1, 0.2, 0.3],
-            variance=[0.01, 0.02, 0.03],
-            subgroup=["A", "B", "B"],
-            model="random",
-        )
+def test_random_singleton_subgroup_uses_auditable_common_effect_fallback() -> None:
+    result = ma.meta_analysis(
+        effect=[0.1, 0.2, 0.3],
+        variance=[0.01, 0.02, 0.03],
+        subgroup=["A", "B", "B"],
+        model="random",
+        ci_method="hartung_knapp",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    singleton = result.groups["A"]
+    assert singleton.model == "common"
+    assert singleton.method.model == "common"
+    assert singleton.method.tau2_method is None
+    assert singleton.method.ci_method == "normal"
+    assert singleton.estimate == pytest.approx(0.1)
+    assert singleton.standard_error == pytest.approx(0.1)
+    assert singleton.tau2 == 0.0
+    assert singleton.prediction_interval is None
+    assert np.isfinite(result.q_between)
+    assert "one included study" in singleton.warnings[-1]
+    assert "Subgroup 'A'" in result.warnings[-1]
+    assert "common-effect fallback" in result.method_details()
+
+
+def test_binary_random_singleton_subgroup_uses_common_effect_fallback() -> None:
+    result = ma.meta_binary(
+        event_treat=[3, 4, 5],
+        n_treat=[20, 20, 20],
+        event_control=[2, 3, 3],
+        n_control=[20, 20, 20],
+        subgroup=["A", "B", "B"],
+        measure="RR",
+        method="IV",
+        model="random",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    assert result.groups["A"].model == "common"
+    assert result.groups["A"].k == 1
+    assert result.groups["B"].model == "random"
+
+
+def test_continuous_random_singleton_subgroup_uses_common_effect_fallback() -> None:
+    result = ma.meta_continuous(
+        mean_treat=[4.0, 5.0, 6.0],
+        sd_treat=[1.0, 1.0, 1.0],
+        n_treat=[20, 20, 20],
+        mean_control=[3.0, 3.5, 4.0],
+        sd_control=[1.0, 1.0, 1.0],
+        n_control=[20, 20, 20],
+        subgroup=["A", "B", "B"],
+        measure="MD",
+        model="random",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    assert result.groups["A"].model == "common"
+    assert result.groups["A"].k == 1
+    assert result.groups["B"].model == "random"
 
 
 def test_result_mapping_and_tables_are_defensive() -> None:

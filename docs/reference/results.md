@@ -57,7 +57,7 @@ The definition differs by model and is specified under
 | `tau2_method` | `REML`, `PM`, `DL`, or `None` |
 | `ci_method` | Resolved mean confidence-interval method |
 | `confidence_level` | Fitted confidence level |
-| `prediction_interval_method` | `HTS` or `None` |
+| `prediction_interval_method` | `HTS`, `HK-PR`, or `None` |
 | `missing` | Resolved missing-value policy |
 | `atol`, `max_iter` | Numerical controls |
 | `options` | Immutable outcome-specific key/value pairs |
@@ -423,7 +423,11 @@ Supplying `subgroup=` returns a `SubgroupMetaAnalysisResult`.
 
 `SubgroupMethodConfig` records `model`, `tau2_strategy`, `test_method`, and
 `subgroup_missing`. Random-effects subgroup fits currently use an independent
-tau-squared estimate within each group and another for the overall result.
+tau-squared estimate within each estimable group and another for the overall
+result. A group with one included study is a `MetaAnalysisResult` with
+`model="common"`, `tau2=0`, a normal interval, and an explicit fallback
+warning; this preserves the requested random-effects overall analysis without
+claiming that within-group heterogeneity was estimable.
 
 `summary().to_dict()` returns nested group and overall summaries.
 `method_details()` and `report()` include subgroup assumptions and the formal

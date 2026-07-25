@@ -26,6 +26,14 @@ Changes planned for the next release accumulate under `Unreleased`.
   coordinates before enabling a logarithmic axis;
 - uncorrected risk-ratio analyses now accept a zero non-event cell when the
   study effect and sampling variance remain well defined.
+- Hartung-Knapp random-effects prediction intervals now use the selected
+  adjusted pooled-mean variance and are recorded as `HK-PR`, matching
+  `metafor` Riley predictions;
+- random-effects subgroup analyses now retain single-study subgroups through
+  an explicit, warned common-effect fallback instead of failing the complete
+  analysis;
+- tagged releases now rerun the full branch-coverage test suite before
+  distributions can be built and published.
 
 ## 0.4.0 - 2026-07-23
 

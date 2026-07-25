@@ -56,6 +56,15 @@ random <- rma.uni(
   test = "z",
   control = reml_control
 )
+singleton_random <- rma.uni(
+  effect,
+  variance,
+  slab = study,
+  data = input[1, ],
+  method = "REML",
+  test = "z",
+  control = reml_control
+)
 
 group_fits <- lapply(
   split(input, input$subgroup),
@@ -94,6 +103,7 @@ reference <- list(
     q_between_pvalue = unname(moderator$QMp),
     i2_between = max(0, (moderator$QM - moderator$QMdf[1]) / moderator$QM)
   ),
+  singleton_random = fit_summary(singleton_random),
   leave_one_out = list(
     common = series_summary(leave1out(common)),
     random_reml = series_summary(leave1out(random))

@@ -37,11 +37,12 @@ validation matrix and its limitations are documented in
 The scripts use only documented `metafor` interfaces. They are retained as
 provenance and are not runtime library code.
 
-`workflow_metafor.json` covers common-effect subgroup differences plus
-common- and random-effects leave-one-out and cumulative workflows. The random
-cumulative Python comparison begins at `k=2`, the minimum prefix for which the
-library fits a random-effects model; the committed R artifact retains its
-single-study row so that this difference remains explicit and auditable.
+`workflow_metafor.json` covers common-effect subgroup differences, the
+single-study random-effects estimate used to validate the subgroup fallback,
+and common- and random-effects leave-one-out and cumulative workflows. The
+random cumulative Python comparison begins at `k=2`, the minimum prefix for
+which the library fits a random-effects model; the committed R artifact retains
+its single-study row so that this difference remains explicit and auditable.
 
 `meta_regression_metafor.json` covers common- and mixed-effects moderator
 models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit

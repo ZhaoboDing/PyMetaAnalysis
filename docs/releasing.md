@@ -62,6 +62,11 @@ python tools/check_release.py --tag vX.Y.Z
 The tag check rejects development versions, version mismatches, and releases
 without a dated changelog heading.
 
+The tag-triggered release workflow independently installs the test extra and
+runs the full branch-coverage suite before building distributions. A tag
+cannot reach the PyPI environment merely because it belongs to `main`; the
+tagged source must pass this release-time test gate.
+
 ## Validate the candidate
 
 ```console

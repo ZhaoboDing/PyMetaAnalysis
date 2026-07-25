@@ -87,9 +87,12 @@ the Q-based definition.
 | `"hartung_knapp"` | `test="knha"` | `method.random.ci="HK"` | Unmodified HK variance and t quantile |
 | `"hartung_knapp_adhoc"` | `test="adhoc"` | HK plus an explicitly selected ad hoc correction | HK variance cannot fall below the classic variance |
 
-Eligible random-effects fits include the documented HTS prediction interval.
-R packages offer additional prediction-interval choices, so matching the mean
-interval does not by itself guarantee a matching prediction interval.
+Eligible random-effects fits use the documented HTS prediction interval under
+normal inference. Either Hartung-Knapp choice instead uses its selected
+pooled-mean variance with `k-2` degrees of freedom (`HK-PR`), matching
+`predict(fit, predtype="Riley")` in `metafor`. R packages offer additional
+prediction-interval choices, so method settings must still be compared
+explicitly.
 
 Meta-regression uses a separate prediction rule. Its default corresponds to
 `predict(fit)` in `metafor`: normal inference uses a normal critical value and

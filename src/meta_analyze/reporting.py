@@ -144,15 +144,19 @@ def method_details(result: MetaAnalysisResult) -> str:
         )
 
     if method.prediction_interval_method is not None:
+        prediction_description = (
+            "Hartung–Knapp–Partlett–Riley"
+            if method.prediction_interval_method == "HK-PR"
+            else "Higgins–Thompson–Spiegelhalter"
+        )
         if result.prediction_interval is not None:
             sentences.append(
-                "A Higgins–Thompson–Spiegelhalter prediction interval was calculated."
+                f"A {prediction_description} prediction interval was calculated."
             )
         else:
             sentences.append(
-                "The configured Higgins–Thompson–Spiegelhalter prediction "
-                "interval was unavailable because fewer than three studies "
-                "were included."
+                f"The configured {prediction_description} prediction interval "
+                "was unavailable because fewer than three studies were included."
             )
 
     options = dict(method.options)
@@ -212,11 +216,20 @@ def subgroup_method_details(result: SubgroupMetaAnalysisResult) -> str:
     """Describe the overall fit and the subgroup-comparison assumptions."""
 
     base = method_details(result.overall)
-    strategy = (
-        "between-study variance was estimated independently within each subgroup"
-        if result.method.tau2_strategy == "independent"
-        else "between-study variance was not applicable to the common-effect fits"
-    )
+    if result.method.tau2_strategy == "independent":
+        if any(group.model == "common" for group in result.groups.values()):
+            strategy = (
+                "between-study variance was estimated independently wherever "
+                "possible, with a documented common-effect fallback for each "
+                "single-study subgroup"
+            )
+        else:
+            strategy = (
+                "between-study variance was estimated independently within "
+                "each subgroup"
+            )
+    else:
+        strategy = "between-study variance was not applicable to the common-effect fits"
     return (
         f"{base} Subgroup effects were fitted separately; {strategy}. "
         "Subgroup differences were tested with a fixed-effect inverse-variance "
