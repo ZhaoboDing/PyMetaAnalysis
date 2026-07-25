@@ -281,7 +281,11 @@ def _fit_meta_binary_single(
         ci_method=normalized_ci,
         confidence_level=confidence_level,
         prediction_interval_method=(
-            _prediction_interval_method(normalized_model, normalized_ci)
+            _prediction_interval_method(
+                normalized_model,
+                normalized_ci,
+                available=fit.prediction_interval is not None,
+            )
             if normalized_method == "inverse_variance"
             else None
         ),

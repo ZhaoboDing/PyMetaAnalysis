@@ -135,6 +135,9 @@ Fits generic study effects on study-level moderators.
 follow `meta_analysis()`. Missingness in any model field applies to the complete
 row. The encoded design must have full column rank and `k > p`. Riley intervals
 additionally require `k-p >= 2`.
+Categorical values must match the declared levels without cross-kind numeric
+coercion: booleans, integers, and floating-point values are distinct category
+kinds, while equivalent Python and NumPy scalar forms share a kind.
 
 The result is a dedicated `MetaRegressionResult`, not a pooled
 `MetaAnalysisResult`. See the [Meta-regression guide](../guides/meta-regression.md)

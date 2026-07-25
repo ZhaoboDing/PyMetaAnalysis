@@ -149,15 +149,14 @@ def method_details(result: MetaAnalysisResult) -> str:
             if method.prediction_interval_method == "HK-PR"
             else "Higgins–Thompson–Spiegelhalter"
         )
-        if result.prediction_interval is not None:
-            sentences.append(
-                f"A {prediction_description} prediction interval was calculated."
-            )
-        else:
-            sentences.append(
-                f"The configured {prediction_description} prediction interval "
-                "was unavailable because fewer than three studies were included."
-            )
+        sentences.append(
+            f"A {prediction_description} prediction interval was calculated."
+        )
+    elif result.model == "random":
+        sentences.append(
+            "A prediction interval was unavailable because fewer than three "
+            "studies were included."
+        )
 
     options = dict(method.options)
     if result.measure in {"OR", "RR", "RD"}:

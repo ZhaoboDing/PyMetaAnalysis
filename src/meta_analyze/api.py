@@ -56,8 +56,10 @@ def _normalize_ci_method(ci_method: str) -> str:
     return aliases.get(normalized, normalized)
 
 
-def _prediction_interval_method(model: str, ci_method: str) -> str | None:
-    if model != "random":
+def _prediction_interval_method(
+    model: str, ci_method: str, *, available: bool
+) -> str | None:
+    if model != "random" or not available:
         return None
     return "HTS" if ci_method == "normal" else "HK-PR"
 
@@ -236,6 +238,7 @@ def _fit_meta_analysis_single(
         prediction_interval_method=_prediction_interval_method(
             normalized_model,
             normalized_ci,
+            available=fit.prediction_interval is not None,
         ),
         missing=missing,
         atol=atol,

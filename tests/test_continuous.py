@@ -147,6 +147,7 @@ def test_dataframe_defaults_to_index_and_supports_random_effects() -> None:
     assert result.model == "random"
     assert result.method.tau2_method == "PM"
     assert result.prediction_interval is not None
+    assert result.method.prediction_interval_method == "HTS"
 
 
 def test_missing_rows_are_retained_with_specific_reasons() -> None:

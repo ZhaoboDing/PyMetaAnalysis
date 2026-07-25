@@ -68,6 +68,33 @@ def test_release_workflow_runs_full_tests_before_building() -> None:
     assert install < test < build
 
 
+def test_credential_bearing_publisher_action_is_pinned() -> None:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    reference = re.search(
+        r"uses: pypa/gh-action-pypi-publish@([0-9a-f]{40})",
+        workflow,
+    )
+
+    assert reference is not None
+
+
+def test_pages_deployment_preserves_running_release_and_least_privilege() -> None:
+    workflow = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
+    build_job, deploy_job = workflow.split("\n  deploy:", maxsplit=1)
+
+    assert "group: pages\n  cancel-in-progress: false" in workflow
+    assert "pages: write" not in build_job
+    assert "pages: write" in deploy_job
+
+
+def test_python_314_is_declared_and_continuously_tested() -> None:
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+    assert '"Programming Language :: Python :: 3.14"' in pyproject
+    assert 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' in workflow
+
+
 def test_example_notebooks_are_valid_unexecuted_json() -> None:
     paths = sorted((ROOT / "examples").glob("*.ipynb"))
 

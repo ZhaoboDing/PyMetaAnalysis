@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass
+from numbers import Integral, Real
 from typing import Any, Literal, TypeAlias
 
 import numpy as np
@@ -187,7 +188,25 @@ def _validate_levels(name: str, levels: Sequence[Hashable]) -> tuple[Hashable, .
     return resolved
 
 
+def _categorical_scalar_kind(value: Any) -> tuple[str, type[Any] | None]:
+    """Group equivalent Python and NumPy scalars without coercing categories."""
+
+    if isinstance(value, (bool, np.bool_)):
+        return ("boolean", None)
+    if isinstance(value, Integral):
+        return ("integer", None)
+    if isinstance(value, Real):
+        return ("real", None)
+    if isinstance(value, str):
+        return ("text", None)
+    if isinstance(value, (bytes, np.bytes_)):
+        return ("bytes", None)
+    return ("other", type(value))
+
+
 def _equal(value: Any, level: Hashable) -> bool:
+    if _categorical_scalar_kind(value) != _categorical_scalar_kind(level):
+        return False
     try:
         comparison = value == level
         return bool(comparison) if np.ndim(comparison) == 0 else False

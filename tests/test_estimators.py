@@ -217,13 +217,24 @@ def test_hartung_knapp_zero_variance_is_reported() -> None:
 
 def test_random_effects_prediction_interval_requires_three_studies() -> None:
     two = ma.meta_analysis(effect=[0.1, 0.4], variance=[0.01, 0.02], model="random")
+    two_hk = ma.meta_analysis(
+        effect=[0.1, 0.4],
+        variance=[0.01, 0.02],
+        model="random",
+        ci_method="hartung_knapp",
+    )
     three = ma.meta_analysis(
         effect=[0.1, 0.4, 0.8], variance=[0.01, 0.02, 0.03], model="random"
     )
 
     assert two.prediction_interval is None
+    assert two.method.prediction_interval_method is None
+    assert two_hk.prediction_interval is None
+    assert two_hk.method.prediction_interval_method is None
+    assert two_hk.method.ci_method == "hartung_knapp"
     assert any("at least three" in warning for warning in two.warnings)
     assert three.prediction_interval is not None
+    assert three.method.prediction_interval_method == "HTS"
     assert "Prediction interval:" in str(three.summary())
     assert "tau^2:" in str(three.summary())
     assert any("fewer than five" in warning for warning in three.warnings)

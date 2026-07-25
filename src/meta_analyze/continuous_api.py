@@ -178,6 +178,7 @@ def _fit_meta_continuous_single(
         prediction_interval_method=_prediction_interval_method(
             normalized_model,
             normalized_ci,
+            available=fit.prediction_interval is not None,
         ),
         missing=missing,
         atol=atol,
