@@ -15,6 +15,7 @@ from .data import ColumnOrArray, MissingPolicy
 from .exceptions import (
     InsufficientStudiesError,
     InvalidStudyDataError,
+    MetaAnalysisError,
     UnsupportedMethodError,
 )
 from .provenance import remap_provenance_rows
@@ -26,7 +27,7 @@ class LeaveOneOutResult:
     """Repeated fits obtained by omitting each included study in turn."""
 
     original: MetaAnalysisResult
-    results: tuple[MetaAnalysisResult, ...]
+    results: tuple[MetaAnalysisResult | None, ...]
     warnings: tuple[str, ...]
     _table: pd.DataFrame = field(repr=False, compare=False)
 
@@ -38,9 +39,17 @@ class LeaveOneOutResult:
 
     @property
     def table(self) -> pd.DataFrame:
-        """Return one row per omitted study and refitted model."""
+        """Return one row per omitted study and attempted refit."""
 
         return self._table.copy(deep=True)
+
+    @property
+    def failed(self) -> pd.DataFrame:
+        """Return omissions whose reduced model could not be estimated."""
+
+        return self._table.loc[lambda frame: ~frame["refit_success"]].reset_index(
+            drop=True
+        )
 
     def summary(self) -> pd.DataFrame:
         """Return the tabular leave-one-out summary."""
@@ -306,6 +315,26 @@ def _fit_summary(result: MetaAnalysisResult) -> dict[str, Any]:
     }
 
 
+def _unavailable_fit_summary(*, k: int) -> dict[str, Any]:
+    return {
+        "k": k,
+        "estimate": np.nan,
+        "standard_error": np.nan,
+        "ci_low": np.nan,
+        "ci_high": np.nan,
+        "display_estimate": np.nan,
+        "display_ci_low": np.nan,
+        "display_ci_high": np.nan,
+        "tau2": np.nan,
+        "q": np.nan,
+        "q_df": np.nan,
+        "q_pvalue": np.nan,
+        "i2": np.nan,
+        "h2": np.nan,
+        "i2_method": None,
+    }
+
+
 def leave_one_out(result: MetaAnalysisResult) -> LeaveOneOutResult:
     """Refit the same model while omitting each included study once."""
 
@@ -324,25 +353,51 @@ def leave_one_out(result: MetaAnalysisResult) -> LeaveOneOutResult:
             f"Leave-one-out analysis requires at least {requirement}."
         )
 
-    fitted_results: list[MetaAnalysisResult] = []
+    fitted_results: list[MetaAnalysisResult | None] = []
     rows: list[dict[str, Any]] = []
+    failure_count = 0
     for omitted in included:
         retained = included[included != omitted]
-        fitted = _refit(result, retained)
-        fitted_results.append(fitted)
         source_row = studies.iloc[int(omitted)]
-        rows.append(
-            {
-                "omitted_row_id": source_row["row_id"],
-                "omitted_study": source_row["study"],
-                **_fit_summary(fitted),
-            }
-        )
+        try:
+            fitted = _refit(result, retained)
+        except MetaAnalysisError as error:
+            fitted = None
+            failure_count += 1
+            rows.append(
+                {
+                    "omitted_row_id": source_row["row_id"],
+                    "omitted_study": source_row["study"],
+                    "refit_success": False,
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                    **_unavailable_fit_summary(k=len(retained)),
+                }
+            )
+        else:
+            assert fitted is not None
+            rows.append(
+                {
+                    "omitted_row_id": source_row["row_id"],
+                    "omitted_study": source_row["study"],
+                    "refit_success": True,
+                    "error_type": None,
+                    "error_message": None,
+                    **_fit_summary(fitted),
+                }
+            )
+        fitted_results.append(fitted)
 
+    warnings: tuple[str, ...] = ()
+    if failure_count:
+        warnings = (
+            f"{failure_count} leave-one-out refit(s) could not be estimated; "
+            "inspect failed for exception details.",
+        )
     return LeaveOneOutResult(
         original=result,
         results=tuple(fitted_results),
-        warnings=(),
+        warnings=warnings,
         _table=pd.DataFrame(rows),
     )
 
@@ -451,11 +506,11 @@ def cumulative(
     )
     studies = result.study_results
     minimum = 2 if result.model == "random" else 1
-    warnings: tuple[str, ...] = ()
+    warnings: list[str] = []
     if minimum == 2:
-        warnings = (
+        warnings.append(
             "Random-effects cumulative analysis begins at k=2 because tau-squared "
-            "is not estimable from a single study in this library.",
+            "is not estimable from a single study in this library."
         )
 
     prefix: list[int] = []
@@ -469,7 +524,16 @@ def cumulative(
         if len(prefix) < minimum:
             continue
         positions = np.asarray(prefix, dtype=np.int64)
-        fitted = _refit(result, positions)
+        try:
+            fitted = _refit(result, positions)
+        except MetaAnalysisError as error:
+            last_position = int(batch[-1])
+            warnings.append(
+                "Skipped unestimable cumulative prefix ending at "
+                f"row_id={studies.iloc[last_position]['row_id']!r}: "
+                f"{type(error).__name__}: {error}"
+            )
+            continue
         fitted_results.append(fitted)
         added_rows = studies.iloc[pending_added]
         last_position = int(batch[-1])
@@ -484,10 +548,12 @@ def cumulative(
         )
         pending_added.clear()
 
+    if not fitted_results:  # pragma: no cover - the original full fit is estimable
+        raise InvalidStudyDataError("No cumulative prefix could be estimated.")
     return CumulativeMetaAnalysisResult(
         original=result,
         results=tuple(fitted_results),
-        warnings=warnings,
+        warnings=tuple(warnings),
         _table=pd.DataFrame(rows),
     )
 

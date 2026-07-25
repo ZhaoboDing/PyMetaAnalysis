@@ -58,6 +58,16 @@ def configure_log_axis(ax: Axes) -> None:
     ax.xaxis.set_minor_formatter(NullFormatter())
 
 
+def validate_log_coordinates(*values: NDArray[np.float64]) -> None:
+    """Reject coordinates that cannot be displayed on a logarithmic axis."""
+
+    if any(np.any(value <= 0.0) for value in values):
+        raise ValueError(
+            "All displayed effects and interval bounds must be strictly positive "
+            "on a logarithmic axis."
+        )
+
+
 def marker_areas(weights: NDArray[np.float64]) -> NDArray[np.float64]:
     """Scale positive relative weights to readable plot marker areas."""
 

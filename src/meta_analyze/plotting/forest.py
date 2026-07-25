@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.stats import norm
 
 from ..results import MetaAnalysisResult
@@ -13,6 +14,7 @@ from ._utils import (
     default_effect_label,
     marker_areas,
     to_display_scale,
+    validate_log_coordinates,
 )
 
 if TYPE_CHECKING:
@@ -81,6 +83,26 @@ def forest_plot(
             "null_value must be finite and strictly positive on a logarithmic axis."
         )
 
+    prediction_coordinates: NDArray[np.float64] | None = None
+    if show_prediction_interval and result.prediction_interval is not None:
+        prediction_coordinates = to_display_scale(
+            np.asarray(result.prediction_interval, dtype=np.float64),
+            display_scale=result.display_scale,
+        )
+    if use_log_scale:
+        coordinates = [
+            study_low,
+            study_estimate,
+            study_high,
+            np.asarray(
+                [pooled_low, pooled_estimate, pooled_high],
+                dtype=np.float64,
+            ),
+        ]
+        if prediction_coordinates is not None:
+            coordinates.append(prediction_coordinates)
+        validate_log_coordinates(*coordinates)
+
     created_axes = ax is None
     if ax is None:
         height = max(4.0, 0.5 * (len(included) + 3))
@@ -117,11 +139,8 @@ def forest_plot(
         zorder=2,
     )
 
-    if show_prediction_interval and result.prediction_interval is not None:
-        prediction_low, prediction_high = to_display_scale(
-            np.asarray(result.prediction_interval, dtype=np.float64),
-            display_scale=result.display_scale,
-        )
+    if prediction_coordinates is not None:
+        prediction_low, prediction_high = prediction_coordinates
         ax.hlines(
             pooled_y,
             prediction_low,

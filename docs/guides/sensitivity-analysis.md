@@ -18,13 +18,17 @@ print(influence.to_dataframe())
 The returned `LeaveOneOutResult` contains:
 
 - `original`, the fitted result supplied to the workflow;
-- `results`, one immutable refit per omitted included study;
+- `results`, one omission-aligned immutable refit or `None` per included study;
 - `table`, `summary()`, and `to_dataframe()`, which return defensive copies;
+- `failed`, the rows for reduced models that could not be estimated;
 - `warnings`, for workflow-level notes.
 
 The table identifies `omitted_row_id` and `omitted_study` and reports each
 refit's estimate, standard error, confidence interval, tau-squared, Q,
-I-squared, and H-squared.
+I-squared, and H-squared. It also records `refit_success`, `error_type`, and
+`error_message`. An unestimable deletion remains aligned in `results` as
+`None`, retains a table row with unavailable numeric values, and does not stop
+the remaining deletions.
 
 Originally excluded rows are never omission candidates. Common-effect analysis
 requires at least two included studies so each refit retains one. Random-effects
@@ -128,6 +132,9 @@ cumulative = result.cumulative(
 `CumulativeMetaAnalysisResult.results` contains the estimable prefix fits, and
 `final` returns the last fit. Its table records the rows and study labels added
 at each step together with the same principal statistics as leave-one-out.
+If an otherwise eligible prefix is not estimable, it is skipped with an
+explicit warning. Its pending studies are included in the next estimable
+prefix row, so the cumulative path and final all-study fit remain complete.
 
 When multiple studies have the same order value, `collapse=True` adds the tied
 studies in one step:

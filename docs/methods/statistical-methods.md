@@ -529,7 +529,7 @@ random effects, tau-squared is estimated separately for every subgroup and the
 overall analysis.
 
 The formal subgroup-differences test weights subgroup pooled estimates by the
-inverse square of their pooled standard errors:
+inverse square of their classic model standard errors:
 
 ```text
 W_g = 1 / SE_g^2
@@ -539,7 +539,9 @@ df_between = number_of_groups - 1
 ```
 
 `Q_between` is compared with a chi-squared distribution. This is not a test
-obtained by comparing separate subgroup p-values.
+obtained by comparing separate subgroup p-values. Hartung-Knapp adjustments
+affect subgroup confidence intervals but are not substituted for the classic
+model variances in this Wald test.
 
 ## Numerical and software references
 

@@ -14,6 +14,7 @@ from ._utils import (
     default_effect_label,
     marker_areas,
     to_display_scale,
+    validate_log_coordinates,
 )
 
 if TYPE_CHECKING:
@@ -92,6 +93,27 @@ def _study_coordinates(
     )
 
 
+def _validate_log_result_coordinates(
+    result: MetaAnalysisResult,
+    *,
+    show_prediction_interval: bool,
+) -> None:
+    study_low, study_estimate, study_high = _study_coordinates(result)
+    pooled = to_display_scale(
+        np.asarray([result.ci_low, result.estimate, result.ci_high]),
+        display_scale=result.display_scale,
+    )
+    coordinates = [study_low, study_estimate, study_high, pooled]
+    if show_prediction_interval and result.prediction_interval is not None:
+        coordinates.append(
+            to_display_scale(
+                np.asarray(result.prediction_interval, dtype=np.float64),
+                display_scale=result.display_scale,
+            )
+        )
+    validate_log_coordinates(*coordinates)
+
+
 def subgroup_forest_plot(
     result: SubgroupMetaAnalysisResult,
     *,
@@ -121,6 +143,16 @@ def subgroup_forest_plot(
     if not np.isfinite(resolved_null) or (use_log_scale and resolved_null <= 0.0):
         raise ValueError(
             "null_value must be finite and strictly positive on a logarithmic axis."
+        )
+    if use_log_scale:
+        for group in result.groups.values():
+            _validate_log_result_coordinates(
+                group,
+                show_prediction_interval=show_prediction_interval,
+            )
+        _validate_log_result_coordinates(
+            overall,
+            show_prediction_interval=show_prediction_interval,
         )
 
     included_count = sum(group.k for group in result.groups.values())

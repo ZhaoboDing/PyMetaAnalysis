@@ -371,17 +371,22 @@ statistic_name, df, pvalue, ci_low, ci_high
 Contains:
 
 - `original`, the fitted source result;
-- `results`, one refit per omitted included study;
+- `results`, one omission-aligned refit or `None` per included study;
 - `warnings`, workflow-level notes;
-- `table`, `summary()`, and `to_dataframe()` defensive tabular views.
+- `table`, `summary()`, and `to_dataframe()` defensive tabular views;
+- `failed`, the attempted refits that could not be estimated.
 
 The table columns are:
 
 ```text
-omitted_row_id, omitted_study, k, estimate, standard_error,
-ci_low, ci_high, display_estimate, display_ci_low, display_ci_high,
-tau2, q, q_df, q_pvalue, i2, h2, i2_method
+omitted_row_id, omitted_study, refit_success, error_type, error_message,
+k, estimate, standard_error, ci_low, ci_high, display_estimate,
+display_ci_low, display_ci_high, tau2, q, q_df, q_pvalue, i2, h2,
+i2_method
 ```
+
+Failed reduced models retain their omission row with unavailable numeric
+statistics and `None` in the corresponding `results` position.
 
 ### `CumulativeMetaAnalysisResult`
 
@@ -395,6 +400,9 @@ step, added_row_ids, added_studies, order_value, k, estimate,
 standard_error, ci_low, ci_high, display_estimate, display_ci_low,
 display_ci_high, tau2, q, q_df, q_pvalue, i2, h2, i2_method
 ```
+
+Only estimable prefixes produce rows. An unestimable prefix is recorded in
+`warnings`, and its pending studies are carried into the next estimable step.
 
 See [sensitivity analysis](../guides/sensitivity-analysis.md) for count and
 ordering rules.

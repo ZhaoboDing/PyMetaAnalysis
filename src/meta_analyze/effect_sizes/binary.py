@@ -346,14 +346,21 @@ def calculate_binary_effects(
         correction=continuity_correction,
         scope=correction_scope,
     )
-    zero_after_correction = included & (
-        (a == 0.0) | (b == 0.0) | (c == 0.0) | (d == 0.0)
-    )
-    if normalized_measure in {"OR", "RR"} and np.any(zero_after_correction):
-        rows = np.flatnonzero(zero_after_correction).tolist()
+    if normalized_measure == "OR":
+        undefined = included & ((a == 0.0) | (b == 0.0) | (c == 0.0) | (d == 0.0))
+    elif normalized_measure == "RR":
+        # Log risk ratios require a positive event count in each arm. A zero
+        # non-event cell is valid unless both arms are all-event, which was
+        # excluded above as uninformative.
+        undefined = included & ((a == 0.0) | (c == 0.0))
+    else:
+        undefined = np.zeros_like(included)
+    if np.any(undefined):
+        rows = np.flatnonzero(undefined).tolist()
         raise InvalidStudyDataError(
-            "OR/RR study effects are undefined with remaining zero cells at row "
-            f"positions {rows}; use a positive continuity_correction."
+            f"{normalized_measure} study effects are undefined with remaining zero "
+            f"cells at row positions {rows}; use a positive "
+            "continuity_correction."
         )
 
     effect = np.full(len(included), np.nan, dtype=np.float64)
