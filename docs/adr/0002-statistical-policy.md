@@ -2,6 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-07-15
+- Amendment: the prediction-interval variance decision is superseded by
+  [ADR 0004](0004-hartung-knapp-prediction-intervals.md).
 
 ## Context
 
@@ -65,10 +67,11 @@ percentage in human-readable output.
 
 ### Prediction intervals
 
-Random-effects inverse-variance models use the Higgins-Thompson-Spiegelhalter
-prediction interval with `k - 2` degrees of freedom and the classic variance
-of the pooled mean. It is unavailable below three studies. With three or four
-studies it is calculated with an explicit uncertainty warning.
+The original decision used the Higgins-Thompson-Spiegelhalter prediction
+interval with `k - 2` degrees of freedom and the classic variance of the
+pooled mean for every confidence-interval method. ADR 0004 replaces that
+variance rule for Hartung-Knapp fits while retaining the study-count boundary
+and small-sample warning.
 
 ## Validation
 

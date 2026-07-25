@@ -8,7 +8,12 @@ from typing import overload
 import numpy as np
 import pandas as pd
 
-from .api import _normalize_ci_method, _normalize_model, _validate_analysis_controls
+from .api import (
+    _normalize_ci_method,
+    _normalize_model,
+    _prediction_interval_method,
+    _validate_analysis_controls,
+)
 from .config import MethodConfig, MethodOptionValue
 from .data import ColumnOrArray, MissingPolicy
 from .effect_sizes.continuous import (
@@ -161,7 +166,10 @@ def _fit_meta_continuous_single(
         tau2_method=None if normalized_model == "common" else normalized_tau2,
         ci_method=normalized_ci,
         confidence_level=confidence_level,
-        prediction_interval_method="HTS" if normalized_model == "random" else None,
+        prediction_interval_method=_prediction_interval_method(
+            normalized_model,
+            normalized_ci,
+        ),
         missing=missing,
         atol=atol,
         max_iter=max_iter,
@@ -324,7 +332,10 @@ def meta_continuous(
         ),
     )
 
-    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+    def fit_group(
+        positions: np.ndarray,
+        singleton_random: bool,
+    ) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]
         return _fit_meta_continuous_single(
             mean_treat=rows["mean_treat"].to_numpy(dtype=np.float64, copy=True),
@@ -335,9 +346,9 @@ def meta_continuous(
             n_control=rows["n_control"].to_numpy(dtype=np.float64, copy=True),
             study=rows["study"].to_numpy(dtype=object, copy=True),
             measure=measure,
-            model=model,
+            model="common" if singleton_random else model,
             tau2_method=tau2_method,
-            ci_method=ci_method,
+            ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             smd_variance=smd_variance,
             missing=missing,

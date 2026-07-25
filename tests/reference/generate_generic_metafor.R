@@ -66,13 +66,11 @@ reml_adhoc <- rma.uni(
 
 q <- unname(common$QE)
 q_df <- unname(common$k - common$p)
-classic_variance <- 1 / sum(1 / (input$variance + reml$tau2))
-prediction_se <- sqrt(reml$tau2 + classic_variance)
-prediction_critical <- qt(0.975, df = nrow(input) - 2)
-prediction_interval <- c(
-  unname(reml$b[1]) - prediction_critical * prediction_se,
-  unname(reml$b[1]) + prediction_critical * prediction_se
-)
+
+riley_prediction_interval <- function(fit) {
+  prediction <- predict(fit, predtype = "Riley")
+  c(unname(prediction$pi.lb), unname(prediction$pi.ub))
+}
 
 reference <- list(
   generated_by = "R metafor",
@@ -95,7 +93,10 @@ reference <- list(
   ),
   reml_hartung_knapp = fit_summary(reml_hk),
   reml_hartung_knapp_adhoc = fit_summary(reml_adhoc),
-  reml_prediction_interval_hts = prediction_interval
+  reml_prediction_interval_hts = riley_prediction_interval(reml),
+  reml_prediction_interval_hartung_knapp = riley_prediction_interval(reml_hk),
+  reml_prediction_interval_hartung_knapp_adhoc =
+    riley_prediction_interval(reml_adhoc)
 )
 
 write_json(

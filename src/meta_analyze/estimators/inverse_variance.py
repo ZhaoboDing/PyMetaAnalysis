@@ -155,9 +155,11 @@ def fit_inverse_variance(
             critical_value = float(
                 t.ppf(0.5 + confidence_level / 2.0, df=prediction_df)
             )
-            # HTS uses the classic variance of the pooled mean. This remains
-            # independent of any Hartung-Knapp method used for the mean CI.
-            prediction_se = float(np.sqrt(tau2_value + classic_variance))
+            # The k-2 prediction rule uses the same pooled-mean variance as the
+            # selected confidence-interval method. This is classic HTS under
+            # normal inference and HK-PR under either Hartung-Knapp variant.
+            prediction_variance = standard_error * standard_error
+            prediction_se = float(np.sqrt(tau2_value + prediction_variance))
             margin = critical_value * prediction_se
             prediction_interval = (estimate - margin, estimate + margin)
             if len(effect) < 5:

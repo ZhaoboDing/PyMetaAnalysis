@@ -212,7 +212,7 @@ def test_method_details_expand_random_effects_and_hartung_knapp_choices() -> Non
     assert "Between-study variance was estimated with REML" in details
     assert "absolute tolerance 1e-10" in details
     assert "ad hoc lower-bound variance safeguard" in details
-    assert "Higgins–Thompson–Spiegelhalter prediction interval" in details
+    assert "Hartung–Knapp–Partlett–Riley prediction interval" in details
     assert f"PyMetaAnalysis {ma.__version__}" in details
 
 

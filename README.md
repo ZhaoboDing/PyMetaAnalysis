@@ -90,7 +90,8 @@ not individual-level or causal effects.
 Random-effects inverse-variance models support REML (default), Paule-Mandel,
 and DerSimonian-Laird tau-squared estimators. Mean confidence intervals support
 the normal default plus unmodified and safeguarded Hartung-Knapp variants.
-Eligible random-effects fits include an HTS prediction interval.
+Eligible random-effects fits include an HTS prediction interval under normal
+inference and an HK-PR interval under either Hartung-Knapp variant.
 
 Generic analyses accept exactly one of `variance=` or `standard_error=`.
 Standard errors are squared internally and the conversion is recorded in the

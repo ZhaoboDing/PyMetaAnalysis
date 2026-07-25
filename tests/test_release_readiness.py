@@ -56,6 +56,18 @@ def test_github_release_command_has_repository_context() -> None:
     )
 
 
+def test_release_workflow_runs_full_tests_before_building() -> None:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+    install = workflow.index('python -m pip install ".[test]" build twine')
+    test = workflow.index(
+        "python -m pytest --cov=meta_analyze --cov-branch --cov-report=term-missing"
+    )
+    build = workflow.index("python -m build")
+
+    assert install < test < build
+
+
 def test_example_notebooks_are_valid_unexecuted_json() -> None:
     paths = sorted((ROOT / "examples").glob("*.ipynb"))
 

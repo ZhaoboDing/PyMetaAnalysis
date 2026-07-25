@@ -87,10 +87,12 @@ to one.
 
 ## Prediction intervals
 
-Random-effects models report an HTS prediction interval when at least three
-studies are included. It describes uncertainty for a new study's underlying
-effect, not uncertainty around the pooled mean. Common-effect models do not
-produce prediction intervals. With three or four studies the interval is still
+Random-effects models report a prediction interval when at least three studies
+are included. Under normal inference this is recorded as `HTS`; either
+Hartung-Knapp choice supplies its selected pooled-mean variance and is recorded
+as `HK-PR`. It describes uncertainty for a new study's underlying effect, not
+uncertainty around the pooled mean. Common-effect models do not produce
+prediction intervals. With three or four studies the interval is still
 calculated, but the result warns that it is especially uncertain.
 
 ## Subgroups
@@ -100,6 +102,11 @@ within each subgroup and again for the overall model. This is recorded as
 `result.method.tau2_strategy == "independent"`. The test for subgroup
 differences compares subgroup summary estimates; it is not a comparison of
 whether individual subgroup p-values are significant.
+
+If a subgroup contains only one included study, tau-squared and random-effects
+inference are not estimable within that subgroup. PyMetaAnalysis retains it as
+the study's common-effect estimate and normal interval, records the fallback
+in warnings, and continues the overall random-effects subgroup analysis.
 
 ## Reporting checklist
 

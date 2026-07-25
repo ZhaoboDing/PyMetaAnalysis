@@ -13,8 +13,10 @@ deferred functionality explicit.
 - common-effect Mantel-Haenszel OR/RR;
 - DL, PM, and REML tau-squared estimators;
 - normal and random-effects Hartung-Knapp mean intervals;
-- HTS prediction intervals;
-- independent subgroup fits and a formal subgroup-differences test;
+- HTS and Hartung-Knapp Partlett-Riley (`HK-PR`) prediction intervals;
+- independent subgroup fits and a formal subgroup-differences test, with a
+  warned common-effect representation when a random-effects subgroup contains
+  only one included study;
 - leave-one-out and cumulative repeated-fit workflows;
 - forest and descriptive funnel plots;
 - structured provenance and reports;

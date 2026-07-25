@@ -18,7 +18,7 @@ from .heterogeneity import _scaled_q_components, _unscale_nonnegative, weighted_
 from .provenance import remap_provenance_rows
 from .results import MetaAnalysisResult, SubgroupMetaAnalysisResult
 
-GroupFitter = Callable[[NDArray[np.int64]], MetaAnalysisResult]
+GroupFitter = Callable[[NDArray[np.int64], bool], MetaAnalysisResult]
 
 
 def _subgroup_labels(
@@ -160,17 +160,31 @@ def fit_subgroup_analysis(
 
     included = overall_studies["included"].to_numpy(dtype=np.bool_, copy=True)
     groups: dict[Hashable, MetaAnalysisResult] = {}
+    subgroup_warnings: list[str] = []
     for code, raw_label in enumerate(unique_labels):
         positions = np.flatnonzero(codes == code).astype(np.int64, copy=False)
         label = cast(Hashable, raw_label)
-        if not np.any(included[positions]):
+        included_count = int(np.count_nonzero(included[positions]))
+        if included_count == 0:
             raise InsufficientStudiesError(
                 f"Subgroup {label!r} has no included studies after exclusions."
             )
+        singleton_random = overall.model == "random" and included_count == 1
         try:
-            group_result = fit_group(positions)
+            group_result = fit_group(positions, singleton_random)
         except InsufficientStudiesError as error:
             raise InsufficientStudiesError(f"Subgroup {label!r}: {error}") from error
+        if singleton_random:
+            warning = (
+                f"Subgroup {label!r} has one included study; tau-squared and "
+                "random-effects inference are not estimable, so the subgroup is "
+                "represented by that study's common-effect estimate and interval."
+            )
+            group_result = replace(
+                group_result,
+                warnings=(*group_result.warnings, warning),
+            )
+            subgroup_warnings.append(warning)
         groups[label] = _restore_global_rows(
             group_result,
             positions=positions,
@@ -195,6 +209,6 @@ def fit_subgroup_analysis(
         q_between_pvalue=pvalue,
         i2_between=i2,
         method=method,
-        warnings=test_warnings,
+        warnings=(*test_warnings, *subgroup_warnings),
         _study_results=combined_studies,
     )

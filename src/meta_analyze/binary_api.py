@@ -11,6 +11,7 @@ import pandas as pd
 from .api import (
     _normalize_ci_method,
     _normalize_model,
+    _prediction_interval_method,
     _validate_analysis_controls,
 )
 from .config import MethodConfig
@@ -270,8 +271,8 @@ def _fit_meta_binary_single(
         ci_method=normalized_ci,
         confidence_level=confidence_level,
         prediction_interval_method=(
-            "HTS"
-            if normalized_model == "random" and normalized_method == "inverse_variance"
+            _prediction_interval_method(normalized_model, normalized_ci)
+            if normalized_method == "inverse_variance"
             else None
         ),
         missing=missing,
@@ -507,7 +508,10 @@ def meta_binary(
         ),
     )
 
-    def fit_group(positions: np.ndarray) -> MetaAnalysisResult:
+    def fit_group(
+        positions: np.ndarray,
+        singleton_random: bool,
+    ) -> MetaAnalysisResult:
         rows = overall.study_results.iloc[positions]
         return _fit_meta_binary_single(
             event_treat=rows["event_treat"].to_numpy(dtype=np.float64, copy=True),
@@ -517,9 +521,9 @@ def meta_binary(
             study=rows["study"].to_numpy(dtype=object, copy=True),
             measure=measure,
             method=method,
-            model=model,
+            model="common" if singleton_random else model,
             tau2_method=tau2_method,
-            ci_method=ci_method,
+            ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             continuity_correction=continuity_correction,
             correction_scope=correction_scope,
