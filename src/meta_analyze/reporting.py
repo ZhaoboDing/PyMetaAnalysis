@@ -21,7 +21,7 @@ REPORT_SCHEMA_VERSION = "1.2"
 
 
 def _json_safe(value: Any) -> Any:
-    if value is None or value is pd.NA:
+    if value is None or value is pd.NA or value is pd.NaT:
         return None
     if isinstance(value, np.generic):
         return _json_safe(value.item())

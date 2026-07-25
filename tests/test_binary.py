@@ -105,6 +105,33 @@ def test_mantel_haenszel_rr_matches_revman_formula_reference() -> None:
     assert result.study_results["normalized_weight"].sum() == pytest.approx(1.0)
 
 
+def test_mantel_haenszel_rejects_explicit_tau2_method() -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_binary(
+            event_treat=EVENT_TREAT,
+            n_treat=N_TREAT,
+            event_control=EVENT_CONTROL,
+            n_control=N_CONTROL,
+            measure="RR",
+            method="MH",
+            tau2_method="REML",
+        )
+
+
+def test_binary_duplicate_study_labels_are_reported() -> None:
+    result = ma.meta_binary(
+        event_treat=EVENT_TREAT[:2],
+        n_treat=N_TREAT[:2],
+        event_control=EVENT_CONTROL[:2],
+        n_control=N_CONTROL[:2],
+        study=["duplicate", "duplicate"],
+        measure="RR",
+        method="MH",
+    )
+
+    assert "Duplicate study labels" in result.warnings[-1]
+
+
 def test_dataframe_input_defaults_to_index_and_supports_random_iv() -> None:
     data = pd.DataFrame(
         {

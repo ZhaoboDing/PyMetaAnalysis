@@ -27,6 +27,11 @@ Property-based and targeted tests check invariants such as:
 - the ad hoc Hartung-Knapp variance is never below the classic variance;
 - excluded rows do not contribute weights or heterogeneity;
 - result DataFrames and reports are defensive copies;
+- duplicate study labels produce an auditable row-position warning while
+  `row_id` remains unique;
+- explicitly inapplicable tau-squared and SMD variance options raise domain
+  errors instead of being ignored;
+- missing pandas timestamps serialize as JSON `null`;
 - subgroup and repeated-fit row IDs map back to original input positions;
 - subgroup-differences tests are invariant to the confidence-interval method,
   including Hartung-Knapp adjustments;

@@ -198,7 +198,7 @@ def _refit(
     selected = studies.iloc[positions]
     options = dict(result.method.options)
     atol, max_iter = _numeric_controls(result)
-    tau2_method = result.method.tau2_method or "REML"
+    tau2_method = result.method.tau2_method
     missing = cast(MissingPolicy, result.method.missing)
     study = selected["study"].to_numpy(dtype=object, copy=True)
 
@@ -264,7 +264,11 @@ def _refit(
             sd_control=selected["sd_control"].to_numpy(dtype=np.float64, copy=True),
             n_control=selected["n_control"].to_numpy(dtype=np.float64, copy=True),
             measure=result.measure,
-            smd_variance=_string_option(options, "smd_variance", "LS"),
+            smd_variance=(
+                _string_option(options, "smd_variance", "LS")
+                if result.measure == "SMD"
+                else None
+            ),
             study=study,
             model=result.model,
             tau2_method=tau2_method,

@@ -12,10 +12,11 @@ from .api import (
     _normalize_ci_method,
     _normalize_model,
     _prediction_interval_method,
+    _resolve_tau2_method,
     _validate_analysis_controls,
 )
 from .config import MethodConfig
-from .data import ColumnOrArray, MissingPolicy
+from .data import ColumnOrArray, MissingPolicy, _duplicate_study_warning
 from .effect_sizes.binary import (
     adjusted_tables,
     calculate_binary_effects,
@@ -67,7 +68,7 @@ def _fit_meta_binary_single(
     measure: str = "RR",
     method: str = "MH",
     model: str = "common",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
@@ -85,6 +86,9 @@ def _fit_meta_binary_single(
     tables by default; set ``mh_continuity_correction`` explicitly when the
     exact pooled estimator is undefined. Study-level effects use the separate
     ``continuity_correction`` setting for display and heterogeneity statistics.
+    ``tau2_method=None`` selects REML only when a random-effects
+    inverse-variance model is requested; an explicit tau-squared method is
+    rejected for common-effect and Mantel-Haenszel fits.
     """
 
     confidence_level, atol, max_iter = _validate_analysis_controls(
@@ -95,7 +99,10 @@ def _fit_meta_binary_single(
     normalized_model = _normalize_model(model)
     normalized_method = _normalize_pooling_method(method)
     normalized_ci = _normalize_ci_method(ci_method)
-    normalized_tau2 = tau2_method.upper().replace("-", "_")
+    normalized_tau2 = _resolve_tau2_method(
+        tau2_method,
+        applicable=normalized_model == "random",
+    )
     normalized_measure = measure.upper()
     correction = validate_correction(
         continuity_correction, name="continuity_correction"
@@ -259,6 +266,9 @@ def _fit_meta_binary_single(
             f"Applied mh_continuity_correction={mh_correction:g} to "
             f"{mh_corrected_count} study table(s) for MH pooling."
         )
+    duplicate_warning = _duplicate_study_warning(effects.studies.study)
+    if duplicate_warning is not None:
+        warnings.append(duplicate_warning)
 
     method_config = MethodConfig(
         model=normalized_model,
@@ -397,7 +407,7 @@ def meta_binary(
     measure: str = "RR",
     method: str = "MH",
     model: str = "common",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
@@ -424,7 +434,7 @@ def meta_binary(
     measure: str = "RR",
     method: str = "MH",
     model: str = "common",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
@@ -450,7 +460,7 @@ def meta_binary(
     measure: str = "RR",
     method: str = "MH",
     model: str = "common",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     continuity_correction: float = 0.5,
@@ -522,7 +532,7 @@ def meta_binary(
             measure=measure,
             method=method,
             model="common" if singleton_random else model,
-            tau2_method=tau2_method,
+            tau2_method=None if singleton_random else tau2_method,
             ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             continuity_correction=continuity_correction,

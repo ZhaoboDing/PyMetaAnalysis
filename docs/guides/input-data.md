@@ -54,7 +54,10 @@ zero.
 `row_id` is the zero-based input position. It is independent of the study
 label and remains stable through exclusion, subgroup, leave-one-out, and
 cumulative workflows. Use it when study labels are duplicated or not suitable
-as identifiers.
+as identifiers. Duplicate labels are accepted because several rows can
+legitimately originate from the same publication, but the result records the
+affected row positions in `warnings` so accidental duplication remains
+auditable.
 
 The complete row table is available from:
 

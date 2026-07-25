@@ -69,7 +69,7 @@ remain explicit attributes in Python.
 | `model="random"` | random-effects `rma.uni()` | `random=TRUE` | Requires a tau-squared policy |
 | `method="IV"` | inverse-variance weighting | `method="Inverse"` | Binary API only; generic and continuous fits are IV |
 | `method="MH"` | `rma.mh()` | `method="MH"` | Common-effect OR/RR only |
-| `tau2_method="REML"` | `method="REML"` | `method.tau="REML"` | PyMetaAnalysis random-effects default |
+| `tau2_method=None` (resolved as `"REML"`) | `method="REML"` | `method.tau="REML"` | PyMetaAnalysis random-effects default |
 | `tau2_method="PM"` | `method="PM"` | `method.tau="PM"` | Paule-Mandel |
 | `tau2_method="DL"` | `method="DL"` | `method.tau="DL"` | DerSimonian-Laird |
 

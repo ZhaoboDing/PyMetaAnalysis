@@ -67,6 +67,29 @@ def test_common_meta_regression_matches_hand_calculated_wls() -> None:
     assert result.method.tau2_method is None
 
 
+def test_common_meta_regression_rejects_explicit_tau2_method() -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_regression(
+            effect=[0.1, 0.2, 0.3],
+            variance=[0.01, 0.02, 0.03],
+            moderators={"dose": [0.0, 1.0, 2.0]},
+            model="common",
+            tau2_method="REML",
+        )
+
+
+def test_meta_regression_duplicate_study_labels_are_reported() -> None:
+    result = ma.meta_regression(
+        effect=[0.1, 0.2, 0.3],
+        variance=[0.01, 0.02, 0.03],
+        moderators={"dose": [0.0, 1.0, 2.0]},
+        study=["duplicate", "duplicate", "unique"],
+        model="common",
+    )
+
+    assert "Duplicate study labels" in result.warnings[-1]
+
+
 @pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
 @pytest.mark.parametrize(
     "inference_method", ["normal", "hartung_knapp", "hartung_knapp_adhoc"]

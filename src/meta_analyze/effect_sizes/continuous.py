@@ -198,14 +198,23 @@ def calculate_continuous_effects(
     studies: ContinuousStudies,
     *,
     measure: str,
-    smd_variance: str = "LS",
+    smd_variance: str | None = None,
 ) -> ContinuousEffectData:
     """Calculate mean differences or exact-corrected Hedges' g values."""
 
     normalized_measure = measure.upper()
     if normalized_measure not in {"MD", "SMD"}:
         raise UnsupportedMethodError("measure must be 'MD' or 'SMD'.")
-    normalized_variance = smd_variance.upper().replace("-", "_")
+    if normalized_measure == "MD" and smd_variance is not None:
+        raise UnsupportedMethodError(
+            "smd_variance is only configurable when measure='SMD'."
+        )
+    if smd_variance is None:
+        normalized_variance = "LS"
+    elif not isinstance(smd_variance, str):
+        raise UnsupportedMethodError("smd_variance must be a string or None.")
+    else:
+        normalized_variance = smd_variance.upper().replace("-", "_")
     if normalized_variance in {"LARGE_SAMPLE", "HEDGES_1982"}:
         normalized_variance = "LS"
     if normalized_measure == "SMD" and normalized_variance != "LS":

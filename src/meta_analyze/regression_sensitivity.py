@@ -153,7 +153,7 @@ def _refit_meta_regression(
         categorical=categorical or None,
         study=selected["study"].to_numpy(dtype=object, copy=True),
         model=result.model,
-        tau2_method=result.method.tau2_method or "REML",
+        tau2_method=result.method.tau2_method,
         inference_method=result.method.inference_method,
         intercept=result.method.intercept,
         confidence_level=result.method.confidence_level,

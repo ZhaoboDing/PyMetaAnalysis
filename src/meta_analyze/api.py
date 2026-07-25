@@ -9,7 +9,12 @@ import numpy as np
 import pandas as pd
 
 from .config import MethodConfig
-from .data import ColumnOrArray, MissingPolicy, normalize_studies
+from .data import (
+    ColumnOrArray,
+    MissingPolicy,
+    _duplicate_study_warning,
+    normalize_studies,
+)
 from .estimators import fit_inverse_variance
 from .exceptions import InvalidStudyDataError, UnsupportedMethodError
 from .heterogeneity import classical_heterogeneity, tau2_inconsistency
@@ -57,6 +62,24 @@ def _prediction_interval_method(model: str, ci_method: str) -> str | None:
     return "HTS" if ci_method == "normal" else "HK-PR"
 
 
+def _resolve_tau2_method(
+    tau2_method: str | None,
+    *,
+    applicable: bool,
+) -> str:
+    if not applicable:
+        if tau2_method is not None:
+            raise UnsupportedMethodError(
+                "tau2_method is only configurable for random- or mixed-effects models."
+            )
+        return "REML"
+    if tau2_method is None:
+        return "REML"
+    if not isinstance(tau2_method, str):
+        raise UnsupportedMethodError("tau2_method must be a string or None.")
+    return tau2_method.upper().replace("-", "_")
+
+
 def _validate_analysis_controls(
     *, confidence_level: float, atol: float, max_iter: int
 ) -> tuple[float, float, int]:
@@ -79,7 +102,7 @@ def _fit_meta_analysis_single(
     standard_error: ColumnOrArray | None = None,
     study: ColumnOrArray | None = None,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -108,7 +131,9 @@ def _fit_meta_analysis_single(
     model:
         ``"common"`` (``"fixed"`` is an alias) or ``"random"``.
     tau2_method:
-        ``"REML"`` (default), ``"PM"``, or ``"DL"`` for random-effects models.
+        ``None`` selects ``"REML"`` for random-effects models. Explicit
+        ``"REML"``, ``"PM"``, or ``"DL"`` values are accepted only when
+        ``model="random"``.
     ci_method:
         ``"normal"``, ``"hartung_knapp"``, or
         ``"hartung_knapp_adhoc"``.
@@ -129,7 +154,10 @@ def _fit_meta_analysis_single(
 
     normalized_model = _normalize_model(model)
     normalized_ci = _normalize_ci_method(ci_method)
-    normalized_tau2 = tau2_method.upper().replace("-", "_")
+    normalized_tau2 = _resolve_tau2_method(
+        tau2_method,
+        applicable=normalized_model == "random",
+    )
 
     studies = normalize_studies(
         data=data,
@@ -185,6 +213,9 @@ def _fit_meta_analysis_single(
     )
 
     warnings = list(fit.warnings)
+    duplicate_warning = _duplicate_study_warning(studies.study)
+    if duplicate_warning is not None:
+        warnings.append(duplicate_warning)
     excluded_count = int(np.count_nonzero(~studies.included))
     if excluded_count:
         warnings.append(
@@ -269,7 +300,7 @@ def meta_analysis(
     study: ColumnOrArray | None = None,
     subgroup: None = None,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -288,7 +319,7 @@ def meta_analysis(
     study: ColumnOrArray | None = None,
     subgroup: None = None,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -307,7 +338,7 @@ def meta_analysis(
     study: ColumnOrArray | None = None,
     subgroup: ColumnOrArray,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -326,7 +357,7 @@ def meta_analysis(
     study: ColumnOrArray | None = None,
     subgroup: ColumnOrArray,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -344,7 +375,7 @@ def meta_analysis(
     study: ColumnOrArray | None = None,
     subgroup: ColumnOrArray | None = None,
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
     missing: MissingPolicy = "raise",
@@ -401,7 +432,7 @@ def meta_analysis(
             variance=rows["variance"].to_numpy(dtype=np.float64, copy=True),
             study=rows["study"].to_numpy(dtype=object, copy=True),
             model="common" if singleton_random else model,
-            tau2_method=tau2_method,
+            tau2_method=None if singleton_random else tau2_method,
             ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             missing=missing,

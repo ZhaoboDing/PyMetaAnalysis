@@ -105,6 +105,33 @@ def test_md_uses_unpooled_sampling_variance() -> None:
     assert dict(result.method.options) == {"sampling_variance": "unpooled"}
 
 
+def test_md_rejects_explicit_smd_variance() -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_continuous(
+            mean_treat=[4.0],
+            sd_treat=[2.0],
+            n_treat=[20],
+            mean_control=[1.5],
+            sd_control=[3.0],
+            n_control=[30],
+            measure="MD",
+            model="common",
+            smd_variance="LS",
+        )
+
+
+def test_continuous_duplicate_study_labels_are_reported() -> None:
+    result = ma.meta_continuous(
+        DATA,
+        **_columns(),
+        study=["duplicate"] * len(DATA),
+        measure="MD",
+        model="common",
+    )
+
+    assert "Duplicate study labels" in result.warnings[-1]
+
+
 def test_dataframe_defaults_to_index_and_supports_random_effects() -> None:
     data = DATA.drop(columns="study").copy()
     data.index = pd.Index(["A", "B", "C", "D"], name="trial")

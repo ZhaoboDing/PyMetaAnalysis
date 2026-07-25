@@ -12,10 +12,11 @@ from .api import (
     _normalize_ci_method,
     _normalize_model,
     _prediction_interval_method,
+    _resolve_tau2_method,
     _validate_analysis_controls,
 )
 from .config import MethodConfig, MethodOptionValue
-from .data import ColumnOrArray, MissingPolicy
+from .data import ColumnOrArray, MissingPolicy, _duplicate_study_warning
 from .effect_sizes.continuous import (
     calculate_continuous_effects,
     normalize_continuous_studies,
@@ -48,10 +49,10 @@ def _fit_meta_continuous_single(
     study: ColumnOrArray | None = None,
     measure: str = "MD",
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
-    smd_variance: str = "LS",
+    smd_variance: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -62,6 +63,8 @@ def _fit_meta_continuous_single(
     ``sd_treat**2 / n_treat + sd_control**2 / n_control``. ``measure="SMD"``
     uses a pooled SD, the exact Hedges correction, and the ``LS`` sampling
     variance convention used by ``metafor::escalc(measure="SMD")``.
+    ``smd_variance=None`` selects ``"LS"`` for SMD and is the only accepted
+    value for MD, where no SMD variance convention applies.
     """
 
     confidence_level, atol, max_iter = _validate_analysis_controls(
@@ -71,7 +74,10 @@ def _fit_meta_continuous_single(
     )
     normalized_model = _normalize_model(model)
     normalized_ci = _normalize_ci_method(ci_method)
-    normalized_tau2 = tau2_method.upper().replace("-", "_")
+    normalized_tau2 = _resolve_tau2_method(
+        tau2_method,
+        applicable=normalized_model == "random",
+    )
 
     studies = normalize_continuous_studies(
         data=data,
@@ -145,6 +151,9 @@ def _fit_meta_continuous_single(
     )
 
     warnings = list(fit.warnings)
+    duplicate_warning = _duplicate_study_warning(studies.study)
+    if duplicate_warning is not None:
+        warnings.append(duplicate_warning)
     excluded_count = int(np.count_nonzero(~included))
     if excluded_count:
         warnings.append(
@@ -237,10 +246,10 @@ def meta_continuous(
     subgroup: None = None,
     measure: str = "MD",
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
-    smd_variance: str = "LS",
+    smd_variance: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -261,10 +270,10 @@ def meta_continuous(
     subgroup: ColumnOrArray,
     measure: str = "MD",
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
-    smd_variance: str = "LS",
+    smd_variance: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -284,10 +293,10 @@ def meta_continuous(
     subgroup: ColumnOrArray | None = None,
     measure: str = "MD",
     model: str = "random",
-    tau2_method: str = "REML",
+    tau2_method: str | None = None,
     ci_method: str = "normal",
     confidence_level: float = 0.95,
-    smd_variance: str = "LS",
+    smd_variance: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -347,7 +356,7 @@ def meta_continuous(
             study=rows["study"].to_numpy(dtype=object, copy=True),
             measure=measure,
             model="common" if singleton_random else model,
-            tau2_method=tau2_method,
+            tau2_method=None if singleton_random else tau2_method,
             ci_method="normal" if singleton_random else ci_method,
             confidence_level=confidence_level,
             smd_variance=smd_variance,
