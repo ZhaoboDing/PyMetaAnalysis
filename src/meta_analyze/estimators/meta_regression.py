@@ -12,6 +12,7 @@ from scipy.stats import chi2, f, norm, t
 
 from ..exceptions import (
     ConvergenceError,
+    InsufficientStudiesError,
     InvalidStudyDataError,
     UnsupportedMethodError,
 )
@@ -186,6 +187,12 @@ def estimate_meta_regression_tau2(
             f"Unsupported tau2_method={method!r}; expected 'DL', 'PM', or 'REML'."
         )
     residual_df = len(effect) - design_matrix.shape[1]
+    if residual_df <= 0:
+        raise InsufficientStudiesError(
+            "Meta-regression tau-squared estimation requires positive residual "
+            f"degrees of freedom; got k={len(effect)} and "
+            f"p={design_matrix.shape[1]}."
+        )
     at_zero = _weighted_solution(effect, variance, design_matrix, 0.0)
 
     if normalized_method == "DL":
@@ -240,12 +247,13 @@ def estimate_meta_regression_tau2(
             f"{normalized_method} meta-regression tau-squared estimation did "
             "not converge."
         )
+    value = max(0.0, float(root))
     return Tau2Estimate(
-        value=max(0.0, float(root)),
+        value=value,
         method=normalized_method,
         converged=True,
         iterations=expansions + result.iterations,
-        boundary=root <= atol,
+        boundary=value == 0.0,
     )
 
 

@@ -83,8 +83,11 @@ The implemented score is evaluated in an algebraically equivalent scaled form;
 the positive scale factor does not change its sign or root.
 
 `result.diagnostics` records convergence, iteration count, and whether the
-solution reached the zero boundary. Failure to bracket or converge raises
-`ConvergenceError`; no fallback estimator is selected silently.
+solution reached the zero boundary. Boundary means the constrained estimate is
+exactly zero; a positive numerical root is not relabeled as a boundary merely
+because it is smaller than the configured absolute root-finding tolerance.
+Failure to bracket or converge raises `ConvergenceError`; no fallback estimator
+is selected silently.
 
 ## Confidence intervals
 
@@ -223,7 +226,9 @@ y' P(tau^2)^2 y - trace(P(tau^2)) = 0
 
 All estimators are constrained to non-negative tau-squared. PM and REML use a
 bracketed scalar root; a non-positive equation at zero returns the boundary.
-Failure raises `ConvergenceError` without estimator fallback.
+Residual tau-squared requires `k-p > 0`. A positive root remains an interior
+solution regardless of its size relative to the numerical tolerance. Failure
+raises `ConvergenceError` without estimator fallback.
 
 ### Coefficient and moderator inference
 
@@ -463,14 +468,18 @@ y_i = p_t - p_c
 v_i = p_t (1 - p_t) / (a + b) + p_c (1 - p_c) / (c + d)
 ```
 
-Under the default zero-variance policy, the effect uses raw counts while the
-variance uses corrected counts only for boundary tables.
+The effect always uses raw counts. The variance uses corrected counts for
+every study selected by `correction_scope`; with the default
+`only_zero_studies` scope, this includes every table containing a zero cell.
+The separate `rd_zero_variance` policy determines whether tables whose raw
+variance is exactly zero are corrected or excluded.
 
 ## Mantel-Haenszel pooling
 
 MH is implemented only for common-effect OR and RR. It uses raw tables by
 default and has a continuity-correction option separate from the study-effect
-correction.
+correction. Every included stratum must have a positive total count; empty
+inputs and zero-total strata are rejected before ratio or variance arithmetic.
 
 For OR, with `n_i = a_i + b_i + c_i + d_i`:
 

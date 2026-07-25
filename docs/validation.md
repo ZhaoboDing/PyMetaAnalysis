@@ -37,6 +37,11 @@ Property-based and targeted tests check invariants such as:
   including Hartung-Knapp adjustments;
 - unestimable repeated Mantel-Haenszel refits remain visible without aborting
   other leave-one-out or cumulative fits;
+- direct tau-squared estimators reject non-positive residual degrees of
+  freedom, and positive roots below `atol` remain distinct from exact boundary
+  solutions;
+- empty or zero-total Mantel-Haenszel inputs raise domain errors before any
+  non-finite intermediate value is formed;
 - Meta-regression is invariant to row order and moderator centering; changing a
   categorical reference preserves fitted values, residual heterogeneity, and
   joint tests;
