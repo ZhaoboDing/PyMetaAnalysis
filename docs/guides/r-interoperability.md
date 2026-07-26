@@ -79,6 +79,13 @@ handling, or heterogeneity definitions. In particular, PyMetaAnalysis records
 tau-squared/typical-variance definition, while common-effect and MH results use
 the Q-based definition.
 
+`result.tau2_confidence_interval()` corresponds to
+`confint(fit, type="QP")` for an `rma.uni` random-effects fit. Both return
+Q-profile bounds for tau-squared and monotonic tau, I-squared, and H-squared
+transformations. PyMetaAnalysis additionally exposes `is_empty` so a formal
+empty confidence set is distinguishable from its constrained `[0, 0]`
+display.
+
 ## Confidence and prediction intervals
 
 | PyMetaAnalysis `ci_method` | `metafor` | R `meta` | Behavior |

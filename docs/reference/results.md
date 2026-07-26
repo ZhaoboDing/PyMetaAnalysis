@@ -46,6 +46,27 @@ identity transformation.
 The definition differs by model and is specified under
 [statistical methods](../methods/statistical-methods.md#heterogeneity-and-inconsistency).
 
+Random-effects inverse-variance results also provide:
+
+```python
+interval = result.tau2_confidence_interval(
+    confidence_level=None,
+    atol=None,
+    max_iter=None,
+)
+```
+
+Omitted controls reuse the fitted result's confidence level, tolerance, and
+iteration limit. The returned immutable `Tau2ConfidenceInterval` contains the
+tau-squared `estimate`, `ci_low`, `ci_high`, and `ci` tuple plus the monotonic
+`tau`, `i2`, and `h2` estimates and intervals. It also records
+`method="q_profile"`, numerical `iterations`, `warnings`, and `is_empty`.
+`to_dict()` returns a detached nested mapping.
+
+The method is not available for common-effect or Mantel-Haenszel results.
+When `is_empty=True`, `[0, 0]` is a constrained display of the formal empty
+confidence set, not a claim of zero uncertainty.
+
 ### Methods and diagnostics
 
 `result.method` is a `MethodConfig` containing the settings actually used:

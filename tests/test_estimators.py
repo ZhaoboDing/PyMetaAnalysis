@@ -8,6 +8,7 @@ import pytest
 import meta_analyze as ma
 import meta_analyze.estimators.meta_regression as meta_regression_module
 import meta_analyze.estimators.tau2 as tau2_module
+import meta_analyze.heterogeneity as heterogeneity_module
 from meta_analyze.estimators import (
     estimate_meta_regression_tau2,
     estimate_tau2,
@@ -199,6 +200,9 @@ def test_meta_regression_nonconverged_solver_result_is_rejected(
 
 
 def test_tau2_bracketing_failures_raise_convergence_errors() -> None:
+    def undefined(_: float) -> float:
+        raise ValueError("undefined")
+
     with pytest.raises(ma.ConvergenceError, match="finite tau-squared solution"):
         tau2_module._find_upper_bound(
             lambda _: np.inf,
@@ -213,6 +217,30 @@ def test_tau2_bracketing_failures_raise_convergence_errors() -> None:
             lambda _: np.inf,
             initial=1.0,
             max_expansions=2,
+        )
+    with pytest.raises(ma.ConvergenceError, match="finite Q-profile"):
+        heterogeneity_module._q_profile_upper_bracket(
+            lambda _: np.inf,
+            initial=1.0,
+            max_expansions=2,
+        )
+    with pytest.raises(ma.ConvergenceError, match="finite Q-profile"):
+        heterogeneity_module._q_profile_upper_bracket(
+            undefined,
+            initial=1.0,
+            max_expansions=2,
+        )
+
+
+def test_q_profile_equation_rejects_nonfinite_denominators() -> None:
+    largest = np.finfo(np.float64).max
+
+    with pytest.raises(ValueError, match="denominators must remain finite"):
+        heterogeneity_module._q_profile_equation(
+            np.asarray([0.0, 1.0]),
+            np.asarray([largest, largest]),
+            largest,
+            1.0,
         )
 
 

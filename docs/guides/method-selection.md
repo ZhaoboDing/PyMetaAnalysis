@@ -107,6 +107,28 @@ The definition is recorded as `result.i2_method`: `q_based` or
 `tau2_typical_variance`. Internally, I-squared remains a proportion from zero
 to one.
 
+## Heterogeneity confidence intervals
+
+A random-effects inverse-variance fit can invert generalized Q to quantify
+uncertainty around tau-squared:
+
+```python
+heterogeneity_interval = result.tau2_confidence_interval()
+heterogeneity_interval.ci
+heterogeneity_interval.i2_ci
+```
+
+The point estimate still follows the selected DL, PM, or REML estimator. The
+Q-profile interval is a separate procedure and therefore is identical across
+those point estimators for the same data and confidence level; it is not
+guaranteed to contain every possible point estimate.
+
+For unusually homogeneous data, both unconstrained bounds can lie below zero.
+The method then has a formal empty confidence set. PyMetaAnalysis exposes
+`is_empty=True` while representing the constrained tau-squared display as
+`[0, 0]`; do not interpret that display as proof that heterogeneity is exactly
+zero.
+
 ## Prediction intervals
 
 Random-effects models report a prediction interval when at least three studies

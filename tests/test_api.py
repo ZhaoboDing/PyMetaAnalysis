@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import chi2
 
 import meta_analyze as ma
+from meta_analyze.heterogeneity import generalized_q
 
 
 def test_common_effect_matches_hand_calculation() -> None:
@@ -27,6 +30,197 @@ def test_common_effect_matches_hand_calculation() -> None:
     assert result.method.tau2_method is None
     assert result.prediction_interval is None
     assert result.study_results["normalized_weight"].sum() == pytest.approx(1.0)
+
+
+def test_q_profile_tau2_interval_inverts_generalized_q() -> None:
+    effect = np.asarray([-0.4, 0.1, 0.5, 1.2, 1.8])
+    variance = np.asarray([0.04, 0.09, 0.05, 0.16, 0.08])
+    result = ma.meta_analysis(
+        effect=effect,
+        variance=variance,
+        model="random",
+        tau2_method="REML",
+    )
+    interval = result.tau2_confidence_interval()
+    alpha = 1.0 - interval.confidence_level
+
+    assert isinstance(interval, ma.Tau2ConfidenceInterval)
+    assert interval.method == "q_profile"
+    assert interval.estimate == result.tau2
+    assert interval.ci_low < interval.estimate < interval.ci_high
+    assert interval.is_empty is False
+    assert interval.iterations > 0
+    assert interval.warnings == ()
+    assert generalized_q(effect, variance, interval.ci_low) == pytest.approx(
+        chi2.ppf(1.0 - alpha / 2.0, result.q_df),
+        rel=2e-10,
+    )
+    assert generalized_q(effect, variance, interval.ci_high) == pytest.approx(
+        chi2.ppf(alpha / 2.0, result.q_df),
+        rel=2e-10,
+    )
+    assert interval.tau_ci == pytest.approx(
+        (np.sqrt(interval.ci_low), np.sqrt(interval.ci_high))
+    )
+    assert interval.i2_ci[0] < interval.i2 < interval.i2_ci[1]
+    assert interval.h2_ci[0] < interval.h2 < interval.h2_ci[1]
+
+
+@pytest.mark.parametrize("tau2_method", ["DL", "PM", "REML"])
+def test_q_profile_interval_is_independent_of_point_estimator(
+    tau2_method: str,
+) -> None:
+    result = ma.meta_analysis(
+        effect=[-0.4, 0.1, 0.5, 1.2, 1.8],
+        variance=[0.04, 0.09, 0.05, 0.16, 0.08],
+        model="random",
+        tau2_method=tau2_method,
+    )
+
+    assert result.tau2_confidence_interval().ci == pytest.approx(
+        (0.20150156345003348, 6.225645762751912),
+        rel=2e-10,
+    )
+
+
+def test_q_profile_boundary_represents_formal_empty_set_explicitly() -> None:
+    result = ma.meta_analysis(
+        effect=[0.2, 0.2, 0.2, 0.2],
+        variance=[0.1, 0.2, 0.3, 0.4],
+        model="random",
+    )
+    interval = result.tau2_confidence_interval()
+
+    assert interval.ci == (0.0, 0.0)
+    assert interval.tau_ci == (0.0, 0.0)
+    assert interval.i2_ci == (0.0, 0.0)
+    assert interval.h2_ci == (1.0, 1.0)
+    assert interval.is_empty is True
+    assert "formal set is empty" in interval.warnings[0]
+
+
+def test_q_profile_can_have_zero_lower_bound_without_being_empty() -> None:
+    result = ma.meta_analysis(
+        effect=[0.0, 0.2, -0.2, 0.0],
+        variance=[0.1, 0.2, 0.3, 0.4],
+        model="random",
+    )
+    interval = result.tau2_confidence_interval()
+
+    assert interval.ci_low == 0.0
+    assert interval.ci_high > 0.0
+    assert interval.is_empty is False
+    assert interval.warnings == ()
+
+
+def test_q_profile_warns_when_point_estimator_falls_outside_interval() -> None:
+    result = ma.meta_analysis(
+        effect=[-3.703983132301097, -4.469641995131243, 16.522179132250695],
+        variance=[0.0004002891781638545, 0.18531201962626231, 14.780225664504611],
+        model="random",
+        tau2_method="DL",
+    )
+    interval = result.tau2_confidence_interval()
+
+    assert result.tau2 < interval.ci_low
+    assert "does not contain" in interval.warnings[0]
+
+
+def test_q_profile_interval_controls_and_applicability_are_explicit() -> None:
+    random = ma.meta_analysis(
+        effect=[-0.4, 0.1, 0.5, 1.2, 1.8],
+        variance=[0.04, 0.09, 0.05, 0.16, 0.08],
+        model="random",
+    )
+    narrower = random.tau2_confidence_interval(confidence_level=0.90)
+    default = random.tau2_confidence_interval()
+
+    assert narrower.ci_low > default.ci_low
+    assert narrower.ci_high < default.ci_high
+    with pytest.raises(ma.InvalidStudyDataError, match="between 0 and 1"):
+        random.tau2_confidence_interval(confidence_level=1.0)
+    with pytest.raises(ma.InvalidStudyDataError, match="positive integer"):
+        random.tau2_confidence_interval(max_iter=0)
+    with pytest.raises(ma.InvalidStudyDataError, match="strictly positive"):
+        random.tau2_confidence_interval(atol=0.0)
+
+    common = ma.meta_analysis(
+        effect=[0.1, 0.2],
+        variance=[0.04, 0.05],
+        model="common",
+    )
+    with pytest.raises(ma.UnsupportedMethodError, match="random-effects"):
+        common.tau2_confidence_interval()
+
+
+def test_q_profile_solver_failure_raises_convergence_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_solver(*_: object, **__: object) -> None:
+        raise RuntimeError("iteration limit")
+
+    monkeypatch.setattr("meta_analyze.heterogeneity.brentq", fail_solver)
+    result = ma.meta_analysis(
+        effect=[-0.4, 0.1, 0.5, 1.2, 1.8],
+        variance=[0.04, 0.09, 0.05, 0.16, 0.08],
+        model="random",
+    )
+
+    with pytest.raises(ma.ConvergenceError, match="Q-profile lower"):
+        result.tau2_confidence_interval()
+
+
+def test_q_profile_nonconverged_solver_result_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def nonconverged_solver(
+        *_: object,
+        **__: object,
+    ) -> tuple[float, SimpleNamespace]:
+        return 0.1, SimpleNamespace(converged=False, iterations=1)
+
+    monkeypatch.setattr("meta_analyze.heterogeneity.brentq", nonconverged_solver)
+    result = ma.meta_analysis(
+        effect=[-0.4, 0.1, 0.5, 1.2, 1.8],
+        variance=[0.04, 0.09, 0.05, 0.16, 0.08],
+        model="random",
+    )
+
+    with pytest.raises(ma.ConvergenceError, match="did not converge"):
+        result.tau2_confidence_interval()
+
+
+def test_q_profile_interval_to_dict_is_detached() -> None:
+    result = ma.meta_analysis(
+        effect=[-0.4, 0.1, 0.5, 1.2, 1.8],
+        variance=[0.04, 0.09, 0.05, 0.16, 0.08],
+        model="random",
+    )
+    interval = result.tau2_confidence_interval()
+    payload = interval.to_dict()
+    payload["tau2"]["ci_low"] = -1.0
+
+    assert interval.to_dict()["tau2"]["ci_low"] == interval.ci_low
+
+
+def test_q_profile_interval_excludes_rows_dropped_from_the_fit() -> None:
+    effect = [-0.4, np.nan, 0.5, 1.2, 1.8]
+    variance = [0.04, 0.09, 0.05, 0.16, 0.08]
+    dropped = ma.meta_analysis(
+        effect=effect,
+        variance=variance,
+        model="random",
+        missing="drop",
+    )
+    direct = ma.meta_analysis(
+        effect=np.asarray(effect)[[0, 2, 3, 4]],
+        variance=np.asarray(variance)[[0, 2, 3, 4]],
+        model="random",
+    )
+
+    assert dropped.tau2_confidence_interval().ci == pytest.approx(
+        direct.tau2_confidence_interval().ci
+    )
 
 
 def test_dataframe_columns_and_default_index_labels() -> None:

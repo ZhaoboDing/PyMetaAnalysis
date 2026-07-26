@@ -171,6 +171,37 @@ I^2 = tau^2 / (tau^2 + v_typical)
 H^2 = 1 + tau^2 / v_typical
 ```
 
+### Q-profile confidence interval
+
+For a candidate non-negative value `t`, define generalized Q using weights
+`w_i(t) = 1 / (v_i + t)`:
+
+```text
+mu_hat(t) = sum(w_i(t) y_i) / sum(w_i(t))
+Q(t) = sum(w_i(t) (y_i - mu_hat(t))^2)
+```
+
+Under the conventional normal random-effects model with known sampling
+variances, `Q(tau^2)` follows a chi-squared distribution with `k-1` degrees of
+freedom. For confidence level `1-alpha`, PyMetaAnalysis numerically solves:
+
+```text
+Q(tau2_low)  = chi2_(k-1, 1-alpha/2)
+Q(tau2_high) = chi2_(k-1, alpha/2)
+```
+
+and constrains both bounds to the non-negative parameter space. If the lower
+root is negative but the upper root is non-negative, the reported lower bound
+is zero. If both roots are negative, the formal confidence set is empty;
+`Tau2ConfidenceInterval` records `is_empty=True` and uses `[0, 0]` as the
+explicit constrained display, following `metafor`'s output convention.
+
+The tau, I-squared, and H-squared bounds are monotonic transformations of the
+same tau-squared bounds. The interval is exact only under its model assumptions;
+in applications with estimated sampling variances or non-normal effects it
+should be interpreted as an approximation. See
+[Viechtbauer (2007)](https://doi.org/10.1002/sim.2514).
+
 `result.i2_method` records `q_based` or `tau2_typical_variance`. I-squared is a
 proportion internally and is formatted as a percentage in human-readable
 output. With one study, Q is zero and its p-value, I-squared, and H-squared are
