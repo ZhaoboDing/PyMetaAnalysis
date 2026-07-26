@@ -9,6 +9,10 @@ output <- if (length(args) >= 1) args[[1]] else {
   "tests/reference/meta_regression_influence_metafor.json"
 }
 input <- read.csv("tests/reference/meta_regression_input.csv")
+input$region <- factor(
+  input$region,
+  levels = c("North", "South", "East")
+)
 
 iterative_control <- list(
   threshold = 1e-10,
@@ -28,11 +32,11 @@ numeric_matrix <- function(values) {
   )
 }
 
-fit_model <- function(method, test = "z") {
+fit_model <- function(mods, method, test = "z") {
   rma.uni(
     yi = effect,
     vi = variance,
-    mods = ~mean_age,
+    mods = mods,
     data = input,
     method = method,
     test = test,
@@ -54,12 +58,21 @@ influence_summary <- function(fit) {
 }
 
 fits <- list(
-  common = fit_model("EE"),
-  mixed_dl = fit_model("DL"),
-  mixed_pm = fit_model("PM"),
-  mixed_reml = fit_model("REML"),
-  mixed_reml_hartung_knapp = fit_model("REML", "knha"),
-  mixed_reml_hartung_knapp_adhoc = fit_model("REML", "adhoc")
+  common = fit_model(~mean_age, "EE"),
+  mixed_dl = fit_model(~mean_age, "DL"),
+  mixed_pm = fit_model(~mean_age, "PM"),
+  mixed_reml = fit_model(~mean_age, "REML"),
+  mixed_reml_hartung_knapp = fit_model(~mean_age, "REML", "knha"),
+  mixed_reml_hartung_knapp_adhoc = fit_model(
+    ~mean_age,
+    "REML",
+    "adhoc"
+  ),
+  common_categorical = fit_model(~region, "EE"),
+  mixed_multivariable_reml = fit_model(
+    ~mean_age + dose + region,
+    "REML"
+  )
 )
 
 reference <- list(
@@ -68,6 +81,7 @@ reference <- list(
   metafor_version = as.character(packageVersion("metafor")),
   jsonlite_version = as.character(packageVersion("jsonlite")),
   iterative_control = list(tolerance = 1e-10, max_iterations = 1000),
+  categorical_levels = list(region = c("North", "South", "East")),
   models = lapply(fits, influence_summary)
 )
 

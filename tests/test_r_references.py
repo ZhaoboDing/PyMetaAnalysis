@@ -39,6 +39,8 @@ ITERATIVE_RTOL = 2e-10
 ITERATIVE_ATOL = 2e-11
 ITERATIVE_DERIVED_RTOL = 2e-9
 ITERATIVE_DERIVED_ATOL = 1e-10
+ALTERNATE_REML_RTOL = 2e-9
+ALTERNATE_REML_ATOL = 2e-10
 
 
 def _binary_columns() -> dict[str, str]:
@@ -106,9 +108,23 @@ def _assert_regression_fit(
     *,
     iterative: bool = False,
     compare_heterogeneity: bool = True,
+    rtol_override: float | None = None,
+    atol_override: float | None = None,
 ) -> None:
-    rtol = ITERATIVE_RTOL if iterative else CLOSED_RTOL
-    atol = ITERATIVE_ATOL if iterative else CLOSED_ATOL
+    rtol = (
+        rtol_override
+        if rtol_override is not None
+        else ITERATIVE_RTOL
+        if iterative
+        else CLOSED_RTOL
+    )
+    atol = (
+        atol_override
+        if atol_override is not None
+        else ITERATIVE_ATOL
+        if iterative
+        else CLOSED_ATOL
+    )
     derived_rtol = ITERATIVE_DERIVED_RTOL if iterative else CLOSED_RTOL
     derived_atol = ITERATIVE_DERIVED_ATOL if iterative else CLOSED_ATOL
     coefficients = result.coefficients
@@ -137,7 +153,7 @@ def _assert_regression_fit(
     )
 
     assert result.tau2 == pytest.approx(expected["tau2"], rel=rtol, abs=atol)
-    if result.model == "common":
+    if expected["tau2_null"] is None:
         assert expected["tau2_null"] is None
         assert expected["pseudo_r2"] is None
         assert expected["pseudo_r2_raw"] is None
@@ -534,6 +550,30 @@ def test_sparse_binary_zero_event_handling_matches_metafor(
     _assert_fit(result, expected[reference_key])
 
 
+@pytest.mark.parametrize("measure", ["OR", "RR"])
+def test_sparse_mh_pooling_correction_matches_metafor(measure: str) -> None:
+    result = ma.meta_binary(
+        SPARSE_BINARY_DATA,
+        **_binary_columns(),
+        study="study",
+        measure=measure,
+        method="MH",
+        mh_continuity_correction=0.5,
+    )
+
+    _assert_fit(
+        result,
+        BINARY["sparse"][measure]["mantel_haenszel_corrected"],
+    )
+    assert result.study_results["mh_continuity_corrected"].tolist() == [
+        True,
+        False,
+        False,
+        False,
+        False,
+    ]
+
+
 def test_common_effect_subgroups_match_metafor_moderator_model() -> None:
     expected = WORKFLOW["subgroup_common"]
     result = ma.meta_analysis(
@@ -791,6 +831,52 @@ def test_no_intercept_meta_regression_fit_matches_metafor() -> None:
         META_REGRESSION["common_no_intercept"],
         compare_heterogeneity=False,
     )
+
+
+def test_no_intercept_riley_predictions_match_metafor() -> None:
+    expected = META_REGRESSION["mixed_no_intercept_reml"]
+    result = ma.meta_regression(
+        META_REGRESSION_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        moderators=["mean_age"],
+        model="mixed",
+        tau2_method="REML",
+        intercept=False,
+        prediction_interval_method="riley",
+    )
+
+    assert expected["tau2_convention"] == "raw-outcome REML score via metafor::rma.mv"
+    assert expected["independently_solved_tau2"] == pytest.approx(
+        result.tau2,
+        rel=ALTERNATE_REML_RTOL,
+        abs=ALTERNATE_REML_ATOL,
+    )
+    assert expected["metafor_default_tau2"] != pytest.approx(result.tau2)
+    _assert_regression_fit(
+        result,
+        expected,
+        iterative=True,
+        compare_heterogeneity=False,
+        rtol_override=ALTERNATE_REML_RTOL,
+        atol_override=ALTERNATE_REML_ATOL,
+    )
+    predictions = result.predict(
+        pd.DataFrame({"mean_age": expected["prediction_values"]})
+    )
+
+    assert expected["predictions_riley"]["prediction_distribution"] == "t"
+    assert expected["predictions_riley"]["prediction_df"] == [
+        result.residual_df - 1
+    ] * len(predictions)
+    for column in predictions:
+        np.testing.assert_allclose(
+            predictions[column],
+            expected["predictions_riley"][column],
+            rtol=ALTERNATE_REML_RTOL,
+            atol=ALTERNATE_REML_ATOL,
+        )
 
 
 def test_categorical_meta_regression_matches_metafor() -> None:

@@ -21,6 +21,36 @@ REFERENCE: dict[str, Any] = json.loads(
 )
 
 
+def _assert_influence_matches_reference(
+    result: ma.MetaRegressionResult,
+    expected: dict[str, Any],
+) -> None:
+    diagnostics = result.influence()
+
+    assert diagnostics.table["refit_success"].all()
+    for column in [
+        "deleted_residual",
+        "deleted_residual_se",
+        "externally_standardized_residual",
+        "cook_distance",
+    ]:
+        np.testing.assert_allclose(
+            diagnostics.table[column],
+            expected[column],
+            rtol=2e-8,
+            atol=1e-10,
+        )
+    actual_dfbetas = (
+        diagnostics.dfbetas["dfbetas"].to_numpy().reshape(result.k, result.p)
+    )
+    np.testing.assert_allclose(
+        actual_dfbetas,
+        expected["dfbetas"],
+        rtol=2e-8,
+        atol=1e-10,
+    )
+
+
 @pytest.mark.parametrize(
     ("reference_name", "options"),
     [
@@ -60,31 +90,44 @@ def test_meta_regression_influence_matches_metafor(
         **options,  # type: ignore[arg-type]
     )
 
-    diagnostics = result.influence()
-    expected = REFERENCE["models"][reference_name]
-
     assert REFERENCE["metafor_version"] == "5.0.1"
-    assert diagnostics.table["refit_success"].all()
-    for column in [
-        "deleted_residual",
-        "deleted_residual_se",
-        "externally_standardized_residual",
-        "cook_distance",
-    ]:
-        np.testing.assert_allclose(
-            diagnostics.table[column],
-            expected[column],
-            rtol=2e-8,
-            atol=1e-10,
-        )
-    actual_dfbetas = (
-        diagnostics.dfbetas["dfbetas"].to_numpy().reshape(result.k, result.p)
+    _assert_influence_matches_reference(
+        result,
+        REFERENCE["models"][reference_name],
     )
-    np.testing.assert_allclose(
-        actual_dfbetas,
-        expected["dfbetas"],
-        rtol=2e-8,
+
+
+@pytest.mark.parametrize(
+    ("reference_name", "moderators", "model_options"),
+    [
+        ("common_categorical", ["region"], {"model": "common"}),
+        (
+            "mixed_multivariable_reml",
+            ["mean_age", "dose", "region"],
+            {"model": "mixed", "tau2_method": "REML"},
+        ),
+    ],
+)
+def test_structured_meta_regression_influence_matches_metafor(
+    reference_name: str,
+    moderators: list[str],
+    model_options: dict[str, str],
+) -> None:
+    result = ma.meta_regression(
+        REFERENCE_DATA,
+        effect="effect",
+        variance="variance",
+        moderators=moderators,
+        categorical={"region": REFERENCE["categorical_levels"]["region"]},
+        study="study",
         atol=1e-10,
+        max_iter=1000,
+        **model_options,  # type: ignore[arg-type]
+    )
+
+    _assert_influence_matches_reference(
+        result,
+        REFERENCE["models"][reference_name],
     )
 
 

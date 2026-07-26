@@ -102,11 +102,27 @@ calculate_sparse <- function(measure) {
     drop00 = c(TRUE, TRUE),
     correct = FALSE
   )
+  mh_corrected <- rma.mh(
+    measure = measure,
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = sparse_input,
+    add = c(0.5, 0.5),
+    to = c("only0", "only0"),
+    drop00 = c(TRUE, TRUE),
+    correct = FALSE
+  )
   result <- list(
     effect = unname(effects$yi),
     variance = unname(effects$vi),
     common_iv = fit_summary(common),
-    mantel_haenszel = fit_summary(mh, include_tau2 = FALSE)
+    mantel_haenszel = fit_summary(mh, include_tau2 = FALSE),
+    mantel_haenszel_corrected = fit_summary(
+      mh_corrected,
+      include_tau2 = FALSE
+    )
   )
   result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
   result
