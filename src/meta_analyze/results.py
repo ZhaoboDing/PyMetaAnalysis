@@ -41,6 +41,84 @@ class HeterogeneityResult:
 
 
 @dataclass(frozen=True, slots=True)
+class Tau2ConfidenceInterval:
+    """Q-profile interval for tau-squared and monotonic derived measures."""
+
+    estimate: float
+    ci_low: float
+    ci_high: float
+    tau: float
+    tau_ci_low: float
+    tau_ci_high: float
+    i2: float
+    i2_ci_low: float
+    i2_ci_high: float
+    h2: float
+    h2_ci_low: float
+    h2_ci_high: float
+    confidence_level: float
+    method: str
+    is_empty: bool
+    iterations: int
+    warnings: tuple[str, ...]
+
+    @property
+    def ci(self) -> tuple[float, float]:
+        """Return the tau-squared confidence limits."""
+
+        return self.ci_low, self.ci_high
+
+    @property
+    def tau_ci(self) -> tuple[float, float]:
+        """Return the confidence limits on the tau scale."""
+
+        return self.tau_ci_low, self.tau_ci_high
+
+    @property
+    def i2_ci(self) -> tuple[float, float]:
+        """Return the confidence limits for I-squared as proportions."""
+
+        return self.i2_ci_low, self.i2_ci_high
+
+    @property
+    def h2_ci(self) -> tuple[float, float]:
+        """Return the confidence limits for H-squared."""
+
+        return self.h2_ci_low, self.h2_ci_high
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a detached, machine-readable representation."""
+
+        return {
+            "method": self.method,
+            "confidence_level": self.confidence_level,
+            "is_empty": self.is_empty,
+            "iterations": self.iterations,
+            "tau2": {
+                "estimate": self.estimate,
+                "ci_low": self.ci_low,
+                "ci_high": self.ci_high,
+            },
+            "tau": {
+                "estimate": self.tau,
+                "ci_low": self.tau_ci_low,
+                "ci_high": self.tau_ci_high,
+            },
+            "i2": {
+                "estimate": self.i2,
+                "ci_low": self.i2_ci_low,
+                "ci_high": self.i2_ci_high,
+            },
+            "h2": {
+                "estimate": self.h2,
+                "ci_low": self.h2_ci_low,
+                "ci_high": self.h2_ci_high,
+            },
+            "warnings": self.warnings,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class FitDiagnostics:
     """Convergence details for the fitted model."""
 
@@ -316,6 +394,88 @@ class MetaAnalysisResult:
 
     def summary(self) -> MetaAnalysisSummary:
         return MetaAnalysisSummary(self)
+
+    def tau2_confidence_interval(
+        self,
+        *,
+        confidence_level: float | None = None,
+        atol: float | None = None,
+        max_iter: int | None = None,
+    ) -> Tau2ConfidenceInterval:
+        """Return a Q-profile interval for random-effects heterogeneity."""
+
+        if self.model != "random" or self.method.pooling_method != "inverse_variance":
+            from .exceptions import UnsupportedMethodError
+
+            raise UnsupportedMethodError(
+                "tau2_confidence_interval() requires a random-effects "
+                "inverse-variance result."
+            )
+
+        from .api import _validate_analysis_controls
+        from .heterogeneity import q_profile_tau2_interval, tau2_inconsistency
+
+        resolved_level = (
+            self.method.confidence_level
+            if confidence_level is None
+            else confidence_level
+        )
+        resolved_atol = self.method.atol if atol is None else atol
+        resolved_max_iter = self.method.max_iter if max_iter is None else max_iter
+        resolved_level, resolved_atol, resolved_max_iter = _validate_analysis_controls(
+            confidence_level=resolved_level,
+            atol=resolved_atol,
+            max_iter=resolved_max_iter,
+        )
+
+        studies = self._study_results
+        included = studies["included"].to_numpy(dtype=bool, copy=True)
+        effect = studies.loc[included, "effect"].to_numpy(dtype="float64", copy=True)
+        variance = studies.loc[included, "variance"].to_numpy(
+            dtype="float64", copy=True
+        )
+        interval = q_profile_tau2_interval(
+            effect,
+            variance,
+            confidence_level=resolved_level,
+            tau2_estimate=self.tau2,
+            atol=resolved_atol,
+            max_iter=resolved_max_iter,
+        )
+        i2_low, h2_low = tau2_inconsistency(variance, interval.ci_low)
+        i2_high, h2_high = tau2_inconsistency(variance, interval.ci_high)
+        warnings: list[str] = []
+        if interval.is_empty:
+            warnings.append(
+                "The unconstrained Q-profile confidence set lies below zero; "
+                "the formal set is empty and its constrained display is [0, 0]."
+            )
+        elif not interval.ci_low <= self.tau2 <= interval.ci_high:
+            warnings.append(
+                "The Q-profile interval does not contain the fitted tau-squared "
+                "estimate; this can occur because the interval and point estimator "
+                "use different estimating equations."
+            )
+
+        return Tau2ConfidenceInterval(
+            estimate=self.tau2,
+            ci_low=interval.ci_low,
+            ci_high=interval.ci_high,
+            tau=math.sqrt(self.tau2),
+            tau_ci_low=math.sqrt(interval.ci_low),
+            tau_ci_high=math.sqrt(interval.ci_high),
+            i2=self.i2,
+            i2_ci_low=i2_low,
+            i2_ci_high=i2_high,
+            h2=self.h2,
+            h2_ci_low=h2_low,
+            h2_ci_high=h2_high,
+            confidence_level=resolved_level,
+            method="q_profile",
+            is_empty=interval.is_empty,
+            iterations=interval.iterations,
+            warnings=tuple(warnings),
+        )
 
     def method_details(self) -> str:
         """Return a concise Methods-style description of the fitted analysis."""

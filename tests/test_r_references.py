@@ -328,6 +328,39 @@ def test_generic_normal_interval_models_match_metafor(tau2_method: str) -> None:
     )
 
 
+def test_q_profile_tau2_interval_matches_metafor() -> None:
+    expected = GENERIC["reml_q_profile"]
+    result = ma.meta_analysis(
+        GENERIC_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        model="random",
+        tau2_method="REML",
+    )
+    interval = result.tau2_confidence_interval()
+
+    assert expected["method"] == "QP"
+    assert interval.method == "q_profile"
+    assert interval.confidence_level == expected["confidence_level"]
+    for prefix, actual in [
+        ("tau2", (interval.estimate, interval.ci_low, interval.ci_high)),
+        ("tau", (interval.tau, interval.tau_ci_low, interval.tau_ci_high)),
+        ("i2", (interval.i2, interval.i2_ci_low, interval.i2_ci_high)),
+        ("h2", (interval.h2, interval.h2_ci_low, interval.h2_ci_high)),
+    ]:
+        np.testing.assert_allclose(
+            actual,
+            [
+                expected[prefix]["estimate"],
+                expected[prefix]["ci_low"],
+                expected[prefix]["ci_high"],
+            ],
+            rtol=ITERATIVE_DERIVED_RTOL,
+            atol=ITERATIVE_DERIVED_ATOL,
+        )
+
+
 def test_generic_common_effect_model_matches_metafor() -> None:
     result = ma.meta_analysis(
         GENERIC_DATA,

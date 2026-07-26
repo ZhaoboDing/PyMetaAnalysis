@@ -150,6 +150,47 @@ def test_standard_error_and_variance_inputs_are_equivalent(
     )
 
 
+def test_q_profile_interval_is_equivariant_to_effect_location_and_scale() -> None:
+    effect = np.asarray([-0.4, 0.1, 0.5, 1.2, 1.8])
+    variance = np.asarray([0.04, 0.09, 0.05, 0.16, 0.08])
+    scale = 3.5
+    original = ma.meta_analysis(
+        effect=effect,
+        variance=variance,
+        model="random",
+    ).tau2_confidence_interval()
+    transformed = ma.meta_analysis(
+        effect=effect * scale - 4.0,
+        variance=variance * scale**2,
+        model="random",
+    ).tau2_confidence_interval()
+
+    np.testing.assert_allclose(
+        transformed.ci,
+        np.asarray(original.ci) * scale**2,
+        rtol=2e-9,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        transformed.tau_ci,
+        np.asarray(original.tau_ci) * scale,
+        rtol=2e-9,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        transformed.i2_ci,
+        original.i2_ci,
+        rtol=2e-9,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        transformed.h2_ci,
+        original.h2_ci,
+        rtol=2e-9,
+        atol=1e-10,
+    )
+
+
 @given(meta_regression_vectors())
 @settings(max_examples=50, deadline=None)
 def test_common_meta_regression_is_invariant_to_row_order(

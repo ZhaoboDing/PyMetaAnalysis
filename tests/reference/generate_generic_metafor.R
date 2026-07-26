@@ -72,6 +72,21 @@ riley_prediction_interval <- function(fit) {
   c(unname(prediction$pi.lb), unname(prediction$pi.ub))
 }
 
+q_profile <- confint(
+  reml,
+  level = 95,
+  type = "QP",
+  control = list(tol = 1e-10, maxiter = 1000)
+)$random
+
+q_profile_row <- function(name, divisor = 1) {
+  list(
+    estimate = unname(q_profile[name, "estimate"]) / divisor,
+    ci_low = unname(q_profile[name, "ci.lb"]) / divisor,
+    ci_high = unname(q_profile[name, "ci.ub"]) / divisor
+  )
+}
+
 reference <- list(
   generated_by = "R metafor",
   r_version = R.version.string,
@@ -93,6 +108,14 @@ reference <- list(
   ),
   reml_hartung_knapp = fit_summary(reml_hk),
   reml_hartung_knapp_adhoc = fit_summary(reml_adhoc),
+  reml_q_profile = list(
+    method = "QP",
+    confidence_level = 0.95,
+    tau2 = q_profile_row("tau^2"),
+    tau = q_profile_row("tau"),
+    i2 = q_profile_row("I^2(%)", divisor = 100),
+    h2 = q_profile_row("H^2")
+  ),
   reml_prediction_interval_hts = riley_prediction_interval(reml),
   reml_prediction_interval_hartung_knapp = riley_prediction_interval(reml_hk),
   reml_prediction_interval_hartung_knapp_adhoc =

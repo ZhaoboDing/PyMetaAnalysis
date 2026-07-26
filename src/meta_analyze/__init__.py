@@ -42,6 +42,7 @@ from .results import (
     MetaAnalysisSummary,
     SubgroupMetaAnalysisResult,
     SubgroupMetaAnalysisSummary,
+    Tau2ConfidenceInterval,
 )
 from .sensitivity import (
     CumulativeMetaAnalysisResult,
@@ -82,6 +83,7 @@ __all__ = [
     "SubgroupCumulativeMetaAnalysisResult",
     "SubgroupLeaveOneOutResult",
     "SubgroupMethodConfig",
+    "Tau2ConfidenceInterval",
     "TransformationRecord",
     "UnsupportedMethodError",
     "meta_analysis",

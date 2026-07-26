@@ -91,7 +91,9 @@ Random-effects inverse-variance models support REML (default), Paule-Mandel,
 and DerSimonian-Laird tau-squared estimators. Mean confidence intervals support
 the normal default plus unmodified and safeguarded Hartung-Knapp variants.
 Eligible random-effects fits include an HTS prediction interval under normal
-inference and an HK-PR interval under either Hartung-Knapp variant.
+inference and an HK-PR interval under either Hartung-Knapp variant. Call
+`result.tau2_confidence_interval()` for a Q-profile interval around
+heterogeneity.
 
 Generic analyses accept exactly one of `variance=` or `standard_error=`.
 Standard errors are squared internally and the conversion is recorded in the
@@ -109,6 +111,7 @@ result.estimate
 result.display_estimate
 result.ci
 result.tau2
+tau2_interval = result.tau2_confidence_interval()
 result.i2
 result.i2_method
 result.diagnostics

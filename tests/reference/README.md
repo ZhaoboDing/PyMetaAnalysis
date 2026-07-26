@@ -44,6 +44,9 @@ random cumulative Python comparison begins at `k=2`, the minimum prefix for
 which the library fits a random-effects model; the committed R artifact retains
 its single-study row so that this difference remains explicit and auditable.
 
+`generic_metafor.json` includes `confint(..., type="QP")` reference values for
+tau-squared and the monotonic tau, I-squared, and H-squared transformations.
+
 `meta_regression_metafor.json` covers common- and mixed-effects moderator
 models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit
 categorical coding, a no-intercept model, multivariable joint tests, fitted

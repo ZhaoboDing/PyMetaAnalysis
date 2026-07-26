@@ -40,6 +40,10 @@ Property-based and targeted tests check invariants such as:
 - direct tau-squared estimators reject non-positive residual degrees of
   freedom, and positive roots below `atol` remain distinct from exact boundary
   solutions;
+- Q-profile bounds satisfy their generalized-Q inversion equations, are
+  independent of the selected tau-squared point estimator, transform
+  consistently under effect rescaling, and distinguish zero lower bounds from
+  formal empty confidence sets;
 - empty or zero-total Mantel-Haenszel inputs raise domain errors before any
   non-finite intermediate value is formed;
 - Meta-regression is invariant to row order and moderator centering; changing a
@@ -77,7 +81,7 @@ The current fixture families cover:
 
 | Fixture | Coverage |
 | --- | --- |
-| `generic_metafor.json` | Common effects, DL/PM/REML random effects, HK variants, HTS and HK-PR prediction intervals |
+| `generic_metafor.json` | Common effects, DL/PM/REML random effects, Q-profile heterogeneity intervals, HK variants, and HTS/HK-PR prediction intervals |
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, exact and explicitly corrected MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Common subgroups, random singleton fallback, leave-one-out, and cumulative common/random fits |

@@ -6,6 +6,12 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- random-effects inverse-variance results now provide opt-in Q-profile
+  confidence intervals for tau-squared, tau, I-squared, and H-squared, with an
+  explicit formal-empty-set flag at the constrained `[0, 0]` boundary.
+
 ### Changed
 
 - sensitivity and influence workflows now borrow internal fitted buffers during
