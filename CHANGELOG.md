@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.5.0 - 2026-07-25
+
 ### Added
 
 - random-effects inverse-variance results now provide opt-in Q-profile
