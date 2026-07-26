@@ -13,6 +13,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 - Meta-regression stores its classic coefficient covariance alongside the
   selected inference covariance and reuses one shared precision-geometry
   implementation across fitting and diagnostics.
+- independent `metafor` fixtures now cover categorical and multivariable
+  influence diagnostics, no-intercept Riley prediction intervals, and explicit
+  Mantel-Haenszel pooling correction; iterative failure paths have direct
+  regression tests.
 
 ### Fixed
 

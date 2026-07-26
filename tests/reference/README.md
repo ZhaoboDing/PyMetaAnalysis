@@ -56,9 +56,19 @@ tau-squared.
 For the no-intercept case, Python comparisons use the coefficient and fitted-
 model fields but not `QE`: `metafor` retains a different no-intercept `QE`
 reporting convention from PyMetaAnalysis's weighted residual sum of squares.
+`metafor` also centers the outcomes internally while iterating its REML
+estimator. That transformation is immaterial when an intercept is present but
+changes a through-origin model. The mixed no-intercept fixture therefore solves
+the standard raw-outcome REML score independently in R and cross-checks it
+against the general random-effects implementation in `metafor::rma.mv`. The
+`rma.mv` fit then validates the default and Riley intervals while correctly
+counting the estimated variance component in Riley's degrees of freedom. The
+fixture records both this convention and `rma.uni`'s otherwise-default
+no-intercept tau-squared.
 
 `meta_regression_influence_metafor.json` covers exact deletion residuals,
-Cook's distances, and DFBETAS. `meta_regression_collinearity_metafor.json`
-covers term VIF plus grouped categorical-moderator GVIF/GSIF for common and
-REML fits. `meta_regression_contrasts_metafor.json` covers individual and
-joint explicit linear hypotheses for normal and Hartung-Knapp inference.
+Cook's distances, and DFBETAS for numeric, categorical, and multivariable
+models. `meta_regression_collinearity_metafor.json` covers term VIF plus
+grouped categorical-moderator GVIF/GSIF for common and REML fits.
+`meta_regression_contrasts_metafor.json` covers individual and joint explicit
+linear hypotheses for normal and Hartung-Knapp inference.

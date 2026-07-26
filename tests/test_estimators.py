@@ -152,6 +152,70 @@ def test_positive_meta_regression_tau2_root_below_atol_is_not_a_boundary(
     assert estimate.boundary is False
 
 
+@pytest.mark.parametrize(
+    ("method", "match"),
+    [
+        ("PM", "Paule-Mandel.*estimation failed"),
+        ("REML", "REML.*estimation failed"),
+    ],
+)
+def test_tau2_root_solver_failures_raise_convergence_error(
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+    match: str,
+) -> None:
+    def fail_solver(*_: object, **__: object) -> None:
+        raise RuntimeError("iteration limit")
+
+    monkeypatch.setattr(tau2_module, "brentq", fail_solver)
+
+    with pytest.raises(ma.ConvergenceError, match=match):
+        estimate_tau2(EFFECT, VARIANCE, method=method)
+
+
+@pytest.mark.parametrize("method", ["PM", "REML"])
+def test_meta_regression_nonconverged_solver_result_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+) -> None:
+    def nonconverged_solver(
+        *_: object,
+        **__: object,
+    ) -> tuple[float, SimpleNamespace]:
+        return 0.1, SimpleNamespace(converged=False, iterations=1)
+
+    monkeypatch.setattr(meta_regression_module, "brentq", nonconverged_solver)
+    design = np.column_stack([np.ones(5), np.arange(5.0)])
+
+    with pytest.raises(ma.ConvergenceError, match=f"{method}.*did not converge"):
+        estimate_meta_regression_tau2(
+            np.asarray([0.0, 3.0, -1.0, 4.0, 0.0]),
+            VARIANCE,
+            design,
+            method=method,
+            atol=1e-10,
+            max_iter=1000,
+        )
+
+
+def test_tau2_bracketing_failures_raise_convergence_errors() -> None:
+    with pytest.raises(ma.ConvergenceError, match="finite tau-squared solution"):
+        tau2_module._find_upper_bound(
+            lambda _: np.inf,
+            initial=1.0,
+            max_expansions=2,
+        )
+    with pytest.raises(
+        ma.ConvergenceError,
+        match="finite meta-regression tau-squared solution",
+    ):
+        meta_regression_module._find_upper_bound(
+            lambda _: np.inf,
+            initial=1.0,
+            max_expansions=2,
+        )
+
+
 def test_mantel_haenszel_rejects_empty_and_all_zero_strata() -> None:
     empty = np.asarray([], dtype=np.float64)
     with pytest.raises(ma.InsufficientStudiesError, match="at least one"):

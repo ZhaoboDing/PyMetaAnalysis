@@ -45,14 +45,18 @@ fit_summary <- function(fit, term_names, tau2_null = NULL) {
       max(0, (fit$QE - residual_df) / fit$QE)
     }
     residual_h2 <- fit$QE / residual_df
+  } else if (is.null(fit$I2) || is.null(fit$H2)) {
+    residual_i2 <- NA_real_
+    residual_h2 <- NA_real_
   } else {
     residual_i2 <- fit$I2 / 100
     residual_h2 <- fit$H2
   }
+  tau2 <- if (inherits(fit, "rma.mv")) fit$sigma2[[1]] else fit$tau2
   pseudo_r2_raw <- if (is.null(tau2_null) || tau2_null <= 0) {
     NA_real_
   } else {
-    1 - fit$tau2 / tau2_null
+    1 - tau2 / tau2_null
   }
 
   list(
@@ -66,7 +70,7 @@ fit_summary <- function(fit, term_names, tau2_null = NULL) {
       ci_high = numeric_array(fit$ci.ub),
       covariance = numeric_matrix(vcov(fit))
     ),
-    tau2 = unname(fit$tau2),
+    tau2 = unname(tau2),
     tau2_null = if (is.null(tau2_null)) NA_real_ else unname(tau2_null),
     pseudo_r2_raw = pseudo_r2_raw,
     pseudo_r2 = if (is.na(pseudo_r2_raw)) {
@@ -132,6 +136,32 @@ fit_model <- function(mods, method, test = "z", intercept = TRUE) {
   )
 }
 
+raw_outcome_reml_tau2 <- function(y, variance, design) {
+  score <- function(tau2) {
+    weights <- 1 / (variance + tau2)
+    inverse_gram <- solve(crossprod(design, weights * design))
+    coefficients <- inverse_gram %*% crossprod(design, weights * y)
+    residuals <- as.numeric(y - design %*% coefficients)
+    trace_projection <- sum(weights) - sum(
+      diag(
+        inverse_gram %*%
+          crossprod(design, (weights^2) * design)
+      )
+    )
+    sum((weights^2) * (residuals^2)) - trace_projection
+  }
+
+  if (score(0) <= 0) {
+    return(0)
+  }
+
+  upper <- max(stats::var(y), max(variance))
+  while (score(upper) > 0) {
+    upper <- upper * 4
+  }
+  uniroot(score, interval = c(0, upper), tol = 1e-12)$root
+}
+
 numeric_terms <- c("intercept", "mean_age")
 common_numeric <- fit_model(~mean_age, "EE")
 mixed_numeric <- lapply(
@@ -161,6 +191,39 @@ numeric_prediction_matrix <- matrix(numeric_prediction_values, ncol = 1)
 colnames(numeric_prediction_matrix) <- "mean_age"
 
 no_intercept <- fit_model(~0 + mean_age, "EE", intercept = FALSE)
+metafor_default_no_intercept <- fit_model(
+  ~0 + mean_age, "REML", intercept = FALSE
+)
+no_intercept_design <- matrix(input$mean_age, ncol = 1)
+no_intercept_tau2 <- raw_outcome_reml_tau2(
+  input$effect,
+  input$variance,
+  no_intercept_design
+)
+mixed_no_intercept <- rma.mv(
+  yi = effect,
+  V = variance,
+  mods = ~0 + mean_age,
+  random = ~1 | study,
+  data = input,
+  method = "REML",
+  test = "z",
+  intercept = FALSE,
+  control = list(
+    optimizer = "BFGS",
+    reltol = 1e-12,
+    maxit = 10000
+  )
+)
+stopifnot(
+  isTRUE(
+    all.equal(
+      mixed_no_intercept$sigma2[[1]],
+      no_intercept_tau2,
+      tolerance = 1e-8
+    )
+  )
+)
 common_categorical <- fit_model(~region, "EE")
 multivariable <- fit_model(~mean_age + dose + region, "REML")
 multivariable_null <- rma.uni(
@@ -288,6 +351,24 @@ reference <- list(
     )
   ),
   common_no_intercept = fit_summary(no_intercept, c("mean_age")),
+  mixed_no_intercept_reml = c(
+    fit_summary(mixed_no_intercept, c("mean_age")),
+    list(
+      tau2_convention = "raw-outcome REML score via metafor::rma.mv",
+      independently_solved_tau2 = unname(no_intercept_tau2),
+      metafor_default_tau2 = unname(metafor_default_no_intercept$tau2),
+      prediction_values = numeric_array(numeric_prediction_values),
+      predictions = prediction_summary(
+        mixed_no_intercept,
+        numeric_prediction_matrix
+      ),
+      predictions_riley = prediction_summary(
+        mixed_no_intercept,
+        numeric_prediction_matrix,
+        predtype = "Riley"
+      )
+    )
+  ),
   common_categorical = fit_summary(
     common_categorical,
     c("intercept", "region[South]", "region[East]")

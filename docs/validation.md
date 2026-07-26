@@ -78,11 +78,11 @@ The current fixture families cover:
 | Fixture | Coverage |
 | --- | --- |
 | `generic_metafor.json` | Common effects, DL/PM/REML random effects, HK variants, HTS and HK-PR prediction intervals |
-| `binary_metafor.json` | OR/RR/RD study effects, IV pooling, MH pooling/heterogeneity, sparse tables |
+| `binary_metafor.json` | OR/RR/RD study effects, IV pooling, exact and explicitly corrected MH pooling/heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Common subgroups, random singleton fallback, leave-one-out, and cumulative common/random fits |
-| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions; zero tau-squared, missing rows, and small samples |
-| `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across common/mixed models and inference variants |
+| `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions, including a no-intercept Riley case; zero tau-squared, missing rows, and small samples |
+| `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across numeric, categorical, and multivariable common/mixed designs |
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 | `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |
 
@@ -91,11 +91,17 @@ squares, generalized tau-squared score equations, intercept-only equivalence
 with the independently validated pooling path, inference covariance checks,
 and encoding invariants.
 
-The no-intercept `metafor` fixture validates coefficients, covariance, fitted
-values, residuals, weights, leverage, and the moderator test. Its `QE` is not
-used as a reference because `metafor` retains a different no-intercept `QE`
-reporting convention from the weighted residual sum of squares reported by
-PyMetaAnalysis.
+The no-intercept `metafor` fixtures validate coefficients, covariance, fitted
+values, residuals, weights, leverage, the moderator test, and default and Riley
+true-effect predictions. Their `QE` is not used as a reference because
+`metafor` retains a different no-intercept `QE` reporting convention from the
+weighted residual sum of squares reported by PyMetaAnalysis. For the mixed
+no-intercept case, the generator independently solves the standard
+raw-outcome REML score in R and cross-checks it with `metafor::rma.mv`, whose
+general random-effects fit supplies the prediction reference. This avoids
+`rma.uni`'s internal outcome-centering convention, which is immaterial with an
+intercept but changes a through-origin model; the fixture also records
+`rma.uni`'s default no-intercept estimate for auditability.
 
 Every artifact records the R, `metafor`, and `jsonlite` versions used to
 produce it. Method-specific numerical tolerances distinguish closed-form from
