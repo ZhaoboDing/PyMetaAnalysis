@@ -28,6 +28,24 @@ def test_leave_one_out_common_effect_matches_hand_calculation() -> None:
     assert table["k"].tolist() == [2, 2, 2]
 
 
+def test_sensitivity_refits_borrow_internal_tables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result = ma.meta_analysis(
+        effect=[1.0, 2.0, 4.0],
+        variance=[1.0, 1.0, 1.0],
+        model="common",
+    )
+
+    def reject_public_copy(_: object) -> None:
+        raise AssertionError("sensitivity must not request a public defensive copy")
+
+    monkeypatch.setattr(type(result), "study_results", property(reject_public_copy))
+    monkeypatch.setattr(type(result), "source_data", property(reject_public_copy))
+
+    assert len(result.leave_one_out()) == 3
+
+
 def test_leave_one_out_preserves_random_effects_method_configuration() -> None:
     result = ma.meta_analysis(
         effect=[-0.2, 0.1, 0.8, 1.4],

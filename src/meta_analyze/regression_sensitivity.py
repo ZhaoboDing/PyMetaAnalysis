@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 from scipy.stats import chi2, norm
 
 from .data import MissingPolicy
+from .estimators.meta_regression import coefficient_covariance_at_tau2
 from .exceptions import InsufficientStudiesError, MetaAnalysisError
 from .provenance import remap_provenance_rows
 from .regression_results import MetaRegressionResult
@@ -135,7 +136,7 @@ def _refit_meta_regression(
 
     from .regression_api import meta_regression
 
-    studies = result.study_results
+    studies = result._study_results_view()
     selected = studies.iloc[positions]
     moderator_values = {
         name: selected[name].to_numpy(copy=True)
@@ -166,10 +167,9 @@ def _refit_meta_regression(
     )
 
     row_ids = selected["row_id"].to_numpy(dtype=np.int64, copy=True)
-    refitted_studies = fitted.study_results
-    refitted_studies["row_id"] = row_ids
-    source = result.source_data
-    selected_source = None if source is None else source.iloc[positions].copy(deep=True)
+    refitted_studies = fitted._study_results_view().assign(row_id=row_ids)
+    source = result._source_data_view()
+    selected_source = None if source is None else source.iloc[positions]
     return replace(
         fitted,
         provenance=remap_provenance_rows(fitted.provenance, row_ids.tolist()),
@@ -299,7 +299,7 @@ def meta_regression_leave_one_out(
             "every reduced model can retain k > p."
         )
 
-    studies = result.study_results
+    studies = result._study_results_view()
     included = np.flatnonzero(
         studies["included"].to_numpy(dtype=np.bool_, copy=True)
     ).astype(np.int64, copy=False)
@@ -343,22 +343,6 @@ def meta_regression_leave_one_out(
         _table=pd.DataFrame(rows),
         _coefficients=pd.DataFrame(coefficient_rows),
     )
-
-
-def _coefficient_covariance_at_tau2(
-    variance: NDArray[np.float64],
-    design_matrix: NDArray[np.float64],
-    tau2: float,
-) -> NDArray[np.float64]:
-    """Return the classic covariance using a supplied residual variance."""
-
-    denominator = variance + tau2
-    variance_scale = float(np.min(denominator))
-    relative_weights = variance_scale / denominator
-    gram = design_matrix.T @ (relative_weights[:, np.newaxis] * design_matrix)
-    inverse = np.linalg.solve(gram, np.eye(gram.shape[0]))
-    inverse = 0.5 * (inverse + inverse.T)
-    return variance_scale * inverse
 
 
 def _standardized_change(
@@ -410,20 +394,16 @@ def meta_regression_influence(
     """Compute exact deletion residual, Cook's distance, and DFBETAS diagnostics."""
 
     deletion = meta_regression_leave_one_out(result)
-    studies = result.study_results
+    studies = result._study_results_view()
     included = np.flatnonzero(
         studies["included"].to_numpy(dtype=np.bool_, copy=True)
     ).astype(np.int64, copy=False)
     included_studies = studies.iloc[included].reset_index(drop=True)
-    design_matrix = result.design_matrix.to_numpy(dtype=np.float64, copy=True)
+    design_matrix = result._design_matrix_view()[included]
     variance = included_studies["variance"].to_numpy(dtype=np.float64, copy=True)
     effect = included_studies["effect"].to_numpy(dtype=np.float64, copy=True)
-    full_coefficients = result.coefficients["estimate"].to_numpy(
-        dtype=np.float64, copy=True
-    )
-    full_covariance = result.coefficient_covariance.to_numpy(
-        dtype=np.float64, copy=True
-    )
+    full_coefficients = result._coefficient_vector_view()
+    full_covariance = result._coefficient_covariance_view()
 
     residual_reference = float(norm.ppf(0.975))
     cook_threshold = float(chi2.ppf(0.5, df=result.p))
@@ -478,13 +458,11 @@ def meta_regression_influence(
                 )
             continue
 
-        deleted_coefficients = fitted.coefficients["estimate"].to_numpy(
-            dtype=np.float64, copy=True
-        )
+        deleted_coefficients = fitted._coefficient_vector_view()
         coefficient_change = full_coefficients - deleted_coefficients
         deleted_tau2 = fitted.tau2
         deleted_scale = fitted.diagnostics.residual_scale
-        deleted_classic_covariance = _coefficient_covariance_at_tau2(
+        deleted_classic_covariance = coefficient_covariance_at_tau2(
             variance,
             design_matrix,
             deleted_tau2,
@@ -502,9 +480,7 @@ def meta_regression_influence(
         design_row = design_matrix[local_position]
         deleted_prediction = float(design_row @ deleted_coefficients)
         deleted_prediction_variance = float(
-            design_row
-            @ fitted.coefficient_covariance.to_numpy(dtype=np.float64, copy=True)
-            @ design_row
+            design_row @ fitted._coefficient_covariance_view() @ design_row
         )
         deleted_residual = float(effect[local_position] - deleted_prediction)
         deleted_residual_variance = deleted_scale * (

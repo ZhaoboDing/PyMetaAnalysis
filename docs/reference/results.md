@@ -169,6 +169,7 @@ the scalar `estimate`, `ci`, and top-level `prediction_interval` attributes of
 | `model` | Resolved `common` or `mixed` model |
 | `coefficients` | Defensive coefficient DataFrame |
 | `coefficient_covariance` | Labeled defensive covariance DataFrame |
+| `classic_coefficient_covariance` | Covariance before Hartung-Knapp scaling |
 | `design_info` | Original moderators, categories, references, and terms |
 | `design_matrix` | Included-study encoded matrix |
 | `global_test` | Distribution-explicit joint test of all non-intercept terms |
@@ -185,6 +186,11 @@ df, pvalue, ci_low, ci_high
 t inference. `ModeratorTestResult` records `distribution`, `df_num`, optional
 `df_denom`, and every tested term, so chi-squared and F results are not
 conflated.
+
+Under normal inference, `coefficient_covariance` and
+`classic_coefficient_covariance` are equal. Under either Hartung-Knapp variant,
+the former contains the selected inference adjustment while the latter retains
+the unadjusted weighted-model covariance used by diagnostics such as VIF.
 
 ### Residual heterogeneity
 

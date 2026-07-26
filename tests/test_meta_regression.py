@@ -304,6 +304,10 @@ def test_hartung_knapp_covariance_and_global_f_test() -> None:
         hk.coefficient_covariance,
         hk.diagnostics.residual_scale * classic.coefficient_covariance,
     )
+    np.testing.assert_allclose(
+        hk.classic_coefficient_covariance,
+        classic.coefficient_covariance,
+    )
     assert hk.global_test.distribution == "F"
     assert hk.global_test.df_num == 2
     assert hk.global_test.df_denom == hk.residual_df
@@ -695,11 +699,14 @@ def test_result_is_defensive_and_has_no_ambiguous_pooled_estimate() -> None:
     coefficients.loc[0, "estimate"] = 999.0
     covariance = result.coefficient_covariance
     covariance.iloc[0, 0] = 999.0
+    classic_covariance = result.classic_coefficient_covariance
+    classic_covariance.iloc[0, 0] = 999.0
     studies = result.study_results
     studies.loc[0, "effect"] = 999.0
 
     assert result.coefficients.loc[0, "estimate"] != 999.0
     assert result.coefficient_covariance.iloc[0, 0] != 999.0
+    assert result.classic_coefficient_covariance.iloc[0, 0] != 999.0
     assert result.study_results.loc[0, "effect"] != 999.0
     assert not hasattr(result, "estimate")
     with pytest.raises(FrozenInstanceError):
