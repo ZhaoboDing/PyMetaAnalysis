@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.6.0 - 2026-08-13
+
 ### Added
 
 - common-effect Peto one-step odds-ratio pooling, including Peto-specific
