@@ -87,23 +87,22 @@ and the [validation status](validation.md) must accurately describe the
 evidence available for the released commit and must not imply that a formal
 audit has occurred when it has not.
 
-### Meta-regression 0.4.0 acceptance checks
+### Statistical release acceptance checks
 
-Before preparing the 0.4.0 version commit, confirm that:
+Before preparing any release version commit, confirm that:
 
-- exact leave-one-out refits and influence diagnostics preserve fitted
-  configuration and remain covered by fixed-version `metafor` references;
-- VIF/GVIF, weighted condition diagnostics, and explicit linear contrasts
-  retain their independent R references and invariance tests;
-- default and Riley prediction intervals remain covered for normal,
-  Hartung-Knapp, multivariable, and zero-tau-squared cases;
-- `meta_regression_multivariable_reml` is present in the release performance
-  benchmark output;
-- the Meta-regression guide, methods, API, result, reporting, limitations, R
-  mapping, and validation pages agree with the shipped behavior.
+- every statistical change has formula documentation, boundary tests, and an
+  independent comparison where an appropriate implementation is available;
+- committed R fixtures still reproduce from their adjacent generator scripts,
+  with every intentional cross-software difference explained;
+- public API, result, report-schema, methods, limitations, interoperability,
+  and validation documentation agree with the behavior being released;
+- example notebooks and performance benchmarks cover new public workflows
+  where appropriate; and
+- the complete validation suite above passes with the final release metadata.
 
-Only after these checks pass should the release pull request change the package
-version to 0.4.0 and create the dated changelog heading.
+Only after these checks pass should the release pull request set the final
+version and create its dated changelog heading.
 
 ## Tag and publish
 

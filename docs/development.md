@@ -11,7 +11,7 @@ cd PyMetaAnalysis
 python -m pip install -e ".[test,dev,docs,plot]"
 ```
 
-Use a supported Python version (3.10–3.13). Keep changes focused and preserve
+Use a supported Python version (3.10–3.14). Keep changes focused and preserve
 unrelated worktree modifications.
 
 ## Run checks
@@ -31,7 +31,7 @@ python -m build
 python tools/inspect_distribution.py dist
 ```
 
-The CI matrix also tests Python 3.10–3.13 and declared dependency lower bounds.
+The CI matrix also tests Python 3.10–3.14 and declared dependency lower bounds.
 Install the `notebook` extra before running the notebook executor.
 
 ## Statistical changes

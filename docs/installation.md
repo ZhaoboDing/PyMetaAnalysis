@@ -1,6 +1,6 @@
 # Installation
 
-PyMetaAnalysis supports Python 3.10 through 3.13. The numerical core depends
+PyMetaAnalysis supports Python 3.10 through 3.14. The numerical core depends
 on NumPy, pandas, and SciPy; Matplotlib is optional.
 
 ## Install from PyPI

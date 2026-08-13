@@ -202,7 +202,7 @@ python -m mkdocs serve
 
 The test suite combines hand calculations, statistical invariants, numerical
 edge cases, and committed R `metafor` reference fixtures. CI covers Python
-3.10–3.13, declared dependency lower bounds, strict typing/linting, docs, and
+3.10–3.14, declared dependency lower bounds, strict typing/linting, docs, and
 distribution builds.
 
 This is independent cross-software validation, not a formal external
