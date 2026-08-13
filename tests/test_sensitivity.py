@@ -69,8 +69,19 @@ def test_leave_one_out_preserves_random_effects_method_configuration() -> None:
         assert refit.method.max_iter == 321
 
 
-@pytest.mark.parametrize("measure", ["RR", "RD"])
-def test_mantel_haenszel_leave_one_out_matches_direct_refits(measure: str) -> None:
+@pytest.mark.parametrize(
+    ("method", "measure", "pooling_method"),
+    [
+        ("MH", "RR", "mantel_haenszel"),
+        ("MH", "RD", "mantel_haenszel"),
+        ("Peto", "OR", "peto"),
+    ],
+)
+def test_table_based_leave_one_out_matches_direct_refits(
+    method: str,
+    measure: str,
+    pooling_method: str,
+) -> None:
     event_treat = np.array([12, 5, 20, 7])
     n_treat = np.array([100, 80, 120, 90])
     event_control = np.array([18, 9, 15, 10])
@@ -81,7 +92,7 @@ def test_mantel_haenszel_leave_one_out_matches_direct_refits(measure: str) -> No
         event_control=event_control,
         n_control=n_control,
         measure=measure,
-        method="MH",
+        method=method,
     )
 
     influence = result.leave_one_out()
@@ -93,16 +104,16 @@ def test_mantel_haenszel_leave_one_out_matches_direct_refits(measure: str) -> No
             event_control=event_control[keep],
             n_control=n_control[keep],
             measure=measure,
-            method="MH",
+            method=method,
         )
         assert refit.estimate == pytest.approx(direct.estimate, abs=1e-14)
         assert refit.standard_error == pytest.approx(direct.standard_error, abs=1e-14)
-        assert refit.method.pooling_method == "mantel_haenszel"
+        assert refit.method.pooling_method == pooling_method
 
     cumulative = result.cumulative()
     assert len(cumulative) == 4
     assert all(
-        refit.method.pooling_method == "mantel_haenszel" for refit in cumulative.results
+        refit.method.pooling_method == pooling_method for refit in cumulative.results
     )
 
 

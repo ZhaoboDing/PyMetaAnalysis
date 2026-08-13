@@ -451,3 +451,97 @@ def calculate_binary_effects(
         effect_scale=effect_scale,
         display_scale=display_scale,
     )
+
+
+def calculate_peto_effects(
+    studies: BinaryStudies,
+    *,
+    continuity_correction: float,
+    correction_scope: CorrectionScope,
+) -> BinaryEffectData:
+    """Calculate study-level Peto log odds ratios and sampling variances."""
+
+    included = studies.included.copy()
+    reasons = studies.exclusion_reason.copy()
+    double_zero = (studies.event_treat == 0.0) & (studies.event_control == 0.0)
+    double_all = (studies.event_treat == studies.n_treat) & (
+        studies.event_control == studies.n_control
+    )
+    uninformative = included & (double_zero | double_all)
+    included[uninformative] = False
+    for index in np.flatnonzero(uninformative):
+        reasons[index] = (
+            "no events in either group"
+            if double_zero[index]
+            else "all participants have events in both groups"
+        )
+    if not np.any(included):
+        raise InvalidStudyDataError("No informative studies remain for Peto OR.")
+
+    working_studies = BinaryStudies(
+        row_id=studies.row_id,
+        study=studies.study,
+        event_treat=studies.event_treat,
+        n_treat=studies.n_treat,
+        event_control=studies.event_control,
+        n_control=studies.n_control,
+        included=included,
+        exclusion_reason=reasons,
+    )
+    a, b, c, d, corrected = adjusted_tables(
+        working_studies,
+        correction=continuity_correction,
+        scope=correction_scope,
+    )
+
+    effect = np.full(len(included), np.nan, dtype=np.float64)
+    variance = np.full(len(included), np.nan, dtype=np.float64)
+    active_a = a[included]
+    active_b = b[included]
+    active_c = c[included]
+    active_d = d[included]
+    cell_scale = np.maximum.reduce((active_a, active_b, active_c, active_d))
+    scaled_a = active_a / cell_scale
+    scaled_b = active_b / cell_scale
+    scaled_c = active_c / cell_scale
+    scaled_d = active_d / cell_scale
+    n1 = scaled_a + scaled_b
+    n0 = scaled_c + scaled_d
+    total = n1 + n0
+    outcome_events = scaled_a + scaled_c
+    outcome_nonevents = scaled_b + scaled_d
+    expected_events = outcome_events * n1 / total
+    information = (
+        outcome_events
+        * outcome_nonevents
+        * (n1 / total)
+        * (n0 / total)
+        / (total - 1.0 / cell_scale)
+    )
+    effect[included] = (scaled_a - expected_events) / information
+    variance[included] = (1.0 / information) / cell_scale
+
+    invalid_effect = included & ~np.isfinite(effect)
+    invalid_variance = included & (~np.isfinite(variance) | (variance <= 0.0))
+    if np.any(invalid_effect | invalid_variance):
+        rows = np.flatnonzero(invalid_effect | invalid_variance).tolist()
+        raise InvalidStudyDataError(
+            "Peto study effects require positive hypergeometric information; "
+            f"invalid rows: {rows}."
+        )
+    _validate_finite_precision_variance(
+        variance,
+        included=included,
+        label="Peto sampling variances",
+    )
+
+    return BinaryEffectData(
+        studies=working_studies,
+        effect=effect,
+        variance=variance,
+        corrected=corrected,
+        rd_zero_variance=np.zeros_like(included),
+        measure="OR",
+        effect_scale="log",
+        display_scale="exp",
+    )

@@ -11,6 +11,7 @@ deferred functionality explicit.
 - two-group continuous MD and exact-corrected Hedges' g;
 - common-effect and univariate random-effects inverse-variance models;
 - common-effect Mantel-Haenszel OR/RR/RD;
+- common-effect Peto one-step OR;
 - DL, PM, and REML tau-squared estimators;
 - Q-profile confidence intervals for tau-squared and its monotonic tau,
   I-squared, and H-squared transformations in random-effects inverse-variance
@@ -33,7 +34,6 @@ deferred functionality explicit.
 
 ## Not currently implemented
 
-- Peto odds ratios;
 - random-effects Mantel-Haenszel pooling;
 - formula parsing, automatic interactions/splines, stepwise moderator
   selection, automatic pairwise contrasts, or multiplicity correction;
@@ -81,6 +81,9 @@ squared, and asymmetry does not establish publication bias.
 
 Continuity corrections and RD boundary policies can materially affect sparse
 binary analyses. They must be chosen in the review protocol and reported.
+Peto OR is an approximation with a restricted applicability region; the
+package warns but cannot determine whether a dataset satisfies the substantive
+rare-outcome, balanced-arm, and modest-effect conditions.
 
 ## Reproducibility limitations
 

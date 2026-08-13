@@ -142,12 +142,18 @@ def test_generic_subgroups_accept_standard_error_column() -> None:
 
 
 @pytest.mark.parametrize(
-    ("measure", "display_scale"),
-    [("RR", "exp"), ("RD", "identity")],
+    ("method", "measure", "display_scale", "pooling_method"),
+    [
+        ("MH", "RR", "exp", "mantel_haenszel"),
+        ("MH", "RD", "identity", "mantel_haenszel"),
+        ("Peto", "OR", "exp", "peto"),
+    ],
 )
-def test_binary_mantel_haenszel_supports_subgroups(
+def test_binary_table_based_methods_support_subgroups(
+    method: str,
     measure: str,
     display_scale: str,
+    pooling_method: str,
 ) -> None:
     result = ma.meta_binary(
         event_treat=[12, 5, 20, 7],
@@ -156,13 +162,13 @@ def test_binary_mantel_haenszel_supports_subgroups(
         n_control=[110, 75, 130, 95],
         subgroup=["early", "early", "late", "late"],
         measure=measure,
-        method="MH",
+        method=method,
         model="common",
     )
 
     assert isinstance(result, ma.SubgroupMetaAnalysisResult)
     assert all(
-        group.method.pooling_method == "mantel_haenszel"
+        group.method.pooling_method == pooling_method
         for group in result.groups.values()
     )
     assert result.overall.display_scale == display_scale

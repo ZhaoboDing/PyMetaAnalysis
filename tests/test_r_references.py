@@ -513,6 +513,61 @@ def test_clean_binary_mantel_haenszel_matches_metafor(measure: str) -> None:
     assert not result.study_results["mh_continuity_corrected"].any()
 
 
+@pytest.mark.parametrize(
+    ("data", "reference_section", "expected_included"),
+    [
+        (BINARY_DATA, "clean", [True, True, True, True]),
+        (SPARSE_BINARY_DATA, "sparse", [True, True, False, False, True]),
+    ],
+)
+def test_peto_odds_ratio_matches_metafor(
+    data: pd.DataFrame,
+    reference_section: str,
+    expected_included: list[bool],
+) -> None:
+    expected = BINARY[reference_section]["OR"]["peto"]
+    result = ma.meta_binary(
+        data,
+        **_binary_columns(),
+        study="study",
+        measure="OR",
+        method="Peto",
+        model="common",
+    )
+    studies = result.study_results
+
+    np.testing.assert_allclose(
+        studies["effect"],
+        np.asarray(expected["effect"], dtype=np.float64),
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        studies["variance"],
+        np.asarray(expected["variance"], dtype=np.float64),
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+        equal_nan=True,
+    )
+    assert studies["included"].tolist() == expected_included
+    _assert_fit(result, expected["fit"])
+
+    heterogeneity = expected["fit"]["heterogeneity"]
+    np.testing.assert_allclose(
+        [result.q, result.q_pvalue, result.i2, result.h2],
+        [
+            heterogeneity["q"],
+            heterogeneity["pvalue"],
+            heterogeneity["i2"],
+            heterogeneity["h2"],
+        ],
+        rtol=CLOSED_RTOL,
+        atol=CLOSED_ATOL,
+    )
+    assert result.q_df == heterogeneity["df"]
+
+
 def test_sparse_risk_difference_variances_match_metafor_boundary_tables() -> None:
     expected = BINARY["sparse"]["RD"]
     result = ma.meta_binary(

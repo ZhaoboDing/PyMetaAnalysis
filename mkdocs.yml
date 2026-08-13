@@ -66,3 +66,4 @@ nav:
               - Meta-regression prediction intervals: adr/0003-meta-regression-prediction-intervals.md
               - Hartung-Knapp prediction intervals: adr/0004-hartung-knapp-prediction-intervals.md
               - Mantel-Haenszel risk difference: adr/0005-mantel-haenszel-risk-difference.md
+              - Peto one-step odds ratio: adr/0006-peto-odds-ratio.md

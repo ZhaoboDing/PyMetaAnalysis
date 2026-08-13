@@ -13,6 +13,7 @@ from meta_analyze.estimators import (
     estimate_meta_regression_tau2,
     estimate_tau2,
     fit_mantel_haenszel,
+    fit_peto,
 )
 
 EFFECT = np.array([-0.4, 0.1, 0.5, 1.2, 1.8], dtype=float)
@@ -301,6 +302,31 @@ def test_mantel_haenszel_rd_is_stable_for_extreme_finite_counts() -> None:
         rtol=5e-15,
         atol=5e-15,
     )
+
+
+def test_peto_is_finite_for_extreme_counts_and_rejects_zero_information() -> None:
+    scale = 1e300
+    fit = fit_peto(
+        np.asarray([12.0, 5.0, 20.0, 7.0]) * scale,
+        np.asarray([88.0, 75.0, 100.0, 83.0]) * scale,
+        np.asarray([18.0, 9.0, 15.0, 10.0]) * scale,
+        np.asarray([92.0, 66.0, 115.0, 85.0]) * scale,
+        confidence_level=0.95,
+    )
+
+    assert np.isfinite(fit.estimate)
+    assert np.isfinite(fit.standard_error)
+    assert fit.standard_error > 0.0
+    assert np.sum(fit.normalized_weights) == pytest.approx(1.0)
+
+    with pytest.raises(ma.InvalidStudyDataError, match="both outcomes"):
+        fit_peto(
+            np.asarray([0.0]),
+            np.asarray([20.0]),
+            np.asarray([0.0]),
+            np.asarray([20.0]),
+            confidence_level=0.95,
+        )
 
 
 def test_hartung_knapp_adhoc_never_has_smaller_se_than_classic() -> None:

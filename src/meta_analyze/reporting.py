@@ -95,11 +95,11 @@ def method_details(result: MetaAnalysisResult) -> str:
 
     method = result.method
     model_name = "common-effect" if result.model == "common" else "random-effects"
-    pooling = (
-        "inverse-variance weighting"
-        if method.pooling_method == "inverse_variance"
-        else "the Mantel–Haenszel estimator"
-    )
+    pooling = {
+        "inverse_variance": "inverse-variance weighting",
+        "mantel_haenszel": "the Mantel–Haenszel estimator",
+        "peto": "Peto's one-step estimator",
+    }.get(method.pooling_method, method.pooling_method)
     study_word = "study" if result.k == 1 else "studies"
     sentences = [
         f"We performed a {model_name} meta-analysis of {result.k} {study_word} "
@@ -137,6 +137,11 @@ def method_details(result: MetaAnalysisResult) -> str:
             "Cochran's Q used common-effect inverse-variance weights; I² and H² "
             "used tau-squared and the typical within-study variance, where the "
             "latter was derived from those common-effect weights."
+        )
+    elif method.pooling_method == "peto":
+        sentences.append(
+            "Peto's O-minus-E statistic and hypergeometric information were "
+            "used for Q, I², and H²."
         )
     else:
         sentences.append(
@@ -199,6 +204,13 @@ def method_details(result: MetaAnalysisResult) -> str:
                 "Mantel–Haenszel pooling used continuity correction "
                 f"{mh_correction:g} with scope {mh_scope!r}; it affected "
                 f"{len(mh_affected)} row(s)."
+            )
+        elif method.pooling_method == "peto":
+            sentences.append(
+                "Peto pooling used the raw 2-by-2 tables without a continuity "
+                "correction. The approximation is intended for rare outcomes, "
+                "similar treatment/control group sizes within studies, and "
+                "effects that are not large."
             )
     elif result.measure == "SMD":
         sentences.append(

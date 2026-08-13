@@ -155,6 +155,96 @@ def test_mantel_haenszel_rd_matches_sato_formula_reference() -> None:
     )
 
 
+def test_peto_or_matches_observed_minus_expected_formula() -> None:
+    a = EVENT_TREAT.astype(float)
+    c = EVENT_CONTROL.astype(float)
+    n1 = N_TREAT.astype(float)
+    n0 = N_CONTROL.astype(float)
+    total = n1 + n0
+    total_events = a + c
+    total_nonevents = total - total_events
+    expected_events = total_events * n1 / total
+    information = (
+        total_events * total_nonevents * (n1 / total) * (n0 / total) / (total - 1.0)
+    )
+    observed_minus_expected = a - expected_events
+    expected_estimate = float(np.sum(observed_minus_expected) / np.sum(information))
+    expected_se = float(np.sqrt(1.0 / np.sum(information)))
+    expected_q = float(
+        np.sum(
+            (observed_minus_expected - expected_estimate * information) ** 2
+            / information
+        )
+    )
+
+    result = ma.meta_binary(
+        event_treat=EVENT_TREAT,
+        n_treat=N_TREAT,
+        event_control=EVENT_CONTROL,
+        n_control=N_CONTROL,
+        measure="OR",
+        method="Peto",
+    )
+
+    assert result.estimate == pytest.approx(expected_estimate, abs=1e-15)
+    assert result.standard_error == pytest.approx(expected_se, abs=1e-15)
+    assert result.q == pytest.approx(expected_q, abs=1e-14)
+    assert result.q_df == 3
+    np.testing.assert_allclose(
+        result.study_results["effect"],
+        observed_minus_expected / information,
+        rtol=5e-15,
+        atol=5e-15,
+    )
+    np.testing.assert_allclose(
+        result.study_results["variance"],
+        1.0 / information,
+        rtol=5e-15,
+        atol=5e-15,
+    )
+    np.testing.assert_allclose(
+        result.study_results["normalized_weight"],
+        information / np.sum(information),
+        rtol=5e-15,
+        atol=5e-15,
+    )
+    assert result.method.pooling_method == "peto"
+    assert dict(result.method.options)["peto_pooling_tables"] == "raw"
+    assert dict(result.method.options)["peto_heterogeneity"] == "O-minus-E"
+
+
+def test_peto_study_correction_does_not_change_raw_pooling() -> None:
+    kwargs = {
+        "event_treat": [0, 8, 12],
+        "n_treat": [50, 60, 70],
+        "event_control": [4, 6, 10],
+        "n_control": [50, 60, 70],
+        "measure": "OR",
+        "method": "Peto",
+    }
+    corrected_studies = ma.meta_binary(**kwargs)
+    raw_studies = ma.meta_binary(
+        **kwargs,
+        continuity_correction=0.0,
+        correction_scope="none",
+    )
+
+    assert corrected_studies.study_results["continuity_corrected"].tolist() == [
+        True,
+        False,
+        False,
+    ]
+    assert not raw_studies.study_results["continuity_corrected"].any()
+    assert corrected_studies.study_results.loc[0, "effect"] != pytest.approx(
+        raw_studies.study_results.loc[0, "effect"]
+    )
+    assert corrected_studies.estimate == pytest.approx(raw_studies.estimate, abs=1e-15)
+    assert corrected_studies.standard_error == pytest.approx(
+        raw_studies.standard_error, abs=1e-15
+    )
+    assert corrected_studies.q == pytest.approx(raw_studies.q, abs=1e-14)
+
+
 def test_mantel_haenszel_rejects_explicit_tau2_method() -> None:
     with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
         ma.meta_binary(
@@ -649,6 +739,15 @@ def test_binary_vectors_must_have_equal_lengths() -> None:
     [
         ({"method": "MH", "model": "random"}, "only for model='common'"),
         ({"method": "MH", "ci_method": "HK"}, "only ci_method='normal'"),
+        (
+            {"method": "Peto", "measure": "OR", "model": "random"},
+            "only for model='common'",
+        ),
+        ({"method": "Peto", "measure": "RR"}, "only measure='OR'"),
+        (
+            {"method": "Peto", "measure": "OR", "ci_method": "HK"},
+            "only ci_method='normal'",
+        ),
         ({"method": "mystery"}, "method must be"),
         ({"measure": "mystery", "method": "IV"}, "measure must be"),
     ],
@@ -690,6 +789,32 @@ def test_swapping_groups_inverts_relative_pooled_effect(
         model="common",
     )
 
+    assert reverse.display_estimate == pytest.approx(1.0 / forward.display_estimate)
+    assert reverse.display_ci == pytest.approx(
+        (1.0 / forward.display_ci[1], 1.0 / forward.display_ci[0])
+    )
+
+
+def test_swapping_groups_inverts_peto_odds_ratio() -> None:
+    forward = ma.meta_binary(
+        event_treat=EVENT_TREAT,
+        n_treat=N_TREAT,
+        event_control=EVENT_CONTROL,
+        n_control=N_CONTROL,
+        measure="OR",
+        method="Peto",
+    )
+    reverse = ma.meta_binary(
+        event_treat=EVENT_CONTROL,
+        n_treat=N_CONTROL,
+        event_control=EVENT_TREAT,
+        n_control=N_TREAT,
+        measure="OR",
+        method="Peto",
+    )
+
+    assert reverse.estimate == pytest.approx(-forward.estimate, abs=2e-15)
+    assert reverse.standard_error == pytest.approx(forward.standard_error, abs=2e-15)
     assert reverse.display_estimate == pytest.approx(1.0 / forward.display_estimate)
     assert reverse.display_ci == pytest.approx(
         (1.0 / forward.display_ci[1], 1.0 / forward.display_ci[0])

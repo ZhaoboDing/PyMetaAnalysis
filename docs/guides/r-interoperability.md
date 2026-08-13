@@ -16,6 +16,7 @@ fixtures used by this project.
 | Generic effects and variances | `meta_analysis()` | `rma.uni(yi, vi, ...)` | `metagen(TE, seTE, ...)` |
 | Binary 2x2 tables, inverse variance | `meta_binary(..., method="IV")` | `escalc()` then `rma.uni()` | `metabin(..., method="Inverse")` |
 | Binary 2x2 tables, Mantel-Haenszel | `meta_binary(..., method="MH")` | `rma.mh()` | `metabin(..., method="MH")` |
+| Binary 2x2 tables, Peto OR | `meta_binary(..., measure="OR", method="Peto")` | `rma.peto()` | `metabin(..., sm="OR", method="Peto")` |
 | Continuous group summaries | `meta_continuous()` | `escalc()` then `rma.uni()` | `metacont()` |
 | Subgroups | `subgroup=` on a high-level call | separate fits or a moderator model | `subgroup=` |
 | Leave-one-out | `result.leave_one_out()` | `leave1out()` for supported fits | `metainf()` |
@@ -69,6 +70,7 @@ remain explicit attributes in Python.
 | `model="random"` | random-effects `rma.uni()` | `random=TRUE` | Requires a tau-squared policy |
 | `method="IV"` | inverse-variance weighting | `method="Inverse"` | Binary API only; generic and continuous fits are IV |
 | `method="MH"` | `rma.mh()` | `method="MH"` | Common-effect OR/RR/RD |
+| `method="Peto"` | `rma.peto()` | `method="Peto"` | Common-effect OR; raw pooling tables and O-minus-E heterogeneity |
 | `tau2_method=None` (resolved as `"REML"`) | `method="REML"` | `method.tau="REML"` | PyMetaAnalysis random-effects default |
 | `tau2_method="PM"` | `method="PM"` | `method.tau="PM"` | Paule-Mandel |
 | `tau2_method="DL"` | `method="DL"` | `method.tau="DL"` | DerSimonian-Laird |
@@ -78,6 +80,9 @@ handling, or heterogeneity definitions. In particular, PyMetaAnalysis records
 `i2_method`; random-effects inverse-variance results use the documented
 tau-squared/typical-variance definition, while common-effect and MH results use
 the Q-based definition.
+Peto also reports Q-based inconsistency, but its Q is formed from the Peto
+observed-minus-expected contributions rather than ordinary study-log-OR
+inverse-variance residuals.
 
 `result.tau2_confidence_interval()` corresponds to
 `confint(fit, type="QP")` for an `rma.uni` random-effects fit. Both return
@@ -133,6 +138,13 @@ the Sato-Greenland-Robins sampling variance. A separate explicit
 `mh_continuity_correction` changes the MH tables; the study-effect
 `continuity_correction` still affects only displayed study variances and
 heterogeneity.
+
+For Peto, PyMetaAnalysis's default study-level correction corresponds to
+`escalc(measure="PETO", add=0.5, to="only0", drop00=TRUE)` for the displayed
+study rows. Its pooled fit corresponds to `rma.peto()` with raw pooling tables;
+the study correction never changes the pooled result. Compare Peto's
+rare-outcome, within-study arm-balance, and modest-effect assumptions before
+porting it solely because a table contains zeros.
 
 Read [zero-event studies](zero-events.md) before translating sparse analyses.
 
@@ -200,6 +212,7 @@ as numerically equivalent.
 - [`metafor::rma.uni`](https://wviechtb.github.io/metafor/reference/rma.uni.html)
 - [`metafor::predict.rma`](https://wviechtb.github.io/metafor/reference/predict.rma.html)
 - [`metafor::rma.mh`](https://wviechtb.github.io/metafor/reference/rma.mh.html)
+- [`metafor::rma.peto`](https://wviechtb.github.io/metafor/reference/rma.peto.html)
 - [`metafor::escalc`](https://wviechtb.github.io/metafor/reference/escalc.html)
 - [`meta::metagen`](https://search.r-project.org/CRAN/refmans/meta/html/metagen.html)
 - [`meta::metabin`](https://search.r-project.org/CRAN/refmans/meta/html/metabin.html)

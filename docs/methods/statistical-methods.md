@@ -100,7 +100,7 @@ estimate +/- z_(1 - alpha/2) * SE
 ```
 
 This is available for common- and random-effects inverse-variance models and
-for common-effect Mantel-Haenszel pooling.
+for common-effect Mantel-Haenszel and Peto pooling.
 
 ### Hartung-Knapp intervals
 
@@ -143,7 +143,8 @@ uncertainty warning.
 
 ## Heterogeneity and inconsistency
 
-Cochran's Q always uses common-effect inverse-variance weights:
+For inverse-variance fits, Cochran's Q uses common-effect inverse-variance
+weights:
 
 ```text
 Q = sum(w_i (y_i - y_hat_common)^2)
@@ -152,9 +153,11 @@ p = P(chi-square_df >= Q)
 ```
 
 For Mantel-Haenszel analyses, residuals are centered on the MH pooled estimate
-while the individual-effect inverse variances supply the Q weights.
+while the individual-effect inverse variances supply the Q weights. Peto uses
+the separate observed-minus-expected definition documented under
+[Peto pooling](#peto-one-step-odds-ratio).
 
-Common-effect and MH results use Q-based inconsistency:
+Common-effect IV, MH, and Peto results use Q-based inconsistency:
 
 ```text
 I^2 = max(0, (Q - df) / Q)
@@ -557,6 +560,44 @@ An undefined raw OR/RR estimator or a non-positive RD sampling variance raises
 `InvalidStudyDataError`. If the review protocol permits it, an explicit
 positive `mh_continuity_correction` can make a sparse fit estimable; the
 decision is recorded separately from the correction used for study effects.
+
+## Peto one-step odds ratio
+
+Peto is implemented only for common-effect OR with a normal confidence
+interval. For study `i`, let `O_i = a_i`, `m_i = a_i + c_i`, treatment and
+control totals be `n1_i` and `n0_i`, and `N_i = n1_i + n0_i`. The expected
+treatment events and their hypergeometric information are:
+
+```text
+E_i = m_i n1_i / N_i
+V_i = m_i (N_i - m_i) n1_i n0_i / (N_i^2 (N_i - 1))
+```
+
+The one-step study estimates and their variances are:
+
+```text
+y_i = (O_i - E_i) / V_i
+v_i = 1 / V_i
+```
+
+The pooled log odds ratio, its variance, and heterogeneity statistic are:
+
+```text
+y_Peto = sum(O_i - E_i) / sum(V_i)
+Var(y_Peto) = 1 / sum(V_i)
+Q_Peto = sum(((O_i - E_i) - y_Peto V_i)^2 / V_i)
+```
+
+Normalized study weights are `V_i / sum(V_i)`. Pooling and Q always use raw
+tables; `continuity_correction` affects only the displayed one-step study
+estimates and variances. Double-zero and double-all rows are excluded from all
+synthesis calculations.
+
+The approximation is intended for rare outcomes, similar treatment/control
+group sizes within studies, and effects that are not large. Every result
+records this caution. Peto is not an automatic replacement for MH or
+inverse-variance pooling when those conditions are doubtful. See
+[ADR 0006](../adr/0006-peto-odds-ratio.md).
 
 ## Continuous study effects
 

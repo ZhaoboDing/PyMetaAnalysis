@@ -51,6 +51,37 @@ calculate_effects <- function(data, measure) {
   )
 }
 
+calculate_peto <- function(data) {
+  effects <- escalc(
+    measure = "PETO",
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = data,
+    add = 0.5,
+    to = "only0",
+    drop00 = TRUE
+  )
+  fit <- rma.peto(
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = data,
+    add = c(0.5, 0),
+    to = c("only0", "none"),
+    drop00 = c(TRUE, TRUE)
+  )
+  result <- list(
+    effect = unname(effects$yi),
+    variance = unname(effects$vi),
+    fit = fit_summary(fit, include_tau2 = FALSE)
+  )
+  result$fit$heterogeneity <- heterogeneity_summary(fit)
+  result
+}
+
 calculate_clean <- function(measure) {
   effects <- calculate_effects(clean_input, measure)
   common <- rma.uni(yi, vi, data = effects, method = "EE", test = "z")
@@ -82,6 +113,9 @@ calculate_clean <- function(measure) {
   )
   result$mantel_haenszel <- fit_summary(mh, include_tau2 = FALSE)
   result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
+  if (measure == "OR") {
+    result$peto <- calculate_peto(clean_input)
+  }
   result
 }
 
@@ -123,6 +157,9 @@ calculate_sparse <- function(measure) {
     )
   )
   result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
+  if (measure == "OR") {
+    result$peto <- calculate_peto(sparse_input)
+  }
   result
 }
 

@@ -1,8 +1,8 @@
 # Zero-event studies
 
-Zero cells in 2-by-2 tables affect OR, RR, RD, and Mantel-Haenszel estimators in
-different ways. PyMetaAnalysis therefore separates study-level effect
-corrections from the pooled Mantel-Haenszel correction.
+Zero cells in 2-by-2 tables affect OR, RR, RD, Mantel-Haenszel, and Peto
+estimators in different ways. PyMetaAnalysis therefore separates study-level
+effect corrections from table-based pooling rules.
 
 ## Default study-level correction
 
@@ -91,6 +91,22 @@ raw table still enters the MH point estimate unless an explicit
 is non-positive, the uncorrected fit raises instead of silently changing the
 tables; a positive MH correction is an explicit protocol choice.
 
+## Peto pooling always uses raw tables
+
+Peto's observed-minus-expected pooling contribution remains defined for many
+single-zero tables, so `method="Peto"` does not apply a continuity correction
+to pooling or Peto Q. The general `continuity_correction` and
+`correction_scope` settings apply only to the one-step study effects and
+variances shown in the study table. There is deliberately no separate Peto
+pooling-correction option.
+
+Double-zero and double-all studies have zero Peto information and are excluded
+before pooling, Q, I-squared, H-squared, and weights. The result retains the
+same structured exclusion reasons used for other relative-effect analyses.
+Peto's lack of a single-zero pooling correction does not make it universally
+preferable: its rare-outcome, balanced-arm, and modest-effect assumptions must
+still be considered.
+
 ## Inspect what happened
 
 ```python
@@ -112,3 +128,5 @@ Resolved correction values and scopes also appear in
 zero-variance policy and affected row IDs in provenance. This makes it possible
 to distinguish a corrected analysis from an exact or exclusion-based one after
 fitting.
+Peto analyses additionally record `peto_pooling_tables="raw"` and
+`peto_heterogeneity="O-minus-E"`.

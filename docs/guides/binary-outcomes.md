@@ -39,6 +39,30 @@ Mantel-Haenszel pooling supports OR, RR, and RD with `model="common"` and
 `ci_method="normal"`. MH risk differences use the Sato-Greenland-Robins
 sampling variance, recorded in `dict(result.method.options)`.
 
+## Peto common-effect odds ratio
+
+Peto's one-step estimator is an explicit alternative for common-effect OR:
+
+```python
+peto = ma.meta_binary(
+    studies,
+    event_treat="events_t",
+    n_treat="total_t",
+    event_control="events_c",
+    n_control="total_c",
+    measure="OR",
+    method="Peto",
+    model="common",
+)
+```
+
+Peto pooling uses the raw 2-by-2 tables and its own observed-minus-expected
+heterogeneity statistic. The study table contains Peto one-step effects;
+`continuity_correction` affects those displayed study effects but not the
+pooled result. Peto is intended for rare outcomes when treatment/control arm
+sizes are similar within studies and effects are not large. The result always
+retains this caveat in `warnings` and Methods text.
+
 ## Random-effects analysis
 
 Use inverse-variance pooling for a random-effects binary analysis:
@@ -108,5 +132,5 @@ Sparse tables require additional decisions. Read
 settings.
 
 See [statistical methods](../methods/statistical-methods.md#binary-study-effects)
-for the OR/RR/RD and Mantel-Haenszel equations, and
+for the OR/RR/RD, Mantel-Haenszel, and Peto equations, and
 [validation](../validation.md) for cross-software coverage.

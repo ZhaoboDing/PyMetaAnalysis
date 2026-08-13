@@ -254,6 +254,50 @@ def test_mh_risk_difference_respects_count_scaling(
     )
 
 
+@given(nonboundary_binary_tables())
+@settings(max_examples=75, deadline=None)
+def test_peto_is_symmetric_and_row_order_invariant(
+    tables: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+) -> None:
+    event_treat, n_treat, event_control, n_control = tables
+    forward = ma.meta_binary(
+        event_treat=event_treat,
+        n_treat=n_treat,
+        event_control=event_control,
+        n_control=n_control,
+        measure="OR",
+        method="Peto",
+    )
+    swapped = ma.meta_binary(
+        event_treat=event_control,
+        n_treat=n_control,
+        event_control=event_treat,
+        n_control=n_treat,
+        measure="OR",
+        method="Peto",
+    )
+    order = np.arange(len(event_treat))[::-1]
+    reordered = ma.meta_binary(
+        event_treat=event_treat[order],
+        n_treat=n_treat[order],
+        event_control=event_control[order],
+        n_control=n_control[order],
+        measure="OR",
+        method="Peto",
+    )
+
+    assert swapped.estimate == pytest.approx(-forward.estimate, rel=2e-13, abs=2e-15)
+    assert swapped.standard_error == pytest.approx(
+        forward.standard_error, rel=2e-13, abs=2e-15
+    )
+    assert swapped.q == pytest.approx(forward.q, rel=2e-12, abs=2e-14)
+    assert reordered.estimate == pytest.approx(forward.estimate, rel=2e-13, abs=2e-15)
+    assert reordered.standard_error == pytest.approx(
+        forward.standard_error, rel=2e-13, abs=2e-15
+    )
+    assert reordered.q == pytest.approx(forward.q, rel=2e-12, abs=2e-14)
+
+
 def test_q_profile_interval_is_equivariant_to_effect_location_and_scale() -> None:
     effect = np.asarray([-0.4, 0.1, 0.5, 1.2, 1.8])
     variance = np.asarray([0.04, 0.09, 0.05, 0.16, 0.08])

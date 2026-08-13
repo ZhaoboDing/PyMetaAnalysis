@@ -8,6 +8,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- common-effect Peto one-step odds-ratio pooling, including Peto-specific
+  study estimates, O-minus-E heterogeneity, explicit approximation warnings,
+  provenance/report metadata, and independent R `metafor` references;
 - common-effect Mantel-Haenszel risk-difference pooling with the
   Sato-Greenland-Robins sampling variance, explicit method metadata,
   sparse-table policy integration, and independent R `metafor` references.
