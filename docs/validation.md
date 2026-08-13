@@ -146,7 +146,7 @@ difference.
 
 GitHub Actions runs:
 
-- the test suite with branch coverage on Python 3.10–3.13;
+- the test suite with branch coverage on Python 3.10–3.14;
 - a Python 3.10 job at declared direct-dependency lower bounds;
 - Ruff formatting and lint checks;
 - strict Mypy type checking;
