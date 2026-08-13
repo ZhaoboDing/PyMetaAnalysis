@@ -160,7 +160,7 @@ model, and the boundary is recorded in `cumulative.warnings`.
 Every refit reuses the original result's:
 
 - common- or random-effects model;
-- inverse-variance or Mantel-Haenszel pooling method;
+- inverse-variance, Mantel-Haenszel, or Peto pooling method;
 - tau-squared and confidence-interval methods;
 - confidence level, absolute tolerance, and iteration limit;
 - missing-data policy;

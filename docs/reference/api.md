@@ -32,6 +32,7 @@ identity rules.
 | --- | --- | --- | --- |
 | Generic | Inverse variance | common, random | normal; HK variants for random |
 | Binary OR/RR/RD | Mantel-Haenszel | common only | normal |
+| Binary OR | Peto one-step | common only | normal |
 | Binary OR/RR | Inverse variance | common, random | normal; HK variants for random |
 | Binary RD | Inverse variance | common, random | normal; HK variants for random |
 | Continuous MD/SMD | Inverse variance | common, random | normal; HK variants for random |
@@ -179,7 +180,7 @@ Calculates and pools two-group binary effects.
 | `event_treat`, `event_control` | Integer event counts |
 | `n_treat`, `n_control` | Strictly positive integer group totals |
 | `measure` | `"OR"`, `"RR"`, or `"RD"` |
-| `method` | `"MH"`/`"mantel_haenszel"` or `"IV"`/`"inverse_variance"` |
+| `method` | `"MH"`/`"mantel_haenszel"`, `"Peto"`/`"peto_one_step"`, or `"IV"`/`"inverse_variance"` |
 | `continuity_correction` | Non-negative correction for individual-study effects |
 | `correction_scope` | `"only_zero_studies"`, `"if_any_zero"`, `"all_studies"`, or `"none"` |
 | `rd_zero_variance` | `"correct"` or `"exclude"`; configurable only for RD |
@@ -193,7 +194,13 @@ MH supports common-effect OR/RR/RD and normal intervals only. MH RD uses the
 Sato-Greenland-Robins sampling variance. Every random-effects binary analysis
 requires inverse-variance pooling. Sparse-table behavior is specified in
 [zero-event studies](../guides/zero-events.md). An explicit `tau2_method` is
-rejected for common-effect and MH fits.
+rejected for common-effect and specialized table-based fits.
+
+Peto supports common-effect OR and normal intervals only. It uses raw tables
+for pooling and observed-minus-expected heterogeneity. The public study-effect
+correction affects only displayed Peto study effects; no Peto pooling
+correction is applied. Every Peto result reports its rare-outcome,
+similar-arm-size, and modest-effect applicability caveat.
 
 ## `meta_continuous()`
 

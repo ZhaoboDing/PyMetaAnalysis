@@ -6,6 +6,8 @@
   [ADR 0004](0004-hartung-knapp-prediction-intervals.md).
 - Amendment: the decision to defer Mantel-Haenszel risk differences is
   superseded by [ADR 0005](0005-mantel-haenszel-risk-difference.md).
+- Amendment: the decision to defer Peto pooling is superseded by
+  [ADR 0006](0006-peto-odds-ratio.md).
 
 ## Context
 
@@ -46,13 +48,15 @@ option, and a provenance transformation.
 Mantel-Haenszel pooling remains a common-effect estimator for OR and RR. It
 uses raw tables by default and has a correction setting separate from the one
 used for individual-study effects. Random-effects Mantel-Haenszel, RD
-Mantel-Haenszel, and Peto pooling are outside the current scope.
+Mantel-Haenszel, and Peto pooling were outside the scope of this original
+decision; ADRs 0005 and 0006 supersede the latter two deferrals.
 
 ### Heterogeneity
 
 Cochran's Q, degrees of freedom, and p-value always use common-effect inverse-
 variance weights. Common-effect and Mantel-Haenszel analyses use Q-based
-I-squared and H-squared.
+I-squared and H-squared. ADR 0006 adds Peto's estimator-specific Q while
+retaining those Q-based inconsistency transformations.
 
 Random-effects analyses use:
 

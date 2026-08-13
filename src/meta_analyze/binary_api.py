@@ -20,12 +20,13 @@ from .data import ColumnOrArray, MissingPolicy, _duplicate_study_warning
 from .effect_sizes.binary import (
     adjusted_tables,
     calculate_binary_effects,
+    calculate_peto_effects,
     normalize_binary_studies,
     normalize_correction_scope,
     normalize_rd_zero_variance,
     validate_correction,
 )
-from .estimators import fit_inverse_variance, fit_mantel_haenszel
+from .estimators import fit_inverse_variance, fit_mantel_haenszel, fit_peto
 from .exceptions import UnsupportedMethodError
 from .heterogeneity import (
     classical_heterogeneity,
@@ -52,8 +53,11 @@ def _normalize_pooling_method(method: str) -> str:
         return "inverse_variance"
     if normalized in {"mh", "mantel_haenszel"}:
         return "mantel_haenszel"
+    if normalized in {"peto", "peto_one_step"}:
+        return "peto"
     raise UnsupportedMethodError(
-        "method must be 'MH'/'mantel_haenszel' or 'IV'/'inverse_variance'."
+        "method must be 'MH'/'mantel_haenszel', 'Peto'/'peto_one_step', "
+        "or 'IV'/'inverse_variance'."
     )
 
 
@@ -86,9 +90,11 @@ def _fit_meta_binary_single(
     by default; set ``mh_continuity_correction`` explicitly when the pooled
     estimator or variance is undefined. Study-level effects use the separate
     ``continuity_correction`` setting for display and heterogeneity statistics.
+    Peto supports common-effect OR, uses raw tables for pooling, and applies
+    the study-level correction only to displayed study estimates.
     ``tau2_method=None`` selects REML only when a random-effects
     inverse-variance model is requested; an explicit tau-squared method is
-    rejected for common-effect and Mantel-Haenszel fits.
+    rejected for common-effect and specialized table-based fits.
     """
 
     confidence_level, atol, max_iter = _validate_analysis_controls(
@@ -133,6 +139,18 @@ def _fit_meta_binary_single(
             raise UnsupportedMethodError(
                 "Mantel-Haenszel currently supports only ci_method='normal'."
             )
+    elif normalized_method == "peto":
+        if normalized_model != "common":
+            raise UnsupportedMethodError(
+                "Peto is implemented only for model='common'; use method='IV' "
+                "for random-effects models."
+            )
+        if normalized_measure != "OR":
+            raise UnsupportedMethodError("Peto pooling supports only measure='OR'.")
+        if normalized_ci != "normal":
+            raise UnsupportedMethodError(
+                "Peto pooling supports only ci_method='normal'."
+            )
 
     studies = normalize_binary_studies(
         data=data,
@@ -143,12 +161,20 @@ def _fit_meta_binary_single(
         study=study,
         missing=missing,
     )
-    effects = calculate_binary_effects(
-        studies,
-        measure=normalized_measure,
-        continuity_correction=correction,
-        correction_scope=scope,
-        rd_zero_variance=rd_policy,
+    effects = (
+        calculate_peto_effects(
+            studies,
+            continuity_correction=correction,
+            correction_scope=scope,
+        )
+        if normalized_method == "peto"
+        else calculate_binary_effects(
+            studies,
+            measure=normalized_measure,
+            continuity_correction=correction,
+            correction_scope=scope,
+            rd_zero_variance=rd_policy,
+        )
     )
     included = effects.studies.included
     included_effect = effects.included_effect
@@ -182,7 +208,7 @@ def _fit_meta_binary_single(
         q_values = classical_heterogeneity(included_effect, included_variance)
         mh_corrected = np.zeros(len(included), dtype=bool)
         warnings.extend(fit.warnings)
-    else:
+    elif normalized_method == "mantel_haenszel":
         a, b, c, d, mh_corrected = adjusted_tables(
             effects.studies,
             correction=mh_correction,
@@ -207,6 +233,40 @@ def _fit_meta_binary_single(
         diagnostics = FitDiagnostics(True, 0, None)
         q_values = heterogeneity_at_estimate(
             included_effect, included_variance, estimate
+        )
+    else:
+        a, b, c, d, mh_corrected = adjusted_tables(
+            effects.studies,
+            correction=0.0,
+            scope="none",
+        )
+        peto_fit = fit_peto(
+            a[included],
+            b[included],
+            c[included],
+            d[included],
+            confidence_level=confidence_level,
+        )
+        estimate = peto_fit.estimate
+        standard_error = peto_fit.standard_error
+        ci_low = peto_fit.ci_low
+        ci_high = peto_fit.ci_high
+        prediction_interval = None
+        weights = peto_fit.weights
+        normalized_weights = peto_fit.normalized_weights
+        tau2 = 0.0
+        diagnostics = FitDiagnostics(True, 0, None)
+        q_values = (
+            peto_fit.q,
+            peto_fit.q_df,
+            peto_fit.q_pvalue,
+            peto_fit.i2,
+            peto_fit.h2,
+        )
+        warnings.append(
+            "Peto's odds-ratio approximation is intended for rare outcomes, "
+            "similar treatment/control group sizes within studies, and effects "
+            "that are not large."
         )
 
     q, q_df, q_pvalue, i2, h2 = q_values
@@ -300,6 +360,14 @@ def _fit_meta_binary_single(
                 if normalized_measure == "RD" and normalized_method == "mantel_haenszel"
                 else ()
             ),
+            *(
+                (
+                    ("peto_pooling_tables", "raw"),
+                    ("peto_heterogeneity", "O-minus-E"),
+                )
+                if normalized_method == "peto"
+                else ()
+            ),
             ("mh_continuity_correction", mh_correction),
             ("mh_correction_scope", mh_scope),
         ),
@@ -311,6 +379,11 @@ def _fit_meta_binary_single(
                 ("measure", normalized_measure),
                 ("model_scale", effects.effect_scale),
                 ("display_scale", effects.display_scale),
+                *(
+                    (("study_estimator", "peto_one_step"),)
+                    if normalized_method == "peto"
+                    else ()
+                ),
             ),
             affected_rows=tuple(int(row) for row in np.flatnonzero(included)),
         ),
@@ -484,8 +557,8 @@ def meta_binary(
 
     Event and total arguments accept DataFrame column names or one-dimensional
     array-like values. The default is common-effect Mantel-Haenszel risk-ratio
-    pooling. Mantel-Haenszel OR, RR, and RD are available for common-effect
-    models; use inverse-variance pooling for random effects. For risk
+    pooling. Mantel-Haenszel OR, RR, and RD and Peto OR are available for
+    common-effect models; use inverse-variance pooling for random effects. For risk
     differences, ``rd_zero_variance="correct"`` retains boundary studies with
     their raw effect and corrected study-level sampling variance. Use
     ``rd_zero_variance="exclude"`` to remove them before all synthesis

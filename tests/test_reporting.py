@@ -290,6 +290,32 @@ def test_mh_risk_difference_reporting_records_sato_variance() -> None:
     assert payload["method"]["options"]["mh_rd_variance"] == ("Sato-Greenland-Robins")
 
 
+def test_peto_reporting_records_formula_and_limitations() -> None:
+    result = ma.meta_binary(
+        event_treat=[1, 2, 3],
+        n_treat=[100, 110, 120],
+        event_control=[2, 1, 4],
+        n_control=[100, 105, 125],
+        measure="OR",
+        method="Peto",
+    )
+
+    details = result.method_details()
+    payload = result.report(include_studies=False).to_dict()
+    effect_record = next(
+        record
+        for record in result.provenance.transformations
+        if record.name == "binary_effect_size"
+    )
+    assert "Peto's one-step estimator" in details
+    assert "O-minus-E statistic and hypergeometric information" in details
+    assert "raw 2-by-2 tables" in details
+    assert "rare outcomes" in details
+    assert payload["method"]["pooling_method"] == "peto"
+    assert payload["method"]["options"]["peto_pooling_tables"] == "raw"
+    assert dict(effect_record.parameters)["study_estimator"] == "peto_one_step"
+
+
 def test_report_payload_contains_resolved_methods_diagnostics_and_studies() -> None:
     result = _generic_with_exclusion()
     report = result.report()

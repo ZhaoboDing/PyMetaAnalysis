@@ -50,6 +50,12 @@ Binary analyses record:
 - non-informative relative-effect exclusions;
 - a separate Mantel-Haenszel correction record when MH pooling is used.
 
+A Peto OR transformation additionally records
+`study_estimator="peto_one_step"`. Its method options state that pooling used
+raw tables and heterogeneity used O-minus-E contributions. The study-level
+continuity-correction record remains separate because it does not alter Peto
+pooling.
+
 An MH risk-difference result additionally records
 `mh_rd_variance="Sato-Greenland-Robins"` in its method options, and generated
 Methods text names that variance convention.
@@ -77,6 +83,8 @@ The text identifies the model, pooling estimator, tau-squared estimator,
 confidence interval, heterogeneity statistics, prediction interval,
 correction settings, missing-data policy, numerical controls, and package
 version as applicable.
+For Peto it also names the O-minus-E heterogeneity calculation, raw-table
+pooling, and the estimator's applicability caveat.
 
 It is a starting point for a manuscript Methods section. Review and adapt it to
 the analysis protocol, field conventions, and journal requirements.

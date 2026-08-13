@@ -63,7 +63,8 @@ tau-squared `estimate`, `ci_low`, `ci_high`, and `ci` tuple plus the monotonic
 `method="q_profile"`, numerical `iterations`, `warnings`, and `is_empty`.
 `to_dict()` returns a detached nested mapping.
 
-The method is not available for common-effect or Mantel-Haenszel results.
+The method is not available for common-effect, Mantel-Haenszel, or Peto
+results.
 When `is_empty=True`, `[0, 0]` is a constrained display of the formal empty
 confidence set, not a claim of zero uncertainty.
 
@@ -74,7 +75,7 @@ confidence set, not a claim of zero uncertainty.
 | Field | Meaning |
 | --- | --- |
 | `model` | Resolved model |
-| `pooling_method` | `inverse_variance` or `mantel_haenszel` |
+| `pooling_method` | `inverse_variance`, `mantel_haenszel`, or `peto` |
 | `tau2_method` | `REML`, `PM`, `DL`, or `None` |
 | `ci_method` | Resolved mean confidence-interval method |
 | `confidence_level` | Fitted confidence level |
@@ -87,6 +88,9 @@ Convert outcome options to a mapping with `dict(result.method.options)`.
 For a Mantel-Haenszel risk difference, this mapping includes
 `mh_rd_variance="Sato-Greenland-Robins"`; correction values and scopes remain
 separate entries.
+For Peto, it includes `peto_pooling_tables="raw"` and
+`peto_heterogeneity="O-minus-E"`, and the result warnings retain the
+approximation's applicability caveat.
 
 `result.diagnostics` is a `FitDiagnostics` record:
 
@@ -146,6 +150,8 @@ Generic tables contain only the common columns above.
 Binary tables additionally contain raw counts, `effect_display`,
 `continuity_corrected`, `rd_zero_variance`, and
 `mh_continuity_corrected`.
+For a Peto result, `effect` and `variance` are the one-step study values while
+the pooled fit and Q are recalculated from raw tables.
 
 #### Continuous-specific columns
 

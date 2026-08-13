@@ -36,7 +36,8 @@ protocols.
 | Data and model | Available pooling method |
 | --- | --- |
 | Generic effects, common or random | Inverse variance |
-| Binary OR/RR/RD, common effect | Mantel-Haenszel or inverse variance |
+| Binary OR, common effect | Mantel-Haenszel, Peto, or inverse variance |
+| Binary RR/RD, common effect | Mantel-Haenszel or inverse variance |
 | Binary OR/RR/RD, random effects | Inverse variance |
 | Continuous MD/SMD, common or random | Inverse variance |
 
@@ -45,6 +46,11 @@ PyMetaAnalysis does not extrapolate its common-effect Mantel-Haenszel weights
 into an undocumented random-effects procedure. Mantel-Haenszel OR/RR/RD
 pooling uses raw tables by default. MH RD uses the Sato-Greenland-Robins
 sampling variance; it is not a random-effects estimator.
+
+Peto is a distinct common-effect OR estimator based on observed-minus-expected
+events. Consider it only when outcomes are rare, treatment/control group sizes
+are similar within each study, and effects are not large. It always uses raw
+tables for pooling and is not an automatic sparse-data default.
 
 ## Estimating tau-squared
 
@@ -63,9 +69,9 @@ Failure to converge raises `ConvergenceError`; it does not silently fall back
 to DL.
 
 The public default is `tau2_method=None`: it resolves to REML for a random- or
-mixed-effects fit. Common-effect and Mantel-Haenszel fits reject an explicitly
-supplied tau-squared method so analysis code cannot appear to request an
-estimator that was not used.
+mixed-effects fit. Common-effect, Mantel-Haenszel, and Peto fits reject an
+explicitly supplied tau-squared method so analysis code cannot appear to
+request an estimator that was not used.
 
 ## Confidence intervals
 
@@ -89,9 +95,10 @@ cautiously: choosing one does not remove the small-sample uncertainty.
 
 ## Heterogeneity definitions
 
-Cochran's Q, its degrees of freedom, and its p-value always use common-effect
-inverse-variance weights. Common-effect and Mantel-Haenszel analyses derive
-I-squared and H-squared from Q.
+Cochran's Q for IV and Mantel-Haenszel fits uses common-effect
+inverse-variance weights; MH residuals are centered on its pooled estimate.
+Peto instead uses its documented observed-minus-expected Q. All common-effect
+fits derive I-squared and H-squared from the applicable Q.
 
 For random-effects analyses, I-squared and H-squared instead use the estimated
 tau-squared and a typical within-study variance:
