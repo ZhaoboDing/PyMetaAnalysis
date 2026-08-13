@@ -31,7 +31,7 @@ identity rules.
 | Input/effect | Pooling | Models | CI methods |
 | --- | --- | --- | --- |
 | Generic | Inverse variance | common, random | normal; HK variants for random |
-| Binary OR/RR | Mantel-Haenszel | common only | normal |
+| Binary OR/RR/RD | Mantel-Haenszel | common only | normal |
 | Binary OR/RR | Inverse variance | common, random | normal; HK variants for random |
 | Binary RD | Inverse variance | common, random | normal; HK variants for random |
 | Continuous MD/SMD | Inverse variance | common, random | normal; HK variants for random |
@@ -189,10 +189,11 @@ Calculates and pools two-group binary effects.
 `study`, `subgroup`, `tau2_method`, `ci_method`, `confidence_level`, `missing`,
 `atol`, and `max_iter` have the meanings described for `meta_analysis()`.
 
-MH supports common-effect OR/RR and normal intervals only. Random-effects
-binary analysis and every RD analysis require inverse-variance pooling. Sparse
-table behavior is specified in [zero-event studies](../guides/zero-events.md).
-An explicit `tau2_method` is rejected for common-effect and MH fits.
+MH supports common-effect OR/RR/RD and normal intervals only. MH RD uses the
+Sato-Greenland-Robins sampling variance. Every random-effects binary analysis
+requires inverse-variance pooling. Sparse-table behavior is specified in
+[zero-event studies](../guides/zero-events.md). An explicit `tau2_method` is
+rejected for common-effect and MH fits.
 
 ## `meta_continuous()`
 

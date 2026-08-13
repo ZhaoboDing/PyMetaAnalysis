@@ -1,7 +1,9 @@
 """Mantel-Haenszel common-effect estimators for binary outcomes.
 
-The pooled estimates and Greenland-Robins variance equations follow the
-publicly documented Review Manager 5 statistical algorithms.
+The pooled OR/RR estimates and Greenland-Robins variance equations follow the
+publicly documented Review Manager 5 statistical algorithms. Risk differences
+use the Sato-Greenland-Robins variance, which remains consistent under both
+large-stratum and sparse-data limiting models.
 """
 
 from __future__ import annotations
@@ -40,12 +42,12 @@ def fit_mantel_haenszel(
     measure: str,
     confidence_level: float,
 ) -> MantelHaenszelFit:
-    """Fit a Mantel-Haenszel common-effect log OR or log RR."""
+    """Fit a Mantel-Haenszel common-effect log OR, log RR, or RD."""
 
     normalized_measure = measure.upper()
-    if normalized_measure not in {"OR", "RR"}:
+    if normalized_measure not in {"OR", "RR", "RD"}:
         raise UnsupportedMethodError(
-            "Mantel-Haenszel currently supports measure='OR' or measure='RR'."
+            "Mantel-Haenszel supports measure='OR', measure='RR', or measure='RD'."
         )
 
     tables = (a, b, c, d)
@@ -97,7 +99,7 @@ def fit_mantel_haenszel(
         pooled = r / s
         pooled_variance = 0.5 * (e / r**2 + (f + g) / (r * s) + h / s**2) / cell_scale
         scaled_weights = scaled_b * scaled_c / total
-    else:
+    elif normalized_measure == "RR":
         r = float(np.sum(scaled_a * n2 / total))
         s = float(np.sum(scaled_c * n1 / total))
         if not np.isfinite(r) or not np.isfinite(s) or r <= 0.0 or s <= 0.0:
@@ -115,8 +117,49 @@ def fit_mantel_haenszel(
         pooled = r / s
         pooled_variance = p / (r * s) / cell_scale
         scaled_weights = scaled_c * n1 / total
+    else:
+        # The MH risk difference is the arm-size-weighted mean of the raw
+        # study risk differences. All arithmetic below uses counts divided by
+        # their common maximum; the Sato-Greenland-Robins variance is therefore
+        # divided by cell_scale once to restore the original count scale.
+        treat_fraction = n1 / total
+        control_fraction = n2 / total
+        scaled_weights = n1 * control_fraction
+        weight_sum = float(np.sum(scaled_weights))
+        if not np.isfinite(weight_sum) or weight_sum <= 0.0:
+            raise InvalidStudyDataError(
+                "Mantel-Haenszel RD study weights have a non-positive sum."
+            )
+
+        pooled = float(
+            np.sum(scaled_a * control_fraction - scaled_c * treat_fraction) / weight_sum
+        )
+        linear_component = float(
+            np.sum(
+                scaled_c * treat_fraction**2
+                - scaled_a * control_fraction**2
+                + treat_fraction * control_fraction * (n2 - n1) / 2.0
+            )
+        )
+        binomial_component = float(
+            np.sum(
+                scaled_a * (n2 - scaled_c) / total + scaled_c * (n1 - scaled_a) / total
+            )
+            / 2.0
+        )
+        pooled_variance = (
+            (pooled * linear_component + binomial_component)
+            / weight_sum**2
+            / cell_scale
+        )
 
     if not np.isfinite(pooled_variance) or pooled_variance <= 0.0:
+        if normalized_measure == "RD":
+            raise InvalidStudyDataError(
+                "Mantel-Haenszel RD produced a non-positive sampling variance "
+                "under the Sato-Greenland-Robins method; set a positive "
+                "mh_continuity_correction if the review protocol permits it."
+            )
         raise InvalidStudyDataError(
             "Mantel-Haenszel produced a non-positive sampling variance."
         )
@@ -126,7 +169,7 @@ def fit_mantel_haenszel(
             "Mantel-Haenszel study weights have a non-positive sum."
         )
 
-    estimate = float(np.log(pooled))
+    estimate = pooled if normalized_measure == "RD" else float(np.log(pooled))
     standard_error = float(np.sqrt(pooled_variance))
     critical_value = float(norm.ppf(0.5 + float(confidence_level) / 2.0))
     margin = critical_value * standard_error

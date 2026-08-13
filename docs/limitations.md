@@ -10,7 +10,7 @@ deferred functionality explicit.
 - two-group binary OR, RR, and RD;
 - two-group continuous MD and exact-corrected Hedges' g;
 - common-effect and univariate random-effects inverse-variance models;
-- common-effect Mantel-Haenszel OR/RR;
+- common-effect Mantel-Haenszel OR/RR/RD;
 - DL, PM, and REML tau-squared estimators;
 - Q-profile confidence intervals for tau-squared and its monotonic tau,
   I-squared, and H-squared transformations in random-effects inverse-variance
@@ -34,7 +34,7 @@ deferred functionality explicit.
 ## Not currently implemented
 
 - Peto odds ratios;
-- Mantel-Haenszel risk differences or random-effects MH pooling;
+- random-effects Mantel-Haenszel pooling;
 - formula parsing, automatic interactions/splines, stepwise moderator
   selection, automatic pairwise contrasts, or multiplicity correction;
 - Q-profile confidence intervals for residual tau-squared in Meta-regression;

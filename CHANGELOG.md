@@ -6,6 +6,18 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- common-effect Mantel-Haenszel risk-difference pooling with the
+  Sato-Greenland-Robins sampling variance, explicit method metadata,
+  sparse-table policy integration, and independent R `metafor` references.
+
+### Fixed
+
+- isolated builds temporarily cap Hatchling below 1.32 so the release
+  workflow continues to produce Core Metadata 2.4 accepted by Twine 6.2;
+  the cap can be removed once Twine validates Metadata 2.5.
+
 ## 0.5.0 - 2026-07-25
 
 ### Added

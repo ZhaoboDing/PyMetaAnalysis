@@ -185,6 +185,11 @@ def method_details(result: MetaAnalysisResult) -> str:
                     f"calculations. This affected {len(rd_affected)} row(s)."
                 )
         if method.pooling_method == "mantel_haenszel":
+            if result.measure == "RD":
+                sentences.append(
+                    "The Mantel-Haenszel risk-difference standard error used "
+                    "the Sato-Greenland-Robins variance."
+                )
             mh_correction = float(options.get("mh_continuity_correction", 0.0) or 0.0)
             mh_scope = str(options.get("mh_correction_scope", "none"))
             mh_affected = _transformation_rows(

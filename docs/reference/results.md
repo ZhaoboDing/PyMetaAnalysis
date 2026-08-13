@@ -84,6 +84,9 @@ confidence set, not a claim of zero uncertainty.
 | `options` | Immutable outcome-specific key/value pairs |
 
 Convert outcome options to a mapping with `dict(result.method.options)`.
+For a Mantel-Haenszel risk difference, this mapping includes
+`mh_rd_variance="Sato-Greenland-Robins"`; correction values and scopes remain
+separate entries.
 
 `result.diagnostics` is a `FitDiagnostics` record:
 

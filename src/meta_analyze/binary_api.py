@@ -82,9 +82,9 @@ def _fit_meta_binary_single(
 ) -> MetaAnalysisResult:
     """Pool OR, RR, or RD from two-group binary study counts.
 
-    Mantel-Haenszel currently supports common-effect OR and RR. It uses raw
-    tables by default; set ``mh_continuity_correction`` explicitly when the
-    exact pooled estimator is undefined. Study-level effects use the separate
+    Mantel-Haenszel supports common-effect OR, RR, and RD. It uses raw tables
+    by default; set ``mh_continuity_correction`` explicitly when the pooled
+    estimator or variance is undefined. Study-level effects use the separate
     ``continuity_correction`` setting for display and heterogeneity statistics.
     ``tau2_method=None`` selects REML only when a random-effects
     inverse-variance model is requested; an explicit tau-squared method is
@@ -125,10 +125,9 @@ def _fit_meta_binary_single(
                 "Mantel-Haenszel is currently implemented only for model='common'; "
                 "use method='IV' for random-effects models."
             )
-        if normalized_measure not in {"OR", "RR"}:
+        if normalized_measure not in {"OR", "RR", "RD"}:
             raise UnsupportedMethodError(
-                "Mantel-Haenszel currently supports measure='OR' or measure='RR'; "
-                "use method='IV' for risk differences."
+                "Mantel-Haenszel supports measure='OR', measure='RR', or measure='RD'."
             )
         if normalized_ci != "normal":
             raise UnsupportedMethodError(
@@ -296,6 +295,11 @@ def _fit_meta_binary_single(
             ("continuity_correction", correction),
             ("correction_scope", scope),
             *((("rd_zero_variance", rd_policy),) if normalized_measure == "RD" else ()),
+            *(
+                (("mh_rd_variance", "Sato-Greenland-Robins"),)
+                if normalized_measure == "RD" and normalized_method == "mantel_haenszel"
+                else ()
+            ),
             ("mh_continuity_correction", mh_correction),
             ("mh_correction_scope", mh_scope),
         ),
@@ -480,9 +484,10 @@ def meta_binary(
 
     Event and total arguments accept DataFrame column names or one-dimensional
     array-like values. The default is common-effect Mantel-Haenszel risk-ratio
-    pooling. Use inverse-variance pooling for random effects or risk differences.
-    For risk differences, ``rd_zero_variance="correct"`` retains boundary
-    studies with their raw effect and corrected sampling variance. Use
+    pooling. Mantel-Haenszel OR, RR, and RD are available for common-effect
+    models; use inverse-variance pooling for random effects. For risk
+    differences, ``rd_zero_variance="correct"`` retains boundary studies with
+    their raw effect and corrected study-level sampling variance. Use
     ``rd_zero_variance="exclude"`` to remove them before all synthesis
     calculations.
     """

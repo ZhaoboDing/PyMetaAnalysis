@@ -40,6 +40,27 @@ def study_vectors(draw: st.DrawFn) -> tuple[np.ndarray, np.ndarray]:
 
 
 @st.composite
+def nonboundary_binary_tables(
+    draw: st.DrawFn,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    size = draw(st.integers(min_value=1, max_value=12))
+    n_treat = draw(
+        st.lists(st.integers(min_value=2, max_value=500), min_size=size, max_size=size)
+    )
+    n_control = draw(
+        st.lists(st.integers(min_value=2, max_value=500), min_size=size, max_size=size)
+    )
+    event_treat = [draw(st.integers(min_value=1, max_value=n - 1)) for n in n_treat]
+    event_control = [draw(st.integers(min_value=1, max_value=n - 1)) for n in n_control]
+    return (
+        np.asarray(event_treat),
+        np.asarray(n_treat),
+        np.asarray(event_control),
+        np.asarray(n_control),
+    )
+
+
+@st.composite
 def meta_regression_vectors(
     draw: st.DrawFn,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -147,6 +168,89 @@ def test_standard_error_and_variance_inputs_are_equivalent(
         from_variance.study_results["normalized_weight"],
         rtol=1e-12,
         atol=1e-12,
+    )
+
+
+@given(nonboundary_binary_tables())
+@settings(max_examples=75, deadline=None)
+def test_mh_risk_difference_is_symmetric_and_row_order_invariant(
+    tables: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+) -> None:
+    event_treat, n_treat, event_control, n_control = tables
+    forward = ma.meta_binary(
+        event_treat=event_treat,
+        n_treat=n_treat,
+        event_control=event_control,
+        n_control=n_control,
+        measure="RD",
+        method="MH",
+    )
+    swapped = ma.meta_binary(
+        event_treat=event_control,
+        n_treat=n_control,
+        event_control=event_treat,
+        n_control=n_treat,
+        measure="RD",
+        method="MH",
+    )
+    order = np.arange(len(event_treat))[::-1]
+    reordered = ma.meta_binary(
+        event_treat=event_treat[order],
+        n_treat=n_treat[order],
+        event_control=event_control[order],
+        n_control=n_control[order],
+        measure="RD",
+        method="MH",
+    )
+
+    assert swapped.estimate == pytest.approx(-forward.estimate, abs=2e-15)
+    assert swapped.standard_error == pytest.approx(
+        forward.standard_error, rel=2e-13, abs=2e-15
+    )
+    assert swapped.ci == pytest.approx(
+        (-forward.ci_high, -forward.ci_low), rel=2e-13, abs=2e-15
+    )
+    assert reordered.estimate == pytest.approx(forward.estimate, rel=2e-13, abs=2e-15)
+    assert reordered.standard_error == pytest.approx(
+        forward.standard_error, rel=2e-13, abs=2e-15
+    )
+
+
+@given(nonboundary_binary_tables(), st.integers(min_value=2, max_value=100))
+@settings(max_examples=50, deadline=None)
+def test_mh_risk_difference_respects_count_scaling(
+    tables: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    scale: int,
+) -> None:
+    event_treat, n_treat, event_control, n_control = tables
+    original = ma.meta_binary(
+        event_treat=event_treat,
+        n_treat=n_treat,
+        event_control=event_control,
+        n_control=n_control,
+        measure="RD",
+        method="MH",
+    )
+    scaled = ma.meta_binary(
+        event_treat=event_treat * scale,
+        n_treat=n_treat * scale,
+        event_control=event_control * scale,
+        n_control=n_control * scale,
+        measure="RD",
+        method="MH",
+    )
+
+    assert scaled.estimate == pytest.approx(original.estimate, abs=2e-15)
+    assert scaled.standard_error == pytest.approx(
+        original.standard_error / np.sqrt(scale),
+        rel=2e-13,
+        abs=2e-15,
+    )
+    np.testing.assert_allclose(
+        scaled.study_results["normalized_weight"],
+        original.study_results["normalized_weight"],
+        rtol=2e-13,
+        atol=2e-15,
     )
 
 

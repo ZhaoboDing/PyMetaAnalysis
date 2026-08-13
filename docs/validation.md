@@ -20,6 +20,9 @@ Property-based and targeted tests check invariants such as:
 - normalized included-study weights sum to one;
 - swapping treatment and control inverts OR/RR and changes the sign of
   difference measures;
+- Mantel-Haenszel RD is invariant to study order and common multiplication of
+  every cell count; swapping treatment and control changes its sign, reverses
+  its confidence limits, and preserves its standard error;
 - uncorrected RR accepts a zero non-event cell when the effect and variance
   remain defined, while zero event cells still require correction;
 - ratio confidence limits transform consistently between log and display
@@ -82,7 +85,7 @@ The current fixture families cover:
 | Fixture | Coverage |
 | --- | --- |
 | `generic_metafor.json` | Common effects, DL/PM/REML random effects, Q-profile heterogeneity intervals, HK variants, and HTS/HK-PR prediction intervals |
-| `binary_metafor.json` | OR/RR/RD study effects, IV pooling, exact and explicitly corrected MH pooling/heterogeneity, sparse tables |
+| `binary_metafor.json` | OR/RR/RD study effects, IV pooling, uncorrected and explicitly corrected MH pooling/heterogeneity, Sato-Greenland-Robins MH RD variance, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `workflow_metafor.json` | Common subgroups, random singleton fallback, leave-one-out, and cumulative common/random fits |
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions, including a no-intercept Riley case; zero tau-squared, missing rows, and small samples |

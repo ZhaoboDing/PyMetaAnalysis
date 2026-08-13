@@ -267,6 +267,42 @@ def test_mantel_haenszel_rejects_empty_and_all_zero_strata() -> None:
         )
 
 
+def test_mantel_haenszel_rd_is_stable_for_extreme_finite_counts() -> None:
+    a = np.asarray([12.0, 5.0, 20.0, 7.0])
+    b = np.asarray([88.0, 75.0, 100.0, 83.0])
+    c = np.asarray([18.0, 9.0, 15.0, 10.0])
+    d = np.asarray([92.0, 66.0, 115.0, 85.0])
+    ordinary = fit_mantel_haenszel(
+        a,
+        b,
+        c,
+        d,
+        measure="RD",
+        confidence_level=0.95,
+    )
+    scale = 1e300
+    extreme = fit_mantel_haenszel(
+        a * scale,
+        b * scale,
+        c * scale,
+        d * scale,
+        measure="RD",
+        confidence_level=0.95,
+    )
+
+    assert extreme.estimate == pytest.approx(ordinary.estimate, abs=1e-15)
+    assert extreme.standard_error == pytest.approx(
+        ordinary.standard_error / np.sqrt(scale),
+        rel=5e-14,
+    )
+    np.testing.assert_allclose(
+        extreme.normalized_weights,
+        ordinary.normalized_weights,
+        rtol=5e-15,
+        atol=5e-15,
+    )
+
+
 def test_hartung_knapp_adhoc_never_has_smaller_se_than_classic() -> None:
     effect = [0.10, 0.11, 0.12, 0.13]
     variance = [0.04, 0.04, 0.04, 0.04]

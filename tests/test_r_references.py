@@ -490,7 +490,7 @@ def test_clean_binary_inverse_variance_models_match_metafor(measure: str) -> Non
     _assert_fit(random, expected["random_reml_iv"], iterative=True)
 
 
-@pytest.mark.parametrize("measure", ["OR", "RR"])
+@pytest.mark.parametrize("measure", ["OR", "RR", "RD"])
 def test_clean_binary_mantel_haenszel_matches_metafor(measure: str) -> None:
     result = ma.meta_binary(
         BINARY_DATA,
@@ -583,7 +583,7 @@ def test_sparse_binary_zero_event_handling_matches_metafor(
     _assert_fit(result, expected[reference_key])
 
 
-@pytest.mark.parametrize("measure", ["OR", "RR"])
+@pytest.mark.parametrize("measure", ["OR", "RR", "RD"])
 def test_sparse_mh_pooling_correction_matches_metafor(measure: str) -> None:
     result = ma.meta_binary(
         SPARSE_BINARY_DATA,
@@ -598,13 +598,28 @@ def test_sparse_mh_pooling_correction_matches_metafor(measure: str) -> None:
         result,
         BINARY["sparse"][measure]["mantel_haenszel_corrected"],
     )
-    assert result.study_results["mh_continuity_corrected"].tolist() == [
-        True,
-        False,
-        False,
-        False,
-        False,
-    ]
+    expected_corrected = (
+        [True, False, True, True, False]
+        if measure == "RD"
+        else [True, False, False, False, False]
+    )
+    assert result.study_results["mh_continuity_corrected"].tolist() == (
+        expected_corrected
+    )
+
+
+def test_sparse_mh_risk_difference_matches_metafor() -> None:
+    result = ma.meta_binary(
+        SPARSE_BINARY_DATA,
+        **_binary_columns(),
+        study="study",
+        measure="RD",
+        method="MH",
+    )
+
+    _assert_fit(result, BINARY["sparse"]["RD"]["mantel_haenszel"])
+    assert result.study_results["included"].all()
+    assert not result.study_results["mh_continuity_corrected"].any()
 
 
 def test_common_effect_subgroups_match_metafor_moderator_model() -> None:

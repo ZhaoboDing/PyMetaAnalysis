@@ -83,7 +83,7 @@ not individual-level or causal effects.
 | Input | Effects | Pooling/models |
 | --- | --- | --- |
 | Effect + sampling variance or standard error | Generic | Common/random inverse variance |
-| Two-group events + totals | OR, RR, RD | Common MH OR/RR; common/random IV |
+| Two-group events + totals | OR, RR, RD | Common MH; common/random IV |
 | Two-group means + SDs + sizes | MD, Hedges' g | Common/random inverse variance |
 | Effect + variance/SE + moderators | Generic | Common/mixed Meta-regression |
 
@@ -103,6 +103,9 @@ Sparse binary behavior is explicit: study-level and Mantel-Haenszel continuity
 corrections are separate, relative-effect double-zero/double-all rows remain
 visible as exclusions, and RD exposes
 `rd_zero_variance="correct" | "exclude"`.
+Common-effect MH risk differences use the Sato-Greenland-Robins sampling
+variance; random-effects binary analyses continue to use inverse-variance
+pooling.
 
 ## Inspect and report
 

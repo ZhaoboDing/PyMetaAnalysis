@@ -507,7 +507,7 @@ variance is exactly zero are corrected or excluded.
 
 ## Mantel-Haenszel pooling
 
-MH is implemented only for common-effect OR and RR. It uses raw tables by
+MH is implemented only for common-effect OR, RR, and RD. It uses raw tables by
 default and has a continuity-correction option separate from the study-effect
 correction. Every included stratum must have a positive total count; empty
 inputs and zero-total strata are rejected before ratio or variance arithmetic.
@@ -525,10 +525,38 @@ For RR, with treatment total `n1_i = a_i + b_i` and control total
 RR_MH = sum(a_i n0_i / n_i) / sum(c_i n1_i / n_i)
 ```
 
-The model-scale estimate is the logarithm of the pooled ratio. Standard errors
-use the Greenland-Robins equations implemented in the estimator. An undefined
-raw pooled ratio raises `InvalidStudyDataError` and recommends an explicit MH
-continuity correction.
+The OR and RR model-scale estimates are the logarithms of the pooled ratios.
+Their standard errors use the Greenland-Robins equations implemented in the
+estimator.
+
+For RD, define `w_i = n1_i n0_i / n_i`, `W = sum(w_i)`, and
+`RD_i = a_i / n1_i - c_i / n0_i`. The MH point estimate is:
+
+```text
+RD_MH = sum(w_i RD_i) / W
+```
+
+Its Sato-Greenland-Robins sampling variance is calculated from:
+
+```text
+A = sum(c_i (n1_i / n_i)^2
+        - a_i (n0_i / n_i)^2
+        + (n1_i / n_i) (n0_i / n_i) (n0_i - n1_i) / 2)
+
+B = sum(a_i (n0_i - c_i) / n_i
+        + c_i (n1_i - a_i) / n_i)
+
+Var(RD_MH) = (RD_MH A + B / 2) / W^2
+```
+
+RD remains on the identity scale and its normal confidence interval is not
+clipped to `[-1, 1]`. The result records
+`mh_rd_variance="Sato-Greenland-Robins"` in its method options.
+
+An undefined raw OR/RR estimator or a non-positive RD sampling variance raises
+`InvalidStudyDataError`. If the review protocol permits it, an explicit
+positive `mh_continuity_correction` can make a sparse fit estimable; the
+decision is recorded separately from the correction used for study effects.
 
 ## Continuous study effects
 
