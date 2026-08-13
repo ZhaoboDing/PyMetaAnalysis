@@ -47,6 +47,11 @@ its single-study row so that this difference remains explicit and auditable.
 `generic_metafor.json` includes `confint(..., type="QP")` reference values for
 tau-squared and the monotonic tau, I-squared, and H-squared transformations.
 
+`binary_metafor.json` covers OR/RR/RD study effects and inverse-variance fits,
+plus uncorrected and explicitly corrected common-effect Mantel-Haenszel fits.
+Its RD MH references exercise the Sato-Greenland-Robins sampling variance for
+both ordinary and sparse tables.
+
 `meta_regression_metafor.json` covers common- and mixed-effects moderator
 models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit
 categorical coding, a no-intercept model, multivariable joint tests, fitted

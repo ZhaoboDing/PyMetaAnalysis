@@ -50,6 +50,10 @@ Binary analyses record:
 - non-informative relative-effect exclusions;
 - a separate Mantel-Haenszel correction record when MH pooling is used.
 
+An MH risk-difference result additionally records
+`mh_rd_variance="Sato-Greenland-Robins"` in its method options, and generated
+Methods text names that variance convention.
+
 This separation matters because exact Mantel-Haenszel pooling can use raw
 tables even when a corrected individual effect is needed for display and
 heterogeneity calculations.

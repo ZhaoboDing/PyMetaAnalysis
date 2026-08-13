@@ -274,6 +274,22 @@ def test_binary_method_details_distinguish_effect_and_mh_corrections() -> None:
     assert "Mantel–Haenszel pooling used continuity correction 0" in details
 
 
+def test_mh_risk_difference_reporting_records_sato_variance() -> None:
+    result = ma.meta_binary(
+        event_treat=[12, 5, 20, 7],
+        n_treat=[100, 80, 120, 90],
+        event_control=[18, 9, 15, 10],
+        n_control=[110, 75, 130, 95],
+        measure="RD",
+        method="MH",
+    )
+
+    details = result.method_details()
+    payload = result.report(include_studies=False).to_dict()
+    assert "Sato-Greenland-Robins variance" in details
+    assert payload["method"]["options"]["mh_rd_variance"] == ("Sato-Greenland-Robins")
+
+
 def test_report_payload_contains_resolved_methods_diagnostics_and_studies() -> None:
     result = _generic_with_exclusion()
     report = result.report()

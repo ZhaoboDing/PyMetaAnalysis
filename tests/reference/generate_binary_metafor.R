@@ -68,22 +68,20 @@ calculate_clean <- function(measure) {
     common_iv = fit_summary(common),
     random_reml_iv = fit_summary(random)
   )
-  if (measure %in% c("OR", "RR")) {
-    mh <- rma.mh(
-      measure = measure,
-      ai = event_treat,
-      bi = n_treat - event_treat,
-      ci = event_control,
-      di = n_control - event_control,
-      data = clean_input,
-      add = c(0.5, 0),
-      to = c("only0", "none"),
-      drop00 = c(TRUE, TRUE),
-      correct = FALSE
-    )
-    result$mantel_haenszel <- fit_summary(mh, include_tau2 = FALSE)
-    result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
-  }
+  mh <- rma.mh(
+    measure = measure,
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = clean_input,
+    add = c(0.5, 0),
+    to = c("only0", "none"),
+    drop00 = c(measure != "RD", measure != "RD"),
+    correct = FALSE
+  )
+  result$mantel_haenszel <- fit_summary(mh, include_tau2 = FALSE)
+  result$mantel_haenszel$heterogeneity <- heterogeneity_summary(mh)
   result
 }
 
@@ -140,9 +138,38 @@ calculate_sparse_rd <- function() {
     to = "only0",
     drop00 = FALSE
   )
+  mh <- rma.mh(
+    measure = "RD",
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = sparse_input,
+    add = c(0.5, 0),
+    to = c("only0", "none"),
+    drop00 = c(FALSE, FALSE),
+    correct = FALSE
+  )
+  mh_corrected <- rma.mh(
+    measure = "RD",
+    ai = event_treat,
+    bi = n_treat - event_treat,
+    ci = event_control,
+    di = n_control - event_control,
+    data = sparse_input,
+    add = c(0.5, 0.5),
+    to = c("only0", "only0"),
+    drop00 = c(FALSE, FALSE),
+    correct = FALSE
+  )
   list(
     metafor_effect = unname(effects$yi),
-    variance = unname(effects$vi)
+    variance = unname(effects$vi),
+    mantel_haenszel = fit_summary(mh, include_tau2 = FALSE),
+    mantel_haenszel_corrected = fit_summary(
+      mh_corrected,
+      include_tau2 = FALSE
+    )
   )
 }
 

@@ -35,8 +35,9 @@ result = ma.meta_binary(
 print(result.summary())
 ```
 
-Mantel-Haenszel pooling currently supports OR and RR with `model="common"` and
-`ci_method="normal"`.
+Mantel-Haenszel pooling supports OR, RR, and RD with `model="common"` and
+`ci_method="normal"`. MH risk differences use the Sato-Greenland-Robins
+sampling variance, recorded in `dict(result.method.options)`.
 
 ## Random-effects analysis
 
@@ -71,7 +72,8 @@ them to the generic inverse-variance model.
 For OR and RR, `result.estimate` and `result.ci` stay on the log model scale.
 Use `display_estimate` and `display_ci` for exponentiated ratios.
 
-RD is available through inverse-variance pooling:
+For a common-effect RD, choose either MH or inverse-variance pooling explicitly.
+The MH form is:
 
 ```python
 result = ma.meta_binary(
@@ -81,7 +83,7 @@ result = ma.meta_binary(
     event_control="events_c",
     n_control="total_c",
     measure="RD",
-    method="IV",
+    method="MH",
     model="common",
     rd_zero_variance="correct",
 )
@@ -91,6 +93,8 @@ result = ma.meta_binary(
 their raw RD and uses corrected counts only for sampling variance. Use
 `"exclude"` for a protocol that excludes these studies before all synthesis
 calculations. See [zero-event studies](zero-events.md) for details.
+Use `method="IV"` for random-effects RD or when inverse-variance common-effect
+pooling is the prespecified estimator.
 
 ## Input validation
 

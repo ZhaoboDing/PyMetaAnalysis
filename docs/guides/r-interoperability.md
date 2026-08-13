@@ -68,7 +68,7 @@ remain explicit attributes in Python.
 | `model="common"` | `rma.uni(..., method="EE")` | `common=TRUE, random=FALSE` | Inverse-variance common-effect fit |
 | `model="random"` | random-effects `rma.uni()` | `random=TRUE` | Requires a tau-squared policy |
 | `method="IV"` | inverse-variance weighting | `method="Inverse"` | Binary API only; generic and continuous fits are IV |
-| `method="MH"` | `rma.mh()` | `method="MH"` | Common-effect OR/RR only |
+| `method="MH"` | `rma.mh()` | `method="MH"` | Common-effect OR/RR/RD |
 | `tau2_method=None` (resolved as `"REML"`) | `method="REML"` | `method.tau="REML"` | PyMetaAnalysis random-effects default |
 | `tau2_method="PM"` | `method="PM"` | `method.tau="PM"` | Paule-Mandel |
 | `tau2_method="DL"` | `method="DL"` | `method.tau="DL"` | DerSimonian-Laird |
@@ -127,6 +127,12 @@ supports dataset-wide correction scopes and methods that PyMetaAnalysis does
 not implement. For OR/RR, double-zero and double-all studies are excluded from
 all model and heterogeneity calculations by default while remaining visible in
 the result table. RD uses its separate `rd_zero_variance` policy.
+
+For `measure="RD"`, PyMetaAnalysis and `metafor::rma.mh(measure="RD")` use
+the Sato-Greenland-Robins sampling variance. A separate explicit
+`mh_continuity_correction` changes the MH tables; the study-effect
+`continuity_correction` still affects only displayed study variances and
+heterogeneity.
 
 Read [zero-event studies](zero-events.md) before translating sparse analyses.
 

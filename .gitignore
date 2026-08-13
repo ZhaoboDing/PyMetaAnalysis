@@ -1,5 +1,6 @@
 # Local design notes are intentionally not part of the published project.
 /DESIGN.md
+/articles/
 
 # Python environments and generated files
 /.venv/

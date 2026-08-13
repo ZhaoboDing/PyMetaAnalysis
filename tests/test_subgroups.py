@@ -141,14 +141,21 @@ def test_generic_subgroups_accept_standard_error_column() -> None:
     }
 
 
-def test_binary_mantel_haenszel_supports_subgroups() -> None:
+@pytest.mark.parametrize(
+    ("measure", "display_scale"),
+    [("RR", "exp"), ("RD", "identity")],
+)
+def test_binary_mantel_haenszel_supports_subgroups(
+    measure: str,
+    display_scale: str,
+) -> None:
     result = ma.meta_binary(
         event_treat=[12, 5, 20, 7],
         n_treat=[100, 80, 120, 90],
         event_control=[18, 9, 15, 10],
         n_control=[110, 75, 130, 95],
         subgroup=["early", "early", "late", "late"],
-        measure="RR",
+        measure=measure,
         method="MH",
         model="common",
     )
@@ -158,7 +165,7 @@ def test_binary_mantel_haenszel_supports_subgroups() -> None:
         group.method.pooling_method == "mantel_haenszel"
         for group in result.groups.values()
     )
-    assert result.overall.display_scale == "exp"
+    assert result.overall.display_scale == display_scale
     assert np.isfinite(result.q_between)
 
 

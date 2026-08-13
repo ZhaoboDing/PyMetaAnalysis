@@ -105,6 +105,56 @@ def test_mantel_haenszel_rr_matches_revman_formula_reference() -> None:
     assert result.study_results["normalized_weight"].sum() == pytest.approx(1.0)
 
 
+def test_mantel_haenszel_rd_matches_sato_formula_reference() -> None:
+    a = EVENT_TREAT.astype(float)
+    c = EVENT_CONTROL.astype(float)
+    n1 = N_TREAT.astype(float)
+    n0 = N_CONTROL.astype(float)
+    total = n1 + n0
+    weights = n1 * n0 / total
+    expected_estimate = float(np.sum(weights * (a / n1 - c / n0)) / np.sum(weights))
+    linear_component = float(
+        np.sum(
+            c * (n1 / total) ** 2
+            - a * (n0 / total) ** 2
+            + (n1 / total) * (n0 / total) * (n0 - n1) / 2.0
+        )
+    )
+    binomial_component = float(np.sum(a * (n0 - c) / total + c * (n1 - a) / total))
+    expected_variance = (
+        expected_estimate * linear_component + binomial_component / 2.0
+    ) / np.sum(weights) ** 2
+
+    result = ma.meta_binary(
+        event_treat=EVENT_TREAT,
+        n_treat=N_TREAT,
+        event_control=EVENT_CONTROL,
+        n_control=N_CONTROL,
+        measure="RD",
+        method="MH",
+    )
+
+    assert expected_estimate == pytest.approx(-0.01292790437130955, abs=1e-15)
+    assert np.sqrt(expected_variance) == pytest.approx(0.022975705712710185, abs=1e-15)
+    assert result.estimate == pytest.approx(expected_estimate, abs=1e-15)
+    assert result.standard_error == pytest.approx(np.sqrt(expected_variance), abs=1e-15)
+    assert result.ci == pytest.approx((-0.05795946008761268, 0.03210365134499358))
+    assert result.effect_scale == "identity"
+    assert result.display_scale == "identity"
+    assert dict(result.method.options)["mh_rd_variance"] == ("Sato-Greenland-Robins")
+    np.testing.assert_allclose(
+        result.study_results["normalized_weight"],
+        [
+            0.26228921754949985,
+            0.19383250094567145,
+            0.3124579915244224,
+            0.2314202899804064,
+        ],
+        rtol=5e-15,
+        atol=5e-15,
+    )
+
+
 def test_mantel_haenszel_rejects_explicit_tau2_method() -> None:
     with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
         ma.meta_binary(
@@ -301,6 +351,52 @@ def test_risk_difference_zero_variance_policy_covers_all_boundary_tables() -> No
         if record.name == "rd_zero_variance_policy"
     )
     assert policy_record.affected_rows == (0, 1, 2, 3)
+
+
+def test_mh_risk_difference_respects_zero_variance_policy() -> None:
+    kwargs = {
+        "event_treat": [0, 20, 20, 0, 4],
+        "n_treat": [20, 20, 20, 20, 20],
+        "event_control": [0, 20, 0, 20, 5],
+        "n_control": [20, 20, 20, 20, 20],
+        "measure": "RD",
+        "method": "MH",
+    }
+
+    retained = ma.meta_binary(**kwargs)
+    assert retained.k == 5
+    assert retained.study_results["included"].all()
+    assert np.isfinite(retained.standard_error)
+
+    excluded = ma.meta_binary(**kwargs, rd_zero_variance="exclude")
+    assert excluded.k == 1
+    assert excluded.study_results["included"].tolist() == [
+        False,
+        False,
+        False,
+        False,
+        True,
+    ]
+    assert excluded.q_df == 0
+
+
+def test_degenerate_mh_rd_variance_requires_explicit_pooling_correction() -> None:
+    kwargs = {
+        "event_treat": [0, 0],
+        "n_treat": [20, 30],
+        "event_control": [0, 0],
+        "n_control": [20, 30],
+        "measure": "RD",
+        "method": "MH",
+    }
+
+    with pytest.raises(ma.InvalidStudyDataError, match="non-positive sampling"):
+        ma.meta_binary(**kwargs)
+
+    corrected = ma.meta_binary(**kwargs, mh_continuity_correction=0.5)
+    assert corrected.estimate == pytest.approx(0.0)
+    assert corrected.standard_error > 0.0
+    assert corrected.study_results["mh_continuity_corrected"].all()
 
 
 def test_rd_zero_variance_option_is_validated_and_rd_specific() -> None:
@@ -552,7 +648,6 @@ def test_binary_vectors_must_have_equal_lengths() -> None:
     ("kwargs", "match"),
     [
         ({"method": "MH", "model": "random"}, "only for model='common'"),
-        ({"method": "MH", "measure": "RD"}, "use method='IV'"),
         ({"method": "MH", "ci_method": "HK"}, "only ci_method='normal'"),
         ({"method": "mystery"}, "method must be"),
         ({"measure": "mystery", "method": "IV"}, "measure must be"),
@@ -599,3 +694,29 @@ def test_swapping_groups_inverts_relative_pooled_effect(
     assert reverse.display_ci == pytest.approx(
         (1.0 / forward.display_ci[1], 1.0 / forward.display_ci[0])
     )
+
+
+@pytest.mark.parametrize("method", ["IV", "MH"])
+def test_swapping_groups_negates_pooled_risk_difference(method: str) -> None:
+    forward = ma.meta_binary(
+        event_treat=EVENT_TREAT,
+        n_treat=N_TREAT,
+        event_control=EVENT_CONTROL,
+        n_control=N_CONTROL,
+        measure="RD",
+        method=method,
+        model="common",
+    )
+    reverse = ma.meta_binary(
+        event_treat=EVENT_CONTROL,
+        n_treat=N_CONTROL,
+        event_control=EVENT_TREAT,
+        n_control=N_TREAT,
+        measure="RD",
+        method=method,
+        model="common",
+    )
+
+    assert reverse.estimate == pytest.approx(-forward.estimate)
+    assert reverse.standard_error == pytest.approx(forward.standard_error)
+    assert reverse.ci == pytest.approx((-forward.ci_high, -forward.ci_low))

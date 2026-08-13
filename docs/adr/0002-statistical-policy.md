@@ -4,6 +4,8 @@
 - Date: 2026-07-15
 - Amendment: the prediction-interval variance decision is superseded by
   [ADR 0004](0004-hartung-knapp-prediction-intervals.md).
+- Amendment: the decision to defer Mantel-Haenszel risk differences is
+  superseded by [ADR 0005](0005-mantel-haenszel-risk-difference.md).
 
 ## Context
 

@@ -36,15 +36,15 @@ protocols.
 | Data and model | Available pooling method |
 | --- | --- |
 | Generic effects, common or random | Inverse variance |
-| Binary OR/RR, common effect | Mantel-Haenszel or inverse variance |
-| Binary OR/RR, random effects | Inverse variance |
-| Binary RD, common or random | Inverse variance |
+| Binary OR/RR/RD, common effect | Mantel-Haenszel or inverse variance |
+| Binary OR/RR/RD, random effects | Inverse variance |
 | Continuous MD/SMD, common or random | Inverse variance |
 
 Mantel-Haenszel and inverse variance are different estimators, not aliases.
 PyMetaAnalysis does not extrapolate its common-effect Mantel-Haenszel weights
-into an undocumented random-effects procedure. Mantel-Haenszel OR/RR pooling
-uses raw tables by default and is not offered for RD.
+into an undocumented random-effects procedure. Mantel-Haenszel OR/RR/RD
+pooling uses raw tables by default. MH RD uses the Sato-Greenland-Robins
+sampling variance; it is not a random-effects estimator.
 
 ## Estimating tau-squared
 

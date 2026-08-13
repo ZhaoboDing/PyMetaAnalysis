@@ -71,7 +71,8 @@ RD-specific; setting `exclude` for OR or RR is rejected.
 
 ## Mantel-Haenszel correction is separate
 
-Exact common-effect Mantel-Haenszel OR/RR pooling uses raw tables by default:
+Uncorrected common-effect Mantel-Haenszel OR/RR/RD pooling uses raw tables by
+default:
 
 ```python
 mh_continuity_correction = None
@@ -82,6 +83,13 @@ mh_correction_scope = "only_zero_studies"
 and heterogeneity. It does not silently alter the pooled Mantel-Haenszel
 estimator. If an exact pooled estimator is undefined, choose an explicit
 positive `mh_continuity_correction` and report that decision.
+
+For MH RD, `rd_zero_variance="exclude"` removes zero-variance boundary rows
+before every synthesis calculation. With the default `"correct"` policy, the
+raw table still enters the MH point estimate unless an explicit
+`mh_continuity_correction` is supplied. If the Sato-Greenland-Robins variance
+is non-positive, the uncorrected fit raises instead of silently changing the
+tables; a positive MH correction is an explicit protocol choice.
 
 ## Inspect what happened
 
