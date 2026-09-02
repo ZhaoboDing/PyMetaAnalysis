@@ -19,6 +19,7 @@ Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
+Rscript tests/reference/generate_small_study_effects_metafor.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
@@ -92,3 +93,5 @@ models. `meta_regression_collinearity_metafor.json` covers term VIF plus
 grouped categorical-moderator GVIF/GSIF for common and REML fits.
 `meta_regression_contrasts_metafor.json` covers individual and joint explicit
 linear hypotheses for normal and Hartung-Knapp inference.
+`small_study_effects_metafor.json` covers the classical Egger regression test
+with standard error as predictor and multiplicative residual dispersion.

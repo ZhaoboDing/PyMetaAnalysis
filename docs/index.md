@@ -65,8 +65,9 @@ Binary analyses with sparse data should also review
 [zero-event studies](guides/zero-events.md).
 
 After fitting a model, continue with [sensitivity analysis](guides/sensitivity-analysis.md)
-and [provenance and reporting](guides/provenance-reporting.md) to assess stability
-and create an auditable export.
+and [small-study effects](guides/small-study-effects.md) to assess stability and
+funnel asymmetry. Use [provenance and reporting](guides/provenance-reporting.md)
+to create an auditable export.
 
 The [statistical methods](methods/statistical-methods.md) page is the formula-
 level implementation contract. [Validation](validation.md) explains the R

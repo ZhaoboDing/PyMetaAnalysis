@@ -25,6 +25,7 @@ fixtures used by this project.
 | Meta-regression collinearity | `regression.collinearity()` | `vif()` plus weighted design diagnostics | — |
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
+| Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.
 One documented Python entry point per input shape keeps result types and
@@ -212,6 +213,25 @@ metagen(
 Check the R package's explicit ad hoc HK option before treating the last call
 as numerically equivalent.
 
+## Classical Egger regression
+
+```python
+egger = result.egger_test()
+```
+
+corresponds to the classical `metafor` configuration:
+
+```r
+regtest(fit, model = "lm", predictor = "sei")
+```
+
+PyMetaAnalysis does not currently expose `metafor`'s default
+`model="rma"` version. The returned `intercept` is the tested asymmetry
+coefficient, while `limit_estimate` is the extrapolated effect as the standard
+error tends to zero. Review the dedicated
+[small-study-effects guide](small-study-effects.md) before treating similarly
+named R functions as numerically interchangeable.
+
 ## Primary R references
 
 - [`metafor::rma.uni`](https://wviechtb.github.io/metafor/reference/rma.uni.html)
@@ -219,6 +239,7 @@ as numerically equivalent.
 - [`metafor::rma.mh`](https://wviechtb.github.io/metafor/reference/rma.mh.html)
 - [`metafor::rma.peto`](https://wviechtb.github.io/metafor/reference/rma.peto.html)
 - [`metafor::escalc`](https://wviechtb.github.io/metafor/reference/escalc.html)
+- [`metafor::regtest`](https://wviechtb.github.io/metafor/reference/regtest.html)
 - [`meta::metagen`](https://search.r-project.org/CRAN/refmans/meta/html/metagen.html)
 - [`meta::metabin`](https://search.r-project.org/CRAN/refmans/meta/html/metabin.html)
 - [`meta::metacont`](https://search.r-project.org/CRAN/refmans/meta/html/metacont.html)

@@ -145,6 +145,7 @@ Rows excluded by missing-value or sparse-data policies remain in
 ```python
 leave_one_out = result.leave_one_out().to_dataframe()
 cumulative = result.cumulative(order="publication_year").to_dataframe()
+egger = result.egger_test()
 regression_deleted = regression.leave_one_out()
 regression_coefficient_changes = regression_deleted.coefficients
 regression_influence = regression.influence()
@@ -163,7 +164,10 @@ ax = result.funnel()
 ```
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
-are descriptive small-study-effect diagnostics, not proof of publication bias.
+are descriptive small-study-effect diagnostics. The classical Egger regression
+test provides a formal asymmetry diagnostic with explicit few-study and
+effect-measure cautions. Neither a funnel plot nor the test proves publication
+bias.
 Meta-regression leave-one-out results also expose a long-form coefficient
 change table. Exact influence diagnostics add externally standardized
 residuals, Cook's distance, DFBETAS, and explicit heuristic screening
@@ -190,7 +194,7 @@ The complete documentation is published at
 - [Generic](https://zhaoboding.github.io/PyMetaAnalysis/guides/generic-effects/), [binary](https://zhaoboding.github.io/PyMetaAnalysis/guides/binary-outcomes/), [continuous](https://zhaoboding.github.io/PyMetaAnalysis/guides/continuous-outcomes/), and [correlation](https://zhaoboding.github.io/PyMetaAnalysis/guides/correlation-outcomes/) guides
 - [Meta-regression](https://zhaoboding.github.io/PyMetaAnalysis/guides/meta-regression/)
 - [Choosing methods](https://zhaoboding.github.io/PyMetaAnalysis/guides/method-selection/) and [statistical formulas](https://zhaoboding.github.io/PyMetaAnalysis/methods/statistical-methods/)
-- [Sensitivity analysis](https://zhaoboding.github.io/PyMetaAnalysis/guides/sensitivity-analysis/) and [plotting](https://zhaoboding.github.io/PyMetaAnalysis/guides/plotting/)
+- [Sensitivity analysis](https://zhaoboding.github.io/PyMetaAnalysis/guides/sensitivity-analysis/), [small-study effects](https://zhaoboding.github.io/PyMetaAnalysis/guides/small-study-effects/), and [plotting](https://zhaoboding.github.io/PyMetaAnalysis/guides/plotting/)
 - [Public API](https://zhaoboding.github.io/PyMetaAnalysis/reference/api/), [result objects](https://zhaoboding.github.io/PyMetaAnalysis/reference/results/), and [report schema](https://zhaoboding.github.io/PyMetaAnalysis/reference/report-schema/)
 - [Validation strategy](https://zhaoboding.github.io/PyMetaAnalysis/validation/) and [scope/limitations](https://zhaoboding.github.io/PyMetaAnalysis/limitations/)
 - [Citation guidance](https://zhaoboding.github.io/PyMetaAnalysis/citation/)

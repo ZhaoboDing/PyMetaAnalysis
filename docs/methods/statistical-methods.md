@@ -210,6 +210,44 @@ proportion internally and is formatted as a percentage in human-readable
 output. With one study, Q is zero and its p-value, I-squared, and H-squared are
 unavailable.
 
+## Classical Egger regression test
+
+For included study effect `y_i`, sampling variance `v_i`, and standard error
+`s_i = sqrt(v_i)`, the classical Egger regression is:
+
+```text
+y_i / s_i = alpha + beta * (1 / s_i) + error_i
+```
+
+This is fitted as the algebraically equivalent weighted regression:
+
+```text
+y_i = beta + alpha * s_i + epsilon_i
+weight_i = 1 / v_i
+```
+
+Let `X` contain an intercept and `s_i`, let `W = diag(1/v_i)`, and let
+`df = k-2`:
+
+```text
+b = (X' W X)^(-1) X' W y
+phi = sum(w_i * (y_i - X_i b)^2) / df
+Cov(b) = phi * (X' W X)^(-1)
+```
+
+The implementation uses a scaled singular-value decomposition rather than an
+explicit inverse. The second coefficient is `alpha`, reported as the
+`EggerTestResult.intercept`, and is tested against zero with a two-sided t test
+using `k-2` degrees of freedom. The first coefficient is `beta`, reported as
+the model-scale `limit_estimate`; its interval uses the same t distribution.
+
+This is the weighted-regression-with-multiplicative-dispersion version produced
+by `metafor::regtest(model="lm", predictor="sei")`. It is distinct from an
+additive random/mixed-effects meta-regression. The test requires at least three
+studies and identifiable variation in standard errors. Interpretation and
+effect-measure limitations are documented under
+[small-study effects](../guides/small-study-effects.md).
+
 ## Meta-regression
 
 For `k` study effects, let `X` be the full-rank `k`-by-`p` design matrix. It

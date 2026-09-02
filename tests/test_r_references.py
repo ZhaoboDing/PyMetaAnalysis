@@ -33,6 +33,7 @@ CONTINUOUS = _load_reference("continuous_metafor.json")
 WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
 CORRELATION = _load_reference("correlation_metafor.json")
+SMALL_STUDY_EFFECTS = _load_reference("small_study_effects_metafor.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
@@ -95,6 +96,7 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
         CORRELATION,
         WORKFLOW,
         META_REGRESSION,
+        SMALL_STUDY_EFFECTS,
     ]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}

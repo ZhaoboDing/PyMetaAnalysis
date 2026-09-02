@@ -69,6 +69,9 @@ Property-based and targeted tests check invariants such as:
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.
+- Classical Egger regression is invariant to study order and effect-location
+  shifts; its weighted coefficients, multiplicative-dispersion covariance,
+  t inference, and limit estimate match direct calculations.
 
 ### Numerical edge cases
 
@@ -97,6 +100,7 @@ The current fixture families cover:
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across numeric, categorical, and multivariable common/mixed designs |
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 | `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |
+| `small_study_effects_metafor.json` | Classical standard-error Egger regression intercept, multiplicative-dispersion standard errors, t test, and limit estimate |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -139,6 +143,7 @@ Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
+Rscript tests/reference/generate_small_study_effects_metafor.R
 ```
 
 Pass an optional output file to review regenerated values before replacement:
