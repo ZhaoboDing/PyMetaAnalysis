@@ -17,6 +17,7 @@ REFERENCE_DATA = pd.read_csv(REFERENCE_DIR / "small_study_effects_input.csv")
 REFERENCE = json.loads(
     (REFERENCE_DIR / "small_study_effects_metafor.json").read_text(encoding="utf-8")
 )
+R_T_QUANTILE_ATOL = 1e-11
 
 
 def _reference_result() -> ma.MetaAnalysisResult:
@@ -71,7 +72,11 @@ def test_egger_matches_metafor_reference() -> None:
     assert result.intercept_standard_error == pytest.approx(
         REFERENCE["intercept_standard_error"], rel=5e-13
     )
-    assert result.intercept_ci == pytest.approx(REFERENCE["intercept_ci"], rel=5e-13)
+    # R's qt() and older SciPy t.ppf() implementations differ by a few
+    # picounits at this tail probability; coefficient-level checks stay tighter.
+    assert result.intercept_ci == pytest.approx(
+        REFERENCE["intercept_ci"], rel=5e-13, abs=R_T_QUANTILE_ATOL
+    )
     assert result.statistic == pytest.approx(REFERENCE["statistic"], rel=5e-13)
     assert result.statistic_name == "t"
     assert result.distribution == "t"
@@ -83,7 +88,9 @@ def test_egger_matches_metafor_reference() -> None:
     assert result.limit_standard_error == pytest.approx(
         REFERENCE["limit_standard_error"], rel=5e-13
     )
-    assert result.limit_ci == pytest.approx(REFERENCE["limit_ci"], rel=5e-13)
+    assert result.limit_ci == pytest.approx(
+        REFERENCE["limit_ci"], rel=5e-13, abs=R_T_QUANTILE_ATOL
+    )
     assert result.method == "egger"
     assert result.model == "weighted_regression_multiplicative_dispersion"
     assert result.predictor == "standard_error"
