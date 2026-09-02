@@ -217,6 +217,36 @@ def test_peto_or_matches_observed_minus_expected_formula() -> None:
     assert "mh_correction_scope" not in options
 
 
+def test_peto_is_exactly_symmetric_for_highly_imbalanced_arms() -> None:
+    forward = ma.meta_binary(
+        event_treat=[1],
+        n_treat=[2],
+        event_control=[235],
+        n_control=[410],
+        measure="OR",
+        method="Peto",
+    )
+    swapped = ma.meta_binary(
+        event_treat=[235],
+        n_treat=[410],
+        event_control=[1],
+        n_control=[2],
+        measure="OR",
+        method="Peto",
+    )
+
+    assert swapped.estimate == -forward.estimate
+    assert swapped.standard_error == forward.standard_error
+    assert (
+        swapped.study_results.loc[0, "effect"]
+        == -forward.study_results.loc[0, "effect"]
+    )
+    assert (
+        swapped.study_results.loc[0, "variance"]
+        == forward.study_results.loc[0, "variance"]
+    )
+
+
 @pytest.mark.parametrize(
     ("method", "measure", "option"),
     [
