@@ -6,6 +6,13 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- `MetaAnalysisResult.egger_test()` implements the classical standard-error
+  Egger regression test for funnel-plot asymmetry with multiplicative
+  dispersion, t inference, an explicitly labeled limit estimate, applicability
+  warnings, and an independent R `metafor` reference fixture.
+
 ## 0.7.0 - 2026-09-02
 
 ### Added

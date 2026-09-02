@@ -1,0 +1,20 @@
+{
+  "generated_by": "R metafor",
+  "r_version": "R version 4.6.1 (2026-06-24 ucrt)",
+  "metafor_version": "5.0.1",
+  "jsonlite_version": "2.0.0",
+  "method": "regtest(model='lm', predictor='sei')",
+  "model": "weighted regression with multiplicative dispersion",
+  "predictor": "standard error",
+  "k": 12,
+  "confidence_level": 0.94999999999999996,
+  "intercept": 0.69203326238082374,
+  "intercept_standard_error": 0.32464817297568382,
+  "intercept_ci": [-0.03132794505265768, 1.4153944698143053],
+  "statistic": 2.1316407113514146,
+  "df": 10,
+  "pvalue": 0.058858352025680849,
+  "limit_estimate": 0.25586802786871704,
+  "limit_standard_error": 0.064487081376999864,
+  "limit_ci": [0.11218185640142311, 0.399554199336011]
+}

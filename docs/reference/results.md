@@ -192,6 +192,29 @@ See [report schema](report-schema.md) for the complete serialized structure.
 Matplotlib is imported only when a plot is requested. Parameters and display-
 scale behavior are documented in [plotting](../guides/plotting.md).
 
+### Egger funnel-asymmetry diagnostic
+
+`egger_test(confidence_level=None)` returns an immutable `EggerTestResult` for
+the classical standard-error Egger regression. Its primary fields are:
+
+| Attribute | Meaning |
+| --- | --- |
+| `intercept`, `intercept_standard_error`, `intercept_ci` | Asymmetry intercept and t interval |
+| `statistic`, `statistic_name`, `distribution`, `df`, `pvalue` | Distribution-explicit two-sided `t_(k-2)` test of a zero intercept |
+| `limit_estimate`, `limit_standard_error`, `limit_ci` | Extrapolated effect as standard error tends to zero, on the model scale |
+| `display_limit_estimate`, `display_limit_ci` | Limit estimate transformed like the source result |
+| `k`, `confidence_level` | Included studies and interval level |
+| `method`, `model`, `predictor` | Explicit diagnostic configuration |
+| `condition_number` | Condition number of the scaled weighted regression design |
+| `warnings` | Few-study, effect-measure, and interpretation cautions |
+
+`intercept` is the intercept in the standardized-normal-deviate-on-precision
+form, although the implementation uses its algebraically equivalent weighted
+effect-on-standard-error form. `to_dict()` returns a detached mapping. The
+diagnostic consumes only included study rows and does not modify or become part
+of the original result report. See
+[small-study effects](../guides/small-study-effects.md) before interpretation.
+
 ## `MetaRegressionResult`
 
 Meta-regression has no unique pooled effect, so this result deliberately omits

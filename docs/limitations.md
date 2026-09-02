@@ -24,6 +24,8 @@ deferred functionality explicit.
   only one included study;
 - leave-one-out and cumulative repeated-fit workflows;
 - forest and descriptive funnel plots;
+- the classical standard-error Egger regression test for funnel-plot
+  asymmetry, with multiplicative dispersion and t inference;
 - structured provenance and reports;
 - study-level Meta-regression with numeric and explicitly encoded categorical
   moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
@@ -48,8 +50,9 @@ deferred functionality explicit.
   correlations, and corrections for measurement unreliability;
 - Knapp-Hartung variants beyond the two documented choices;
 - prediction-interval methods beyond the documented default and Riley rules;
-- formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias
-  procedures;
+- random/mixed-effects Egger regression, Begg rank correlation, Harbord or
+  Peters binary-outcome tests, trim-and-fill, selection-model, or other
+  publication-bias procedures;
 - Meta-regression DFFITS, covariance ratios, influence plots, or simulated and
   re-estimated VIF variants;
 - automatic conversion from confidence intervals, p-values, or raw papers to
@@ -88,7 +91,11 @@ or causal effects. The package warns below ten studies but does not prohibit a
 scientifically prespecified, full-rank model when `k > p`.
 
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
-squared, and asymmetry does not establish publication bias.
+squared. The classical Egger test diagnoses a relationship between effects and
+standard errors and is underpowered with few studies; it can also be
+artefactual for measures such as OR and SMD. Neither visual nor tested
+asymmetry establishes publication bias, and a non-significant test does not
+exclude missing evidence.
 
 Continuity corrections and RD boundary policies can materially affect sparse
 binary analyses. They must be chosen in the review protocol and reported.

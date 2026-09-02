@@ -45,6 +45,7 @@ nav:
       - Meta-regression: guides/meta-regression.md
       - Zero-event studies: guides/zero-events.md
       - Sensitivity analysis: guides/sensitivity-analysis.md
+      - Small-study effects: guides/small-study-effects.md
       - Plotting: guides/plotting.md
       - Provenance and reporting: guides/provenance-reporting.md
       - Mapping R workflows: guides/r-interoperability.md

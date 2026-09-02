@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         SubgroupCumulativeMetaAnalysisResult,
         SubgroupLeaveOneOutResult,
     )
+    from .small_study_effects import EggerTestResult
 else:
     Axes = Any
 
@@ -522,6 +523,17 @@ class MetaAnalysisResult:
             ascending=ascending,
             collapse=collapse,
         )
+
+    def egger_test(
+        self,
+        *,
+        confidence_level: float | None = None,
+    ) -> EggerTestResult:
+        """Run the classical Egger regression test for funnel-plot asymmetry."""
+
+        from .small_study_effects import egger_test
+
+        return egger_test(self, confidence_level=confidence_level)
 
     def forest(
         self,

@@ -318,11 +318,14 @@ Every `MetaAnalysisResult` provides:
 | `to_dataframe()` | Defensive copy of the study table |
 | `leave_one_out()` | `LeaveOneOutResult` |
 | `cumulative(...)` | `CumulativeMetaAnalysisResult` |
+| `egger_test(confidence_level=None)` | `EggerTestResult` |
 | `forest(...)` | Matplotlib `Axes` |
 | `funnel(...)` | Matplotlib `Axes` |
 
-`SubgroupMetaAnalysisResult` has the same methods except `funnel()`, and its
-sensitivity methods return subgroup composite result classes.
+`SubgroupMetaAnalysisResult` omits `funnel()` and `egger_test()`; use its
+`overall` or individual `groups` results when either diagnostic is
+scientifically appropriate. Its sensitivity methods return subgroup composite
+result classes.
 
 `MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
 `to_dataframe()`, `predict(new_data)`, `test_moderator(name)`,
@@ -358,6 +361,15 @@ Subgroup forest plots omit `pooled_label`. See [plotting](../guides/plotting.md)
 
 Funnel plots accept `ax`, `effect_label`, `confidence_level`,
 `show_pseudo_confidence_interval`, `warn_on_few_studies`, and `log_scale`.
+
+### `egger_test()` parameters
+
+The optional `confidence_level` controls coefficient intervals and defaults to
+the fitted analysis level. The classical test always uses study standard error
+as predictor, inverse sampling-variance weights, multiplicative dispersion,
+and a `t_(k-2)` reference distribution. See
+[small-study effects](../guides/small-study-effects.md) for applicability and
+interpretation.
 
 ## Configuration and diagnostics
 

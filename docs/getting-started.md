@@ -165,6 +165,17 @@ ax = result.funnel()
 Both methods return a Matplotlib `Axes` and never call `show()`. This keeps them
 usable in notebooks, scripts, tests, and composed figures.
 
+The classical Egger regression test is available separately from plotting:
+
+```python
+egger = result.egger_test()
+print(egger)
+```
+
+It tests for funnel-plot asymmetry or small-study effects, not publication bias
+itself. Read [small-study effects](guides/small-study-effects.md) before using or
+interpreting it.
+
 See [plotting](guides/plotting.md) for every parameter, display-scale rules,
 axes composition, and interpretation cautions.
 

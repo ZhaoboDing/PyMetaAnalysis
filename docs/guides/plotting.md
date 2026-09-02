@@ -96,8 +96,10 @@ tau-squared.
 
 Funnel asymmetry can reflect small-study effects, heterogeneity, outcome
 selection, design differences, chance, or publication processes. It is not by
-itself evidence of publication bias. PyMetaAnalysis currently provides the
-plot but not formal asymmetry tests.
+itself evidence of publication bias. Use the separately documented classical
+[`result.egger_test()`](small-study-effects.md) when a formal regression
+diagnostic is appropriate; it does not change the plot or prove a publication
+mechanism.
 
 ## Meta-regression bubble plots
 
