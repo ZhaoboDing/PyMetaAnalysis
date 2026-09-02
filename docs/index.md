@@ -86,13 +86,13 @@ lists unsupported methods explicitly.
 
 ## Project status
 
-PyMetaAnalysis 0.6.0 adds common-effect Mantel-Haenszel risk-difference and
-Peto one-step odds-ratio pooling, with explicit sparse-table policies,
-statistical metadata, and independent R references. It also retains the
-Q-profile heterogeneity intervals and Meta-regression diagnostics introduced
-in earlier releases. The project has not undergone a formal external
-statistical audit. Pin the package version for consequential work and
-independently check important analyses. See the
+PyMetaAnalysis 0.7.0 adds independent Pearson-correlation pooling on Fisher's
+z scale, including common- and random-effects fits, back-transformed displays,
+subgroups, sensitivity workflows, plots, reports, and independent R
+references. It also tightens categorical moderator and method-option contracts
+and expands small-sample and Q-profile validation. The project has not
+undergone a formal external statistical audit. Pin the package version for
+consequential work and independently check important analyses. See the
 repository
 [changelog](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md)
 and [contribution guide](development.md). For manuscripts and archived

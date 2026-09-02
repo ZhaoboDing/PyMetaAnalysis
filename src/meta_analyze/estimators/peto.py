@@ -88,12 +88,11 @@ def fit_peto(
 
     outcome_events = scaled_a + scaled_c
     outcome_nonevents = scaled_b + scaled_d
-    expected_events = outcome_events * n1 / total
+    observed_minus_expected = (scaled_a * n0 - scaled_c * n1) / total
     information = (
         outcome_events
         * outcome_nonevents
-        * (n1 / total)
-        * (n0 / total)
+        * (n1 * n0 / (total * total))
         / total_minus_one
     )
     invalid_information = ~np.isfinite(information) | (information <= 0.0)
@@ -104,7 +103,6 @@ def fit_peto(
             f"stratum; invalid rows: {rows}."
         )
 
-    observed_minus_expected = scaled_a - expected_events
     information_sum = float(np.sum(information))
     if not np.isfinite(information_sum) or information_sum <= 0.0:
         raise InvalidStudyDataError(

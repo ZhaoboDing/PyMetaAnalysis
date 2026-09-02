@@ -510,15 +510,14 @@ def calculate_peto_effects(
     total = n1 + n0
     outcome_events = scaled_a + scaled_c
     outcome_nonevents = scaled_b + scaled_d
-    expected_events = outcome_events * n1 / total
+    observed_minus_expected = (scaled_a * n0 - scaled_c * n1) / total
     information = (
         outcome_events
         * outcome_nonevents
-        * (n1 / total)
-        * (n0 / total)
+        * (n1 * n0 / (total * total))
         / (total - 1.0 / cell_scale)
     )
-    effect[included] = (scaled_a - expected_events) / information
+    effect[included] = observed_minus_expected / information
     variance[included] = (1.0 / information) / cell_scale
 
     invalid_effect = included & ~np.isfinite(effect)

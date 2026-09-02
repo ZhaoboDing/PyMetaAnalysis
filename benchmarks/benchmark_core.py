@@ -48,6 +48,8 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
     mean_treat = mean_control + rng.normal(0.25, 0.18, size=studies)
     sd_treat = rng.uniform(0.7, 1.6, size=studies)
     sd_control = rng.uniform(0.7, 1.6, size=studies)
+    correlation = rng.uniform(-0.65, 0.65, size=studies)
+    correlation_n = rng.integers(20, 300, size=studies)
 
     return {
         "generic_random_reml": lambda: ma.meta_analysis(
@@ -74,6 +76,12 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
             sd_control=sd_control,
             n_control=continuous_n_control,
             measure="SMD",
+            model="random",
+            tau2_method="REML",
+        ),
+        "correlation_random_reml": lambda: ma.meta_correlation(
+            correlation=correlation,
+            n=correlation_n,
             model="random",
             tau2_method="REML",
         ),

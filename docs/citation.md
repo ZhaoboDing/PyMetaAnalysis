@@ -19,7 +19,7 @@ print(ma.__version__)
 A provisional citation can use:
 
 ```text
-PyMetaAnalysis contributors. PyMetaAnalysis (version <version>):
+Zhaobo Ding. PyMetaAnalysis (version <version>):
 a pandas-first meta-analysis library for Python.
 https://github.com/ZhaoboDing/PyMetaAnalysis
 ```

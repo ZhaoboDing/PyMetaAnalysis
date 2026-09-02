@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.7.0 - 2026-09-02
+
 ### Added
 
 - `meta_correlation()` for independent study-level correlations using Fisher's
@@ -32,6 +34,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 - normal-inference subgroup tests reuse each fitted standard error directly,
   avoiding an unnecessary recomputation and last-bit numerical drift.
+- Peto observed-minus-expected arithmetic now uses a treatment/control-symmetric
+  formulation, preventing avoidable last-bit drift for highly imbalanced arms.
 
 ## 0.6.0 - 2026-08-13
 
