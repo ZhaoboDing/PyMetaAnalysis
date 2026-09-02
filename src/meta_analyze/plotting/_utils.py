@@ -25,6 +25,8 @@ def to_display_scale(
     elif display_scale == "exp":
         with np.errstate(over="ignore"):
             displayed = np.exp(values)
+    elif display_scale == "tanh":
+        displayed = np.tanh(values)
     else:
         raise ValueError(f"Unknown display scale {display_scale!r}.")
     if not np.all(np.isfinite(displayed)):
@@ -43,6 +45,7 @@ def default_effect_label(result: MetaAnalysisResult) -> str:
         "RD": "Risk difference",
         "MD": "Mean difference",
         "SMD": "Standardized mean difference",
+        "ZCOR": "Correlation",
         "GENERIC": "Effect",
     }
     return labels.get(result.measure, result.measure)

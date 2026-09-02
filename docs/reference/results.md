@@ -12,9 +12,9 @@ fitting. DataFrame-returning properties provide defensive copies.
 | --- | --- |
 | `k` | Number of included studies |
 | `model` | Resolved `common` or `random` model |
-| `measure` | `GENERIC`, `OR`, `RR`, `RD`, `MD`, or `SMD` |
+| `measure` | `GENERIC`, `OR`, `RR`, `RD`, `MD`, `SMD`, or `ZCOR` |
 | `effect_scale` | Scale used for model calculations |
-| `display_scale` | Identity or exponentiating display transformation |
+| `display_scale` | Identity, exponentiating, or hyperbolic-tangent display transformation |
 
 ### Pooled estimates
 
@@ -29,8 +29,9 @@ fitting. DataFrame-returning properties provide defensive copies.
 | `display_prediction_interval` | Display-scale prediction interval |
 
 For OR and RR, `estimate`, `ci`, and `prediction_interval` are logarithmic;
-their display counterparts are exponentiated ratios. Other measures use the
-identity transformation.
+their display counterparts are exponentiated ratios. For `ZCOR`, model values
+are Fisher's z and display counterparts are correlations obtained with
+`tanh`. Other measures use the identity transformation.
 
 ### Heterogeneity
 
@@ -158,6 +159,12 @@ the pooled fit and Q are recalculated from raw tables.
 Continuous tables additionally contain raw group summaries, `effect_display`,
 `pooled_sd`, `cohen_d`, and `smd_correction_factor`. MD rows leave SMD-only
 intermediates unavailable.
+
+#### Correlation-specific columns
+
+Correlation tables additionally contain the raw `correlation`, sample size
+`n`, and `effect_display`. The model-scale `effect` is Fisher's z,
+`effect_display` is the original correlation, and `variance` is `1 / (n - 3)`.
 
 ### Summaries
 

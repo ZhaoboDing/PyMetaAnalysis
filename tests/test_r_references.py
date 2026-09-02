@@ -32,6 +32,7 @@ BINARY = _load_reference("binary_metafor.json")
 CONTINUOUS = _load_reference("continuous_metafor.json")
 WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
+CORRELATION = _load_reference("correlation_metafor.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
@@ -87,7 +88,14 @@ def _assert_fit(
 
 
 def test_reference_fixtures_record_a_consistent_r_environment() -> None:
-    fixtures = [GENERIC, BINARY, CONTINUOUS, WORKFLOW, META_REGRESSION]
+    fixtures = [
+        GENERIC,
+        BINARY,
+        CONTINUOUS,
+        CORRELATION,
+        WORKFLOW,
+        META_REGRESSION,
+    ]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}
     assert len({fixture["r_version"] for fixture in fixtures}) == 1

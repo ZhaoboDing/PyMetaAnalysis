@@ -23,6 +23,7 @@ The high-level APIs intentionally have outcome-specific defaults:
 | --- | --- |
 | `meta_analysis()` | random-effects inverse variance, REML |
 | `meta_continuous()` | random-effects inverse variance, REML |
+| `meta_correlation()` | random-effects inverse variance, REML |
 | `meta_binary()` | common-effect Mantel-Haenszel |
 | `meta_regression()` | mixed-effects inverse variance, REML |
 
@@ -40,6 +41,7 @@ protocols.
 | Binary RR/RD, common effect | Mantel-Haenszel or inverse variance |
 | Binary OR/RR/RD, random effects | Inverse variance |
 | Continuous MD/SMD, common or random | Inverse variance |
+| Fisher's z correlation, common or random | Inverse variance |
 
 Mantel-Haenszel and inverse variance are different estimators, not aliases.
 PyMetaAnalysis does not extrapolate its common-effect Mantel-Haenszel weights

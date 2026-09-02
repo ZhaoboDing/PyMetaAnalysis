@@ -93,6 +93,31 @@ def meta_regression_vectors(
     return np.asarray(effects), np.asarray(variances), moderator
 
 
+@st.composite
+def correlation_vectors(draw: st.DrawFn) -> tuple[np.ndarray, np.ndarray]:
+    size = draw(st.integers(min_value=2, max_value=20))
+    correlations = draw(
+        st.lists(
+            st.floats(
+                min_value=-0.95,
+                max_value=0.95,
+                allow_nan=False,
+                allow_infinity=False,
+            ),
+            min_size=size,
+            max_size=size,
+        )
+    )
+    sample_sizes = draw(
+        st.lists(
+            st.integers(min_value=4, max_value=2000),
+            min_size=size,
+            max_size=size,
+        )
+    )
+    return np.asarray(correlations), np.asarray(sample_sizes)
+
+
 @given(study_vectors())
 @settings(max_examples=75, deadline=None)
 def test_common_model_is_invariant_to_row_order(
@@ -169,6 +194,43 @@ def test_standard_error_and_variance_inputs_are_equivalent(
         rtol=1e-12,
         atol=1e-12,
     )
+
+
+@given(correlation_vectors())
+@settings(max_examples=75, deadline=None)
+def test_correlation_pooling_is_sign_symmetric_and_row_order_invariant(
+    vectors: tuple[np.ndarray, np.ndarray],
+) -> None:
+    correlation, n = vectors
+    forward = ma.meta_correlation(correlation=correlation, n=n, model="common")
+    negated = ma.meta_correlation(correlation=-correlation, n=n, model="common")
+    order = np.arange(len(correlation))[::-1]
+    reordered = ma.meta_correlation(
+        correlation=correlation[order],
+        n=n[order],
+        model="common",
+    )
+
+    assert negated.estimate == pytest.approx(-forward.estimate, abs=2e-14)
+    assert negated.ci == pytest.approx(
+        (-forward.ci_high, -forward.ci_low),
+        abs=2e-14,
+    )
+    assert negated.display_estimate == pytest.approx(
+        -forward.display_estimate,
+        abs=2e-14,
+    )
+    assert reordered.estimate == pytest.approx(
+        forward.estimate,
+        rel=2e-13,
+        abs=2e-14,
+    )
+    assert reordered.standard_error == pytest.approx(
+        forward.standard_error,
+        rel=2e-13,
+        abs=2e-14,
+    )
+    assert reordered.q == pytest.approx(forward.q, rel=2e-12, abs=2e-13)
 
 
 @given(nonboundary_binary_tables())

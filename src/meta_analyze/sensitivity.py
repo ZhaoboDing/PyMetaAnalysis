@@ -193,6 +193,7 @@ def _refit(
     from .api import meta_analysis
     from .binary_api import meta_binary
     from .continuous_api import meta_continuous
+    from .correlation_api import meta_correlation
 
     studies = result._study_results_view()
     selected = studies.iloc[positions]
@@ -208,6 +209,23 @@ def _refit(
             effect=selected["effect"].to_numpy(dtype=np.float64, copy=True),
             variance=selected["variance"].to_numpy(dtype=np.float64, copy=True),
             study=study,
+            model=result.model,
+            tau2_method=tau2_method,
+            ci_method=result.method.ci_method,
+            confidence_level=result.method.confidence_level,
+            missing=missing,
+            atol=atol,
+            max_iter=max_iter,
+        )
+    elif {"correlation", "n"}.issubset(selected.columns):
+        fitted = meta_correlation(
+            correlation=selected["correlation"].to_numpy(
+                dtype=np.float64,
+                copy=True,
+            ),
+            n=selected["n"].to_numpy(dtype=np.float64, copy=True),
+            study=study,
+            measure=result.measure,
             model=result.model,
             tau2_method=tau2_method,
             ci_method=result.method.ci_method,

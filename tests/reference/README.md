@@ -13,6 +13,7 @@ repository root:
 Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
+Rscript tests/reference/generate_correlation_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R
@@ -52,6 +53,10 @@ plus uncorrected and explicitly corrected common-effect Mantel-Haenszel fits
 and Peto study effects, pooling, weights, and O-minus-E heterogeneity.
 Its RD MH references exercise the Sato-Greenland-Robins sampling variance for
 both ordinary and sparse tables.
+
+`correlation_metafor.json` covers Fisher's r-to-z transformation, its
+`1 / (n - 3)` sampling variance, common-effect pooling, REML random-effects
+pooling, normalized weights, and back-transformation to correlations.
 
 `meta_regression_metafor.json` covers common- and mixed-effects moderator
 models, DL/PM/REML residual heterogeneity, Hartung-Knapp variants, explicit

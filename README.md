@@ -85,6 +85,7 @@ not individual-level or causal effects.
 | Effect + sampling variance or standard error | Generic | Common/random inverse variance |
 | Two-group events + totals | OR, RR, RD | Common MH; common Peto OR; common/random IV |
 | Two-group means + SDs + sizes | MD, Hedges' g | Common/random inverse variance |
+| Correlations + sample sizes | Fisher's z (`ZCOR`) | Common/random inverse variance |
 | Effect + variance/SE + moderators | Generic | Common/mixed Meta-regression |
 
 Random-effects inverse-variance models support REML (default), Paule-Mandel,
@@ -132,7 +133,8 @@ markdown = report.to_markdown()
 
 OR and RR remain on the log model scale in auditable numeric attributes;
 `display_estimate`, `display_ci`, and `display_prediction_interval` provide
-exponentiated ratios.
+exponentiated ratios. `ZCOR` results similarly retain Fisher's z internally
+and expose back-transformed correlations through the display properties.
 
 Rows excluded by missing-value or sparse-data policies remain in
 `study_results` with a stable `row_id`, `included=False`, and an
@@ -185,7 +187,7 @@ The complete documentation is published at
 - [Installation](https://zhaoboding.github.io/PyMetaAnalysis/installation/)
 - [Getting started](https://zhaoboding.github.io/PyMetaAnalysis/getting-started/)
 - [Input data and row decisions](https://zhaoboding.github.io/PyMetaAnalysis/guides/input-data/)
-- [Generic](https://zhaoboding.github.io/PyMetaAnalysis/guides/generic-effects/), [binary](https://zhaoboding.github.io/PyMetaAnalysis/guides/binary-outcomes/), and [continuous](https://zhaoboding.github.io/PyMetaAnalysis/guides/continuous-outcomes/) guides
+- [Generic](https://zhaoboding.github.io/PyMetaAnalysis/guides/generic-effects/), [binary](https://zhaoboding.github.io/PyMetaAnalysis/guides/binary-outcomes/), [continuous](https://zhaoboding.github.io/PyMetaAnalysis/guides/continuous-outcomes/), and [correlation](https://zhaoboding.github.io/PyMetaAnalysis/guides/correlation-outcomes/) guides
 - [Meta-regression](https://zhaoboding.github.io/PyMetaAnalysis/guides/meta-regression/)
 - [Choosing methods](https://zhaoboding.github.io/PyMetaAnalysis/guides/method-selection/) and [statistical formulas](https://zhaoboding.github.io/PyMetaAnalysis/methods/statistical-methods/)
 - [Sensitivity analysis](https://zhaoboding.github.io/PyMetaAnalysis/guides/sensitivity-analysis/) and [plotting](https://zhaoboding.github.io/PyMetaAnalysis/guides/plotting/)

@@ -88,6 +88,30 @@ def test_ratio_forest_uses_display_scale_log_axis_and_null_one() -> None:
     plt.close(axes.figure)
 
 
+def test_correlation_forest_back_transforms_fisher_z_on_linear_axis() -> None:
+    result = ma.meta_correlation(
+        correlation=[-0.35, 0.15, 0.55],
+        n=[30, 45, 60],
+        model="common",
+    )
+    axes = result.forest(show_weights=False)
+
+    assert axes.get_xscale() == "linear"
+    assert axes.get_xlabel() == "Correlation"
+    np.testing.assert_allclose(axes.lines[0].get_xdata(), [0.0, 0.0])
+    diamond = axes.patches[0].get_xy()
+    np.testing.assert_allclose(
+        diamond[:4, 0],
+        [
+            result.display_ci[0],
+            result.display_estimate,
+            result.display_ci[1],
+            result.display_estimate,
+        ],
+    )
+    plt.close(axes.figure)
+
+
 def test_prediction_interval_can_be_shown_or_hidden() -> None:
     result = ma.meta_analysis(
         effect=[-0.2, 0.1, 0.5, 0.8],
