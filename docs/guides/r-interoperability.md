@@ -18,6 +18,7 @@ fixtures used by this project.
 | Binary 2x2 tables, Mantel-Haenszel | `meta_binary(..., method="MH")` | `rma.mh()` | `metabin(..., method="MH")` |
 | Binary 2x2 tables, Peto OR | `meta_binary(..., measure="OR", method="Peto")` | `rma.peto()` | `metabin(..., sm="OR", method="Peto")` |
 | Continuous group summaries | `meta_continuous()` | `escalc()` then `rma.uni()` | `metacont()` |
+| Correlations and sample sizes | `meta_correlation()` | `escalc(measure="ZCOR")` then `rma.uni()` | `metacor(sm="ZCOR")` |
 | Subgroups | `subgroup=` on a high-level call | separate fits or a moderator model | `subgroup=` |
 | Leave-one-out | `result.leave_one_out()` | `leave1out()` for supported fits | `metainf()` |
 | Meta-regression influence | `regression.influence()` | `influence()`, `rstudent()`, `cooks.distance()`, `dfbetas()` | — |
@@ -42,6 +43,7 @@ provenance behavior consistent.
 | Control total | `n_control` | `n2i` | `n.c` |
 | Treatment mean/SD | `mean_treat`, `sd_treat` | `m1i`, `sd1i` | `mean.e`, `sd.e` |
 | Control mean/SD | `mean_control`, `sd_control` | `m2i`, `sd2i` | `mean.c`, `sd.c` |
+| Correlation/sample size | `correlation`, `n` | `ri`, `ni` | `cor`, `n` |
 
 PyMetaAnalysis accepts DataFrame column names or aligned one-dimensional
 array-like values. When `study=` is omitted for a DataFrame, its index supplies
@@ -56,11 +58,14 @@ the display labels.
 | `"RD"` | Risk difference | `"RD"` | `"RD"` | identity |
 | `"MD"` | Mean difference | `"MD"` | `"MD"` | identity |
 | `"SMD"` | Exact-corrected Hedges' g | `"SMD"` with the documented correction | `"SMD"` with exact Hedges correction | identity |
+| `"ZCOR"` | Fisher's z-transformed correlation | `"ZCOR"` | `"ZCOR"` | Fisher's z |
 
-For OR and RR, `estimate` and `ci` remain on the log model scale.
-`display_estimate` and `display_ci` provide exponentiated ratios. This is
-similar to choosing transformed or untransformed printing in R, but both scales
-remain explicit attributes in Python.
+For OR and RR, `estimate` and `ci` remain on the log model scale;
+`display_estimate` and `display_ci` provide exponentiated ratios. For `ZCOR`,
+the model attributes remain Fisher's z values and the display attributes apply
+`tanh` to return correlations. This is similar to choosing transformed or
+untransformed printing in R, but both scales remain explicit attributes in
+Python.
 
 ## Models, pooling, and heterogeneity
 
@@ -68,7 +73,7 @@ remain explicit attributes in Python.
 | --- | --- | --- | --- |
 | `model="common"` | `rma.uni(..., method="EE")` | `common=TRUE, random=FALSE` | Inverse-variance common-effect fit |
 | `model="random"` | random-effects `rma.uni()` | `random=TRUE` | Requires a tau-squared policy |
-| `method="IV"` | inverse-variance weighting | `method="Inverse"` | Binary API only; generic and continuous fits are IV |
+| `method="IV"` | inverse-variance weighting | `method="Inverse"` | Binary API only; generic, continuous, and correlation fits are IV |
 | `method="MH"` | `rma.mh()` | `method="MH"` | Common-effect OR/RR/RD |
 | `method="Peto"` | `rma.peto()` | `method="Peto"` | Common-effect OR; raw pooling tables and O-minus-E heterogeneity |
 | `tau2_method=None` (resolved as `"REML"`) | `method="REML"` | `method.tau="REML"` | PyMetaAnalysis random-effects default |
@@ -217,3 +222,4 @@ as numerically equivalent.
 - [`meta::metagen`](https://search.r-project.org/CRAN/refmans/meta/html/metagen.html)
 - [`meta::metabin`](https://search.r-project.org/CRAN/refmans/meta/html/metabin.html)
 - [`meta::metacont`](https://search.r-project.org/CRAN/refmans/meta/html/metacont.html)
+- [`meta::metacor`](https://search.r-project.org/CRAN/refmans/meta/html/metacor.html)

@@ -9,6 +9,7 @@ deferred functionality explicit.
 - generic effects with known sampling variances;
 - two-group binary OR, RR, and RD;
 - two-group continuous MD and exact-corrected Hedges' g;
+- independent study-level Pearson correlations pooled on Fisher's z scale;
 - common-effect and univariate random-effects inverse-variance models;
 - common-effect Mantel-Haenszel OR/RR/RD;
 - common-effect Peto one-step OR;
@@ -41,7 +42,10 @@ deferred functionality explicit.
 - multilevel, multivariate, network, dose-response, diagnostic-accuracy, or
   individual-participant-data meta-analysis;
 - robust variance estimation or dependent-effect clustering;
-- single proportions, incidence rates, correlations, or survival outcomes;
+- single proportions, incidence rates, raw-correlation (`COR`) pooling, or
+  survival outcomes;
+- dependent correlations, within-study correlation matrices, partial or rank
+  correlations, and corrections for measurement unreliability;
 - Knapp-Hartung variants beyond the two documented choices;
 - prediction-interval methods beyond the documented default and Riley rules;
 - formal funnel-asymmetry, trim-and-fill, selection-model, or publication-bias
@@ -69,6 +73,13 @@ rules. A non-significant Q test is not evidence of homogeneity.
 Subgroup analyses estimate tau-squared independently within each random-
 effects subgroup. This differs from fitting a Meta-regression with categorical
 moderators and a single residual tau-squared.
+
+Correlation pooling assumes one independent Pearson correlation per study.
+Different correlations from the same participants require covariance-aware
+multivariate, multilevel, or robust methods; assigning different study labels
+does not make those effects independent. Fisher's z is also an approximation,
+especially in very small samples or when distributional assumptions behind
+the reported Pearson correlation are poor.
 
 Meta-regression uses aggregate study-level moderators. Coefficients are
 susceptible to ecological bias, confounding, measurement error, low power, and

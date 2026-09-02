@@ -634,6 +634,34 @@ The implemented `LS` sampling variance is:
 v_i = 1/n_treat + 1/n_control + g^2 / (2 (n_treat + n_control))
 ```
 
+## Correlation study effects
+
+`meta_correlation(measure="ZCOR")` transforms each independent Pearson
+correlation with Fisher's r-to-z transformation:
+
+```text
+y_i = atanh(r_i) = 0.5 log((1 + r_i) / (1 - r_i))
+v_i = 1 / (n_i - 3)
+```
+
+The common- or random-effects model, heterogeneity statistics, confidence
+interval, and prediction interval are calculated on the Fisher's z scale.
+Display values use the inverse transformation:
+
+```text
+r = tanh(z)
+```
+
+The accepted domain is `-1 < r_i < 1` and integer `n_i >= 4`. The strict
+correlation boundary prevents infinite transformed effects; the sample-size
+boundary ensures a finite, strictly positive sampling variance. The pooled
+display correlation is the inverse transform of the pooled z value, not a
+direct arithmetic average of raw correlations.
+
+This implementation assumes one independent correlation per study. It does
+not construct covariance matrices for multiple dependent correlations from
+the same sample. See [ADR 0007](../adr/0007-fisher-z-correlation.md).
+
 ## Subgroup differences
 
 Subgroup fits use the same selected model independently within each group. For

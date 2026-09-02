@@ -87,6 +87,7 @@ def _measure_description(measure: str) -> str:
         "RD": "risk differences",
         "MD": "mean differences",
         "SMD": "Hedges' g standardized mean differences",
+        "ZCOR": "Fisher's z-transformed correlations",
     }.get(measure, measure)
 
 
@@ -220,6 +221,12 @@ def method_details(result: MetaAnalysisResult) -> str:
         )
     elif result.measure == "MD":
         sentences.append("Mean differences used unpooled sampling variances.")
+    elif result.measure == "ZCOR":
+        sentences.append(
+            "Correlations were transformed with Fisher's r-to-z transformation, "
+            "assigned sampling variance 1 / (n - 3), and back-transformed with "
+            "the hyperbolic tangent for display."
+        )
 
     sentences.append(
         f"Missing inputs were handled with missing={method.missing!r}. "

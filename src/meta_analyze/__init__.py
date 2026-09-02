@@ -5,6 +5,7 @@ from .api import meta_analysis
 from .binary_api import meta_binary
 from .config import MetaRegressionMethodConfig, MethodConfig, SubgroupMethodConfig
 from .continuous_api import meta_continuous
+from .correlation_api import meta_correlation
 from .design_matrix import DesignInfo, ModeratorSpec
 from .exceptions import (
     ConvergenceError,
@@ -89,6 +90,7 @@ __all__ = [
     "meta_analysis",
     "meta_binary",
     "meta_continuous",
+    "meta_correlation",
     "meta_regression",
     "__version__",
 ]

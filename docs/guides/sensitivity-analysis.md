@@ -164,8 +164,8 @@ Every refit reuses the original result's:
 - tau-squared and confidence-interval methods;
 - confidence level, absolute tolerance, and iteration limit;
 - missing-data policy;
-- binary continuity corrections and RD zero-variance policy, or the continuous
-  effect-size convention.
+- binary continuity corrections and RD zero-variance policy, the continuous
+  effect-size convention, or the Fisher's z correlation convention.
 
 Meta-regression refits additionally reuse the intercept choice, inference
 method, moderator order, and complete explicit categorical level definitions.

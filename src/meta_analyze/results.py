@@ -317,6 +317,8 @@ class MetaAnalysisResult:
             return value
         if self.display_scale == "exp":
             return math.exp(value)
+        if self.display_scale == "tanh":
+            return math.tanh(value)
         raise ValueError(f"Unknown display scale {self.display_scale!r}.")
 
     @property

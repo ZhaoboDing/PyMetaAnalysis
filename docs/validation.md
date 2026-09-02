@@ -29,6 +29,8 @@ Property-based and targeted tests check invariants such as:
   remain defined, while zero event cells still require correction;
 - ratio confidence limits transform consistently between log and display
   scales;
+- Fisher's z correlation pooling is sign-symmetric and invariant to study
+  order, and its confidence limits back-transform consistently with `tanh`;
 - the ad hoc Hartung-Knapp variance is never below the classic variance;
 - excluded rows do not contribute weights or heterogeneity;
 - result DataFrames and reports are defensive copies;
@@ -89,6 +91,7 @@ The current fixture families cover:
 | `generic_metafor.json` | Common effects, DL/PM/REML random effects, Q-profile heterogeneity intervals, HK variants, and HTS/HK-PR prediction intervals |
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, uncorrected and explicitly corrected MH pooling/heterogeneity, Sato-Greenland-Robins MH RD variance, Peto study effects/pooling/O-minus-E heterogeneity, sparse tables |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
+| `correlation_metafor.json` | Fisher's z effects, `1 / (n - 3)` variances, common and REML fits, weights, and back-transformation |
 | `workflow_metafor.json` | Common subgroups, random singleton fallback, leave-one-out, and cumulative common/random fits |
 | `meta_regression_metafor.json` | Numeric, categorical, and multivariable common/mixed meta-regression; DL/PM/REML; HK variants; joint tests; default and Riley predictions, including a no-intercept Riley case; zero tau-squared, missing rows, and small samples |
 | `meta_regression_influence_metafor.json` | Exact deleted residuals and their standard errors, externally standardized residuals, Cook's distances, and DFBETAS across numeric, categorical, and multivariable common/mixed designs |
@@ -130,6 +133,7 @@ Install R plus `metafor` and `jsonlite`, then run from the repository root:
 Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
+Rscript tests/reference/generate_correlation_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
 Rscript tests/reference/generate_meta_regression_metafor.R
 Rscript tests/reference/generate_meta_regression_influence_metafor.R

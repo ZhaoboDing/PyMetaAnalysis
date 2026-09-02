@@ -7,7 +7,7 @@ The distribution is named `PyMetaAnalysis` and the import package is
 import meta_analyze as ma
 ```
 
-The public surface consists of four analysis functions, immutable result and
+The public surface consists of five analysis functions, immutable result and
 configuration classes, provenance/report classes, sensitivity result classes,
 and domain exceptions exported from `meta_analyze`.
 
@@ -36,6 +36,7 @@ identity rules.
 | Binary OR/RR | Inverse variance | common, random | normal; HK variants for random |
 | Binary RD | Inverse variance | common, random | normal; HK variants for random |
 | Continuous MD/SMD | Inverse variance | common, random | normal; HK variants for random |
+| Fisher's z correlation | Inverse variance | common, random | normal; HK variants for random |
 | Generic Meta-regression | Inverse variance | common, mixed | normal; HK variants for mixed |
 
 Canonical values should be used in saved analysis code. Model aliases such as
@@ -48,6 +49,7 @@ The entry points do not share one implicit model default:
 | --- | --- |
 | `meta_analysis()` | random-effects inverse variance with REML |
 | `meta_continuous()` | random-effects inverse variance with REML |
+| `meta_correlation()` | random-effects inverse variance with REML |
 | `meta_binary()` | common-effect Mantel-Haenszel |
 | `meta_regression()` | mixed-effects inverse variance with REML |
 
@@ -244,9 +246,50 @@ The remaining shared parameters have the same meanings as in
 g with the LS variance convention. An explicit `smd_variance` is rejected for
 MD rather than silently ignored.
 
+## `meta_correlation()`
+
+```text
+ma.meta_correlation(
+    data=None,
+    *,
+    correlation,
+    n,
+    study=None,
+    subgroup=None,
+    measure="ZCOR",
+    model="random",
+    tau2_method=None,
+    ci_method="normal",
+    confidence_level=0.95,
+    missing="raise",
+    atol=1e-10,
+    max_iter=1000,
+)
+```
+
+Calculates Fisher's r-to-z effects and pools independent study correlations
+with inverse-variance weighting.
+
+| Parameter | Description |
+| --- | --- |
+| `correlation` | Finite study correlation strictly between -1 and 1 |
+| `n` | Whole-number study sample size of at least 4 |
+| `measure` | Only `"ZCOR"` is currently supported |
+
+The remaining shared parameters have the same meanings as in
+`meta_analysis()`. Each model-scale effect is `atanh(correlation)` and its
+sampling variance is `1 / (n - 3)`. `estimate`, `ci`, tau-squared, Q, and
+fitted weights remain on Fisher's z scale. The `display_*` properties apply
+`tanh` to return correlations. Raw-correlation pooling (`measure="COR"`) is
+rejected rather than substituted silently.
+
+Each row must represent an independent effect. Multiple correlations from the
+same participants require a dependent-effect method that this API does not
+implement.
+
 ## Return types
 
-The three pooling entry points return `MetaAnalysisResult` without `subgroup=`
+The four pooling entry points return `MetaAnalysisResult` without `subgroup=`
 and `SubgroupMetaAnalysisResult` with it. `meta_regression()` instead returns
 `MetaRegressionResult` and does not accept `subgroup=`.
 

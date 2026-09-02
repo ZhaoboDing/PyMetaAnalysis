@@ -6,6 +6,14 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- `meta_correlation()` for independent study-level correlations using Fisher's
+  r-to-z transformation (`ZCOR`), `1 / (n - 3)` sampling variances, common- or
+  REML/PM/DL random-effects inverse-variance pooling, back-transformed result
+  displays, subgroup and sensitivity workflows, plotting, provenance, reports,
+  and independent R `metafor` references.
+
 ## 0.6.0 - 2026-08-13
 
 ### Added

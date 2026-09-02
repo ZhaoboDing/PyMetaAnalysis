@@ -120,8 +120,9 @@ schema, strict JSON behavior, and subgroup reports.
 ## 6. Understand model and display scales
 
 Generic effects, MD, SMD, and RD use the identity scale. OR and RR are modeled
-on a log scale, so their audit-friendly numeric attributes remain logarithmic.
-Use display properties for ratios:
+on a log scale, while `ZCOR` is modeled on Fisher's z scale. Their audit-
+friendly numeric attributes remain on those model scales. Use display
+properties for ratios and back-transformed correlations:
 
 ```python
 result.display_estimate
@@ -130,7 +131,8 @@ result.display_prediction_interval
 ```
 
 The [binary-outcome guide](guides/binary-outcomes.md) includes a complete ratio
-example.
+example; the [correlation guide](guides/correlation-outcomes.md) explains the
+Fisher transformation.
 
 ## 7. Check sensitivity
 

@@ -72,6 +72,8 @@ prediction_interval_method, missing, atol, max_iter, options
 `options` is an object containing resolved outcome-specific choices. Binary
 examples include continuity corrections and RD boundary policy; continuous
 SMD options identify its estimator, standardizer, and variance convention.
+Correlation options identify the Fisher transformation, `1 / (n - 3)`
+variance, and `tanh` display transformation.
 
 ### `diagnostics`
 
@@ -97,7 +99,7 @@ The nested `provenance` object contains:
 | --- | --- |
 | `package_version` | Version that fitted the result |
 | `schema_version` | Provenance schema identifier (`"1.0"`) |
-| `analysis_type` | `generic`, `binary`, `continuous`, or `meta_regression` |
+| `analysis_type` | `generic`, `binary`, `continuous`, `correlation`, or `meta_regression` |
 | `data_source` | `pandas_dataframe`, `array_like`, or `derived_subset` |
 | `input_fields` | Ordered input source records |
 | `column_mapping` | Public input roles mapped to DataFrame columns |

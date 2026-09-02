@@ -96,6 +96,26 @@ def test_ratio_funnel_uses_exponentiated_log_axis() -> None:
     plt.close(axes.figure)
 
 
+def test_correlation_funnel_back_transforms_fisher_z() -> None:
+    correlations = np.linspace(-0.45, 0.65, 10)
+    result = ma.meta_correlation(
+        correlation=correlations,
+        n=np.arange(20, 120, 10),
+        model="common",
+    )
+    axes = result.funnel(warn_on_few_studies=False)
+    scatter = _scatter(axes)
+
+    assert axes.get_xscale() == "linear"
+    assert axes.get_xlabel() == "Correlation"
+    np.testing.assert_allclose(scatter.get_offsets()[:, 0], correlations)
+    np.testing.assert_allclose(
+        axes.lines[-1].get_xdata(),
+        [result.display_estimate, result.display_estimate],
+    )
+    plt.close(axes.figure)
+
+
 def test_random_funnel_limits_do_not_include_tau2() -> None:
     result = _generic_result(model="random")
     assert result.tau2 > 0.0

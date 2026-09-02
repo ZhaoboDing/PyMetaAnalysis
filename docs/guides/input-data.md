@@ -2,7 +2,7 @@
 
 Every analysis entry point accepts either DataFrame column names or
 one-dimensional array-like values. This page describes rules shared by the
-generic, binary, and continuous APIs.
+generic, binary, continuous, and correlation APIs.
 
 ## DataFrame columns
 
@@ -105,8 +105,9 @@ silently assigning or dropping them would change the subgroup definition.
 | Generic | finite effect; finite, strictly positive sampling variance large enough for a finite float64 inverse weight |
 | Binary | integer event counts and totals; positive totals; `0 <= events <= total` |
 | Continuous | finite means/SDs; non-negative SDs; integer group sizes of at least 2 |
+| Correlation | finite `-1 < correlation < 1`; integer sample size `n >= 4` |
 
-Binary and continuous APIs preserve their raw input columns in
+Binary, continuous, and correlation APIs preserve their raw input columns in
 `study_results`. Derived effects, variances, correction indicators, and
 weights appear alongside them.
 

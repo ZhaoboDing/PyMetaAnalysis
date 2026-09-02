@@ -50,7 +50,9 @@ fig.tight_layout()
 | `log_scale` | Override the default logarithmic ratio axis |
 
 OR and RR are modeled on a log scale but displayed as ratios on a logarithmic
-axis by default. Other measures use an identity display scale and linear axis.
+axis by default. `ZCOR` is modeled on Fisher's z scale, back-transformed to
+correlations, and displayed on a linear axis. Other measures use an identity
+display scale and linear axis.
 When overriding `log_scale=True`, all displayed effects and the null value must
 be strictly positive.
 
