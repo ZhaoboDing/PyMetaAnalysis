@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.7.0 - 2026-09-02
+
 ### Added
 
 - `meta_correlation()` for independent study-level correlations using Fisher's
