@@ -67,10 +67,11 @@ This produces terms such as `region[Asia]` and `region[North America]`, each
 relative to `Europe`. The reference never depends on row order. Undeclared
 levels, levels absent after exclusions, and string moderators omitted from
 `categorical=` are errors rather than implicit recoding decisions.
-Categorical matching preserves scalar kinds: Python and NumPy integers are
-equivalent, for example, but booleans do not match integer levels and
-floating-point values do not match integer levels. Declare levels using the
-same scalar kind as the observed moderator values.
+Categorical matching keeps booleans distinct from numeric levels. Python and
+NumPy integers are equivalent, and integer-valued floats such as `1.0` match
+the corresponding integer level `1`. This accommodates pandas integer columns
+that become floating point after introducing a missing value. Non-integer
+floats such as `1.5` do not match integer levels.
 
 Formula parsing, automatic interactions, splines, and polynomial terms are not
 implemented. Construct those columns explicitly before fitting when they are

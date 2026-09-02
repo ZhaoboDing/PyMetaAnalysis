@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import meta_analyze as ma
+from meta_analyze.subgroups import _subgroup_test_standard_error
 
 
 def _generic_subgroups() -> ma.SubgroupMetaAnalysisResult:
@@ -54,6 +55,20 @@ def test_subgroup_test_uses_pooled_standard_errors() -> None:
     )
 
     assert result.q_between == pytest.approx(expected)
+
+
+def test_normal_subgroup_test_reuses_fitted_standard_error_exactly() -> None:
+    result = ma.meta_analysis(
+        effect=[0.13, 0.37, 0.81, 1.19, 1.41, 1.82],
+        variance=[0.031, 0.077, 0.043, 0.092, 0.057, 0.118],
+        subgroup=["A", "A", "A", "B", "B", "B"],
+        model="random",
+        tau2_method="REML",
+        ci_method="normal",
+    )
+
+    for group in result.groups.values():
+        assert _subgroup_test_standard_error(group) == group.standard_error
 
 
 @pytest.mark.parametrize("ci_method", ["hartung_knapp", "hartung_knapp_adhoc"])

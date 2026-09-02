@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass
 from numbers import Integral, Real
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, cast
 
 import numpy as np
 import pandas as pd
@@ -38,6 +38,11 @@ _RESERVED_TERM_NAMES = frozenset(
         "normalized_precision_weight",
         "leverage",
     }
+)
+_CATEGORY_MATCHING_GUIDANCE = (
+    "Categorical matching keeps booleans distinct from numeric levels; "
+    "integer-valued floating-point values such as 1.0 match the corresponding "
+    "integer level."
 )
 
 
@@ -205,8 +210,19 @@ def _categorical_scalar_kind(value: Any) -> tuple[str, type[Any] | None]:
 
 
 def _equal(value: Any, level: Hashable) -> bool:
-    if _categorical_scalar_kind(value) != _categorical_scalar_kind(level):
-        return False
+    value_kind = _categorical_scalar_kind(value)
+    level_kind = _categorical_scalar_kind(level)
+    if value_kind != level_kind:
+        kinds = {value_kind[0], level_kind[0]}
+        if kinds != {"integer", "real"}:
+            return False
+        real_value = value if value_kind[0] == "real" else level
+        try:
+            numeric_real = float(cast(Real, real_value))
+            if not np.isfinite(numeric_real) or not numeric_real.is_integer():
+                return False
+        except (OverflowError, TypeError, ValueError):
+            return False
     try:
         comparison = value == level
         return bool(comparison) if np.ndim(comparison) == 0 else False
@@ -394,7 +410,7 @@ def normalize_meta_regression_data(
             rows = np.flatnonzero(unknown_levels).tolist()
             raise InvalidStudyDataError(
                 f"Categorical moderator {moderator.name!r} contains undeclared "
-                f"levels at rows {rows}."
+                f"levels at rows {rows}. {_CATEGORY_MATCHING_GUIDANCE}"
             )
         validated_moderators.append(moderator)
     raw_moderators = validated_moderators
@@ -523,7 +539,8 @@ def build_prediction_design_matrix(
         if np.any(unknown):
             rows = np.flatnonzero(unknown).tolist()
             raise InvalidStudyDataError(
-                f"new_data moderator {spec.name!r} has unknown levels at rows {rows}."
+                f"new_data moderator {spec.name!r} has unknown levels at rows {rows}. "
+                f"{_CATEGORY_MATCHING_GUIDANCE}"
             )
         columns.extend(
             np.asarray(codes == code, dtype=np.float64)

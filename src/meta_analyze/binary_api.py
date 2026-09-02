@@ -79,7 +79,7 @@ def _fit_meta_binary_single(
     correction_scope: str = "only_zero_studies",
     rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
-    mh_correction_scope: str = "only_zero_studies",
+    mh_correction_scope: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -113,12 +113,22 @@ def _fit_meta_binary_single(
     correction = validate_correction(
         continuity_correction, name="continuity_correction"
     )
+    scope = normalize_correction_scope(correction_scope)
+    rd_policy = normalize_rd_zero_variance(rd_zero_variance)
+
+    if normalized_method != "mantel_haenszel" and (
+        mh_continuity_correction is not None or mh_correction_scope is not None
+    ):
+        raise UnsupportedMethodError(
+            "mh_continuity_correction and mh_correction_scope are only "
+            "configurable when method='MH'."
+        )
     mh_correction = validate_correction(
         mh_continuity_correction, name="mh_continuity_correction"
     )
-    scope = normalize_correction_scope(correction_scope)
-    rd_policy = normalize_rd_zero_variance(rd_zero_variance)
-    mh_scope = normalize_correction_scope(mh_correction_scope)
+    mh_scope = normalize_correction_scope(
+        "only_zero_studies" if mh_correction_scope is None else mh_correction_scope
+    )
 
     if normalized_measure != "RD" and rd_policy != "correct":
         raise UnsupportedMethodError(
@@ -368,8 +378,14 @@ def _fit_meta_binary_single(
                 if normalized_method == "peto"
                 else ()
             ),
-            ("mh_continuity_correction", mh_correction),
-            ("mh_correction_scope", mh_scope),
+            *(
+                (
+                    ("mh_continuity_correction", mh_correction),
+                    ("mh_correction_scope", mh_scope),
+                )
+                if normalized_method == "mantel_haenszel"
+                else ()
+            ),
         ),
     )
     transformations = [
@@ -495,7 +511,7 @@ def meta_binary(
     correction_scope: str = "only_zero_studies",
     rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
-    mh_correction_scope: str = "only_zero_studies",
+    mh_correction_scope: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -522,7 +538,7 @@ def meta_binary(
     correction_scope: str = "only_zero_studies",
     rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
-    mh_correction_scope: str = "only_zero_studies",
+    mh_correction_scope: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,
@@ -548,7 +564,7 @@ def meta_binary(
     correction_scope: str = "only_zero_studies",
     rd_zero_variance: str = "correct",
     mh_continuity_correction: float | None = None,
-    mh_correction_scope: str = "only_zero_studies",
+    mh_correction_scope: str | None = None,
     missing: MissingPolicy = "raise",
     atol: float = 1e-10,
     max_iter: int = 1000,

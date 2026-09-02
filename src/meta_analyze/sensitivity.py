@@ -251,11 +251,15 @@ def _refit(
                 options, "correction_scope", "only_zero_studies"
             ),
             rd_zero_variance=_string_option(options, "rd_zero_variance", "correct"),
-            mh_continuity_correction=_float_option(
-                options, "mh_continuity_correction", 0.0
+            mh_continuity_correction=(
+                _float_option(options, "mh_continuity_correction", 0.0)
+                if result.method.pooling_method == "mantel_haenszel"
+                else None
             ),
-            mh_correction_scope=_string_option(
-                options, "mh_correction_scope", "only_zero_studies"
+            mh_correction_scope=(
+                _string_option(options, "mh_correction_scope", "only_zero_studies")
+                if result.method.pooling_method == "mantel_haenszel"
+                else None
             ),
             study=study,
             model=result.model,

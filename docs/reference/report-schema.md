@@ -69,6 +69,11 @@ model, pooling_method, tau2_method, ci_method, confidence_level,
 prediction_interval_method, missing, atol, max_iter, options
 ```
 
+For single pooled analyses, `prediction_interval_method` is `"HTS"` for an
+available normal-inference interval, `"HK-PR"` for an available
+Hartung-Knapp interval, or `null` when no interval was calculated. These are
+serialized result-method labels, not input parameter names.
+
 `options` is an object containing resolved outcome-specific choices. Binary
 examples include continuity corrections and RD boundary policy; continuous
 SMD options identify its estimator, standardizer, and variance convention.
@@ -169,6 +174,8 @@ moderators, categorical levels, and references.
 Meta-regression diagnostics add `rank`, `condition_number`, and
 `residual_scale`. Its optional study records include original moderators,
 fitted values, residuals, precision weights, and leverage.
+The Meta-regression method field `prediction_interval_method` is `"default"`
+or `"riley"` for mixed-effects fits and `null` for common-effect fits.
 
 ## Markdown representation
 

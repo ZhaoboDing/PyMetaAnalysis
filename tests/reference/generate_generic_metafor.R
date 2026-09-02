@@ -63,6 +63,15 @@ reml_adhoc <- rma.uni(
   test = "adhoc",
   control = reml_control
 )
+two_study_hk_input <- input[c(1, 4), ]
+reml_hk_k2 <- rma.uni(
+  effect,
+  variance,
+  data = two_study_hk_input,
+  method = "REML",
+  test = "knha",
+  control = reml_control
+)
 
 q <- unname(common$QE)
 q_df <- unname(common$k - common$p)
@@ -108,6 +117,7 @@ reference <- list(
   ),
   reml_hartung_knapp = fit_summary(reml_hk),
   reml_hartung_knapp_adhoc = fit_summary(reml_adhoc),
+  reml_hartung_knapp_k2 = fit_summary(reml_hk_k2),
   reml_q_profile = list(
     method = "QP",
     confidence_level = 0.95,

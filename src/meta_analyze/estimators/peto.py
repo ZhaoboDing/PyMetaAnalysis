@@ -36,7 +36,14 @@ def fit_peto(
     *,
     confidence_level: float,
 ) -> PetoFit:
-    """Fit Peto's one-step common-effect log odds ratio."""
+    """Fit Peto's one-step common-effect log odds ratio.
+
+    Every supplied stratum must have positive hypergeometric information, so
+    callers must first exclude double-zero and double-all tables. The public
+    ``meta_binary`` API performs that filtering. This differs from the pooling
+    side of ``metafor::rma.peto()`` under its default ``drop00`` handling,
+    which can retain zero-information strata in ``k`` and Q degrees of freedom.
+    """
 
     tables = (a, b, c, d)
     if (

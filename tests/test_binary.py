@@ -103,6 +103,7 @@ def test_mantel_haenszel_rr_matches_revman_formula_reference() -> None:
     assert result.standard_error == pytest.approx(0.1915886270134988, abs=1e-13)
     assert result.display_ci == pytest.approx((0.6167892961382874, 1.3070671451911116))
     assert result.study_results["normalized_weight"].sum() == pytest.approx(1.0)
+    assert dict(result.method.options)["mh_correction_scope"] == ("only_zero_studies")
 
 
 def test_mantel_haenszel_rd_matches_sato_formula_reference() -> None:
@@ -209,8 +210,54 @@ def test_peto_or_matches_observed_minus_expected_formula() -> None:
         atol=5e-15,
     )
     assert result.method.pooling_method == "peto"
-    assert dict(result.method.options)["peto_pooling_tables"] == "raw"
-    assert dict(result.method.options)["peto_heterogeneity"] == "O-minus-E"
+    options = dict(result.method.options)
+    assert options["peto_pooling_tables"] == "raw"
+    assert options["peto_heterogeneity"] == "O-minus-E"
+    assert "mh_continuity_correction" not in options
+    assert "mh_correction_scope" not in options
+
+
+@pytest.mark.parametrize(
+    ("method", "measure", "option"),
+    [
+        ("IV", "RR", {"mh_continuity_correction": 0.5}),
+        ("IV", "RR", {"mh_correction_scope": "only_zero_studies"}),
+        ("Peto", "OR", {"mh_continuity_correction": 0.5}),
+        ("Peto", "OR", {"mh_correction_scope": "only_zero_studies"}),
+    ],
+)
+def test_non_mh_pooling_rejects_explicit_mh_options(
+    method: str,
+    measure: str,
+    option: dict[str, object],
+) -> None:
+    with pytest.raises(ma.UnsupportedMethodError, match="only configurable"):
+        ma.meta_binary(
+            event_treat=EVENT_TREAT,
+            n_treat=N_TREAT,
+            event_control=EVENT_CONTROL,
+            n_control=N_CONTROL,
+            method=method,
+            measure=measure,
+            model="common",
+            **option,  # type: ignore[arg-type]
+        )
+
+
+def test_inverse_variance_options_do_not_claim_mh_correction() -> None:
+    result = ma.meta_binary(
+        event_treat=EVENT_TREAT,
+        n_treat=N_TREAT,
+        event_control=EVENT_CONTROL,
+        n_control=N_CONTROL,
+        method="IV",
+        measure="RR",
+        model="common",
+    )
+
+    options = dict(result.method.options)
+    assert "mh_continuity_correction" not in options
+    assert "mh_correction_scope" not in options
 
 
 def test_peto_study_correction_does_not_change_raw_pooling() -> None:

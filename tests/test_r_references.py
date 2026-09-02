@@ -405,6 +405,24 @@ def test_generic_hartung_knapp_intervals_match_metafor(
     _assert_fit(result, GENERIC[reference_key], iterative=True)
 
 
+def test_two_study_hartung_knapp_interval_matches_metafor() -> None:
+    two_studies = GENERIC_DATA.iloc[[0, 3]]
+    result = ma.meta_analysis(
+        two_studies,
+        effect="effect",
+        variance="variance",
+        study="study",
+        model="random",
+        tau2_method="REML",
+        ci_method="hartung_knapp",
+    )
+
+    _assert_fit(result, GENERIC["reml_hartung_knapp_k2"], iterative=True)
+    assert result.k == 2
+    assert result.q_df == 1
+    assert result.prediction_interval is None
+
+
 def test_generic_hts_prediction_interval_matches_metafor_formula() -> None:
     result = ma.meta_analysis(
         GENERIC_DATA,
@@ -712,6 +730,34 @@ def test_common_effect_subgroups_match_metafor_moderator_model() -> None:
         atol=CLOSED_ATOL,
     )
     assert result.q_between_df == expected["q_between_df"]
+
+
+def test_random_subgroup_q_profile_intervals_match_metafor() -> None:
+    expected = WORKFLOW["subgroup_random_q_profile"]["groups"]
+    result = ma.meta_analysis(
+        WORKFLOW_DATA,
+        effect="effect",
+        variance="variance",
+        study="study",
+        subgroup="subgroup",
+        model="random",
+        tau2_method="REML",
+    )
+
+    assert isinstance(result, ma.SubgroupMetaAnalysisResult)
+    assert list(result.groups) == list(expected)
+    for name, group in result.groups.items():
+        interval = group.tau2_confidence_interval()
+        np.testing.assert_allclose(
+            [interval.estimate, interval.ci_low, interval.ci_high],
+            [
+                expected[name]["estimate"],
+                expected[name]["ci_low"],
+                expected[name]["ci_high"],
+            ],
+            rtol=ITERATIVE_RTOL,
+            atol=ITERATIVE_ATOL,
+        )
 
 
 def test_random_singleton_subgroup_estimate_matches_metafor() -> None:
