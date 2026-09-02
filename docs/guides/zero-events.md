@@ -76,20 +76,25 @@ default:
 
 ```python
 mh_continuity_correction = None
-mh_correction_scope = "only_zero_studies"
+mh_correction_scope = None  # resolves to "only_zero_studies" for MH
 ```
 
 `continuity_correction` still controls the study-level effects used for display
 and heterogeneity. It does not silently alter the pooled Mantel-Haenszel
 estimator. If an exact pooled estimator is undefined, choose an explicit
 positive `mh_continuity_correction` and report that decision.
+Both MH-specific options are rejected when explicitly supplied to IV or Peto
+pooling, where they would otherwise have no effect.
 
 For MH RD, `rd_zero_variance="exclude"` removes zero-variance boundary rows
 before every synthesis calculation. With the default `"correct"` policy, the
 raw table still enters the MH point estimate unless an explicit
 `mh_continuity_correction` is supplied. If the Sato-Greenland-Robins variance
 is non-positive, the uncorrected fit raises instead of silently changing the
-tables; a positive MH correction is an explicit protocol choice.
+tables; a positive MH correction is an explicit protocol choice. Some other
+implementations, including `metafor`, can report a degenerate zero or near-zero
+standard error for such boundary data. PyMetaAnalysis rejects that result by
+the policy recorded in ADR 0005.
 
 ## Peto pooling always uses raw tables
 
@@ -103,6 +108,10 @@ pooling-correction option.
 Double-zero and double-all studies have zero Peto information and are excluded
 before pooling, Q, I-squared, H-squared, and weights. The result retains the
 same structured exclusion reasons used for other relative-effect analyses.
+This means `fit_peto()` expects already-filtered tables. It also differs from
+the pooling side of `metafor::rma.peto()` under its default `drop00` handling,
+which can retain zero-information rows when calculating `k` and Q degrees of
+freedom even though those rows contribute no Peto information.
 Peto's lack of a single-zero pooling correction does not make it universally
 preferable: its rare-outcome, balanced-arm, and modest-effect assumptions must
 still be considered.
@@ -123,10 +132,10 @@ columns = [
 result.study_results[columns]
 ```
 
-Resolved correction values and scopes also appear in
-`dict(result.method.options)`. RD analyses additionally record the resolved
-zero-variance policy and affected row IDs in provenance. This makes it possible
-to distinguish a corrected analysis from an exact or exclusion-based one after
-fitting.
+Applicable resolved correction values and scopes also appear in
+`dict(result.method.options)`. MH-specific keys are present only for MH fits.
+RD analyses additionally record the resolved zero-variance policy and affected
+row IDs in provenance. This makes it possible to distinguish a corrected
+analysis from an exact or exclusion-based one after fitting.
 Peto analyses additionally record `peto_pooling_tables="raw"` and
 `peto_heterogeneity="O-minus-E"`.

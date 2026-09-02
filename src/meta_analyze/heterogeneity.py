@@ -159,7 +159,14 @@ def q_profile_tau2_interval(
     atol: float,
     max_iter: int,
 ) -> QProfileInterval:
-    """Invert generalized Q to obtain a constrained Q-profile interval."""
+    """Invert pooled-mean Q to obtain a constrained Q-profile interval.
+
+    This implementation is intentionally limited to an intercept-only pooled
+    effect, whose Q degrees of freedom are ``k - 1``. Meta-regression requires
+    refitting the full design matrix at each candidate tau-squared in addition
+    to using ``k - p`` degrees of freedom and must not reuse this function by
+    changing the degrees of freedom alone.
+    """
 
     df = len(effect) - 1
     alpha = 1.0 - confidence_level

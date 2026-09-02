@@ -33,6 +33,20 @@
     "q_between_pvalue": 2.0643109153649152e-09,
     "i2_between": 0.97215417145606953
   },
+  "subgroup_random_q_profile": {
+    "groups": {
+      "early": {
+        "estimate": 0.17195093134511844,
+        "ci_low": 0.010376986888644081,
+        "ci_high": 7.9864836878177874
+      },
+      "late": {
+        "estimate": 0.51895013391966771,
+        "ci_low": 0.063592010051188891,
+        "ci_high": 25.687557150399375
+      }
+    }
+  },
   "singleton_random": {
     "estimate": -0.40000000000000013,
     "standard_error": 0.20000000000000001,

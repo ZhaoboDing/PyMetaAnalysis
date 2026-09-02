@@ -77,6 +77,18 @@ group_fits <- lapply(
     test = "z"
   )
 )
+random_group_fits <- lapply(
+  split(input, input$subgroup),
+  function(group) rma.uni(
+    effect,
+    variance,
+    slab = study,
+    data = group,
+    method = "REML",
+    test = "z",
+    control = reml_control
+  )
+)
 moderator <- rma.uni(
   effect,
   variance,
@@ -88,6 +100,20 @@ moderator <- rma.uni(
 
 common_cumulative <- cumul(common, order = input$year)
 random_cumulative <- cumul(random, order = input$year)
+
+q_profile_tau2_summary <- function(fit) {
+  profile <- confint(
+    fit,
+    level = 95,
+    type = "QP",
+    control = list(tol = 1e-10, maxiter = 1000)
+  )$random
+  list(
+    estimate = unname(profile["tau^2", "estimate"]),
+    ci_low = unname(profile["tau^2", "ci.lb"]),
+    ci_high = unname(profile["tau^2", "ci.ub"])
+  )
+}
 
 reference <- list(
   generated_by = "R metafor",
@@ -102,6 +128,9 @@ reference <- list(
     q_between_df = unname(moderator$QMdf[1]),
     q_between_pvalue = unname(moderator$QMp),
     i2_between = max(0, (moderator$QM - moderator$QMdf[1]) / moderator$QM)
+  ),
+  subgroup_random_q_profile = list(
+    groups = lapply(random_group_fits, q_profile_tau2_summary)
   ),
   singleton_random = fit_summary(singleton_random),
   leave_one_out = list(

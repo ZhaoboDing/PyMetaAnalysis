@@ -14,6 +14,25 @@ Changes planned for the next release accumulate under `Unreleased`.
   displays, subgroup and sensitivity workflows, plotting, provenance, reports,
   and independent R `metafor` references.
 
+### Changed
+
+- integer-valued floating-point categorical moderators now match declared
+  integer levels while booleans remain distinct, supporting pandas columns
+  promoted to floating point by missing values;
+- MH pooling corrections now use `None` as the context-sensitive scope default;
+  explicitly supplying either MH-only option to IV or Peto pooling raises an
+  error, and non-MH method metadata no longer records unused MH settings;
+- estimator documentation now makes the pooled-mean-only Q-profile contract,
+  the prefiltered `fit_peto()` input contract, and sparse MH RD boundary policy
+  explicit;
+- fixed-version `metafor` references now cover a two-study Hartung-Knapp
+  interval and Q-profile intervals reached through random-effects subgroups.
+
+### Fixed
+
+- normal-inference subgroup tests reuse each fitted standard error directly,
+  avoiding an unnecessary recomputation and last-bit numerical drift.
+
 ## 0.6.0 - 2026-08-13
 
 ### Added
@@ -51,6 +70,21 @@ Changes planned for the next release accumulate under `Unreleased`.
   Mantel-Haenszel pooling correction; iterative failure paths have direct
   regression tests.
 
+### Breaking changes
+
+- explicitly supplying `tau2_method` to a common-effect model, including the
+  former default spelling `"REML"`, now raises an error instead of being
+  ignored; explicitly inapplicable SMD variance settings follow the same rule;
+- cumulative analysis now rejects a string `order` selector when the name is
+  present in both source data and the calculated study table, instead of
+  silently preferring the source-data column;
+- `LeaveOneOutResult.results` now preserves failed refits as `None`, and its
+  table adds `refit_success`, `error_type`, and `error_message` columns;
+- pooled-result `prediction_interval_method` metadata now uses `null` when an
+  interval is unavailable and `"HK-PR"` for Hartung-Knapp intervals. Report
+  schema 1.2 remains unchanged because the field itself was already present;
+  consumers must handle the documented value set.
+
 ### Fixed
 
 - inverse-variance means, heterogeneity statistics, and pooling and
@@ -79,9 +113,6 @@ Changes planned for the next release accumulate under `Unreleased`.
   analysis;
 - tagged releases now rerun the full branch-coverage test suite before
   distributions can be built and published.
-- tau-squared methods and SMD variance conventions now use `None` as the
-  context-sensitive default, so explicitly inapplicable settings raise domain
-  errors instead of being silently ignored;
 - duplicate study labels now add a row-position warning while preserving
   `row_id` as the unique audit key;
 - report JSON now serializes `pd.NaT` study labels as `null` rather than the
@@ -89,8 +120,6 @@ Changes planned for the next release accumulate under `Unreleased`.
 - Meta-regression with `missing="drop"` now determines complete-row exclusions
   before validating moderator values, so invalid values in already excluded
   rows cannot abort the analysis;
-- cumulative analysis now rejects ambiguous string `order` selectors that
-  exist in both source data and study results;
 - empty inputs now report that at least one study row is required, and binary
   zero-cell errors identify when `correction_scope="none"` disables an
   otherwise positive correction.
@@ -102,8 +131,6 @@ Changes planned for the next release accumulate under `Unreleased`.
   errors;
 - the Mantel-Haenszel estimator now rejects empty and zero-total strata before
   division, preventing NaN propagation and misleading variance diagnostics.
-- prediction-interval metadata is now `None` when too few studies prevent an
-  interval from being calculated;
 - categorical moderator encoding no longer conflates booleans, integers, and
   floating-point values through Python's cross-type numeric equality;
 - CI now covers Python 3.14, Pages deployments are not cancelled mid-flight,

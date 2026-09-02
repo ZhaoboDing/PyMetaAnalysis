@@ -69,6 +69,30 @@ def test_leave_one_out_preserves_random_effects_method_configuration() -> None:
         assert refit.method.max_iter == 321
 
 
+def test_leave_one_out_refit_exposes_consistent_q_profile_interval() -> None:
+    effect = np.asarray([-0.2, 0.1, 0.8, 1.4])
+    variance = np.asarray([0.03, 0.05, 0.04, 0.06])
+    result = ma.meta_analysis(
+        effect=effect,
+        variance=variance,
+        model="random",
+        tau2_method="REML",
+    )
+
+    refit = result.leave_one_out().results[0]
+    assert refit is not None
+    direct = ma.meta_analysis(
+        effect=effect[1:],
+        variance=variance[1:],
+        model="random",
+        tau2_method="REML",
+    )
+    refit_interval = refit.tau2_confidence_interval()
+    direct_interval = direct.tau2_confidence_interval()
+
+    assert refit_interval == direct_interval
+
+
 @pytest.mark.parametrize(
     ("method", "measure", "pooling_method"),
     [

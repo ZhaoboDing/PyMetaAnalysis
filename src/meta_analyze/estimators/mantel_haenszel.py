@@ -157,7 +157,9 @@ def fit_mantel_haenszel(
         if normalized_measure == "RD":
             raise InvalidStudyDataError(
                 "Mantel-Haenszel RD produced a non-positive sampling variance "
-                "under the Sato-Greenland-Robins method; set a positive "
+                "under the Sato-Greenland-Robins method. PyMetaAnalysis rejects "
+                "this degenerate case instead of returning a zero or near-zero "
+                "standard error; set a positive "
                 "mh_continuity_correction if the review protocol permits it."
             )
         raise InvalidStudyDataError(

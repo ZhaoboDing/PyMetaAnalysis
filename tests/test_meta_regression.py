@@ -556,22 +556,51 @@ def test_invalid_moderator_declarations_are_explicit(
         )
 
 
-@pytest.mark.parametrize(
-    ("values", "levels"),
-    [
-        ([False, True, False], [0, 1]),
-        ([0.0, 1.0, 0.0], [0, 1]),
-    ],
-)
-def test_categorical_levels_do_not_use_cross_kind_numeric_equality(
-    values: list[object], levels: list[object]
-) -> None:
-    with pytest.raises(ma.InvalidStudyDataError, match="undeclared levels"):
+def test_categorical_levels_keep_booleans_distinct_from_integers() -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="booleans"):
         ma.meta_regression(
             effect=[0.1, 0.2, 0.3],
             variance=[0.04, 0.05, 0.06],
-            moderators={"group": values},
-            categorical={"group": levels},
+            moderators={"group": [False, True, False]},
+            categorical={"group": [0, 1]},
+            model="common",
+        )
+
+
+def test_integer_valued_float_categories_match_integer_levels_after_drop() -> None:
+    data = pd.DataFrame(
+        {
+            "effect": [0.1, 0.2, 0.3, 0.4],
+            "variance": [0.04, 0.05, 0.06, 0.07],
+            "group": [0, 1, None, 0],
+        }
+    )
+
+    result = ma.meta_regression(
+        data,
+        effect="effect",
+        variance="variance",
+        moderators=["group"],
+        categorical={"group": [0, 1]},
+        model="common",
+        missing="drop",
+    )
+    prediction = result.predict(pd.DataFrame({"group": [0.0, 1.0]}))
+
+    assert data["group"].dtype == np.dtype("float64")
+    assert result.k == 3
+    assert result.study_results["included"].tolist() == [True, True, False, True]
+    assert len(prediction) == 2
+    assert np.isfinite(prediction["estimate"]).all()
+
+
+def test_non_integer_float_category_does_not_match_integer_level() -> None:
+    with pytest.raises(ma.InvalidStudyDataError, match="integer-valued"):
+        ma.meta_regression(
+            effect=[0.1, 0.2, 0.3],
+            variance=[0.04, 0.05, 0.06],
+            moderators={"group": [0.0, 1.5, 0.0]},
+            categorical={"group": [0, 1]},
             model="common",
         )
 

@@ -73,7 +73,10 @@ def _restore_global_rows(
 def _subgroup_test_standard_error(group: MetaAnalysisResult) -> float:
     """Return the classic model SE used by the subgroup Wald test."""
 
-    if group.method.pooling_method != "inverse_variance":
+    if (
+        group.method.pooling_method != "inverse_variance"
+        or group.method.ci_method == "normal"
+    ):
         return group.standard_error
 
     studies = group.study_results

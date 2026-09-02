@@ -46,7 +46,13 @@ which the library fits a random-effects model; the committed R artifact retains
 its single-study row so that this difference remains explicit and auditable.
 
 `generic_metafor.json` includes `confint(..., type="QP")` reference values for
-tau-squared and the monotonic tau, I-squared, and H-squared transformations.
+tau-squared and the monotonic tau, I-squared, and H-squared transformations,
+plus a two-study Hartung-Knapp fit that exercises the `t` interval at one
+degree of freedom.
+
+`workflow_metafor.json` additionally includes Q-profile tau-squared intervals
+for random-effects subgroup fits, exercising the interval API on fitted group
+subsets rather than only on the main inverse-variance path.
 
 `binary_metafor.json` covers OR/RR/RD study effects and inverse-variance fits,
 plus uncorrected and explicitly corrected common-effect Mantel-Haenszel fits

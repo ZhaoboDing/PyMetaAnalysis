@@ -138,9 +138,12 @@ Fits generic study effects on study-level moderators.
 follow `meta_analysis()`. Missingness in any model field applies to the complete
 row. The encoded design must have full column rank and `k > p`. Riley intervals
 additionally require `k-p >= 2`.
-Categorical values must match the declared levels without cross-kind numeric
-coercion: booleans, integers, and floating-point values are distinct category
-kinds, while equivalent Python and NumPy scalar forms share a kind.
+Categorical values must match the declared levels without conflating booleans
+with numeric categories. Integer-valued floating-point values such as `1.0`
+match the corresponding integer level `1`, which supports pandas columns that
+were promoted to floating point by missing values. Non-integer floats remain
+distinct from integer levels, while equivalent Python and NumPy scalar forms
+also match.
 
 The result is a dedicated `MetaRegressionResult`, not a pooled
 `MetaAnalysisResult`. See the [Meta-regression guide](../guides/meta-regression.md)
@@ -168,7 +171,7 @@ ma.meta_binary(
     correction_scope="only_zero_studies",
     rd_zero_variance="correct",
     mh_continuity_correction=None,
-    mh_correction_scope="only_zero_studies",
+    mh_correction_scope=None,
     missing="raise",
     atol=1e-10,
     max_iter=1000,
@@ -187,7 +190,7 @@ Calculates and pools two-group binary effects.
 | `correction_scope` | `"only_zero_studies"`, `"if_any_zero"`, `"all_studies"`, or `"none"` |
 | `rd_zero_variance` | `"correct"` or `"exclude"`; configurable only for RD |
 | `mh_continuity_correction` | Separate non-negative MH pooling correction; `None` means zero |
-| `mh_correction_scope` | Scope for the separate MH pooling correction |
+| `mh_correction_scope` | Scope for the separate MH pooling correction; `None` selects `"only_zero_studies"` |
 
 `study`, `subgroup`, `tau2_method`, `ci_method`, `confidence_level`, `missing`,
 `atol`, and `max_iter` have the meanings described for `meta_analysis()`.
@@ -196,7 +199,9 @@ MH supports common-effect OR/RR/RD and normal intervals only. MH RD uses the
 Sato-Greenland-Robins sampling variance. Every random-effects binary analysis
 requires inverse-variance pooling. Sparse-table behavior is specified in
 [zero-event studies](../guides/zero-events.md). An explicit `tau2_method` is
-rejected for common-effect and specialized table-based fits.
+rejected for common-effect and specialized table-based fits. Explicit
+`mh_continuity_correction` and `mh_correction_scope` values are rejected for
+IV and Peto pooling instead of being ignored.
 
 Peto supports common-effect OR and normal intervals only. It uses raw tables
 for pooling and observed-minus-expected heterogeneity. The public study-effect
