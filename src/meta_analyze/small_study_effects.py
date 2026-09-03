@@ -142,6 +142,122 @@ class EggerTestResult:
 
 
 @dataclass(frozen=True, slots=True)
+class HarbordTestResult:
+    """Harbord efficient-score test for small-study effects in odds ratios."""
+
+    intercept: float
+    intercept_standard_error: float
+    intercept_ci_low: float
+    intercept_ci_high: float
+    statistic: float
+    statistic_name: str
+    distribution: str
+    df: int
+    pvalue: float
+    limit_estimate: float
+    limit_standard_error: float
+    limit_ci_low: float
+    limit_ci_high: float
+    residual_dispersion: float
+    confidence_level: float
+    k: int
+    measure: str
+    effect_scale: str
+    display_scale: str
+    method: str
+    model: str
+    response: str
+    predictor: str
+    weight_method: str
+    uses_continuity_correction: bool
+    condition_number: float
+    warnings: tuple[str, ...]
+
+    @property
+    def intercept_ci(self) -> tuple[float, float]:
+        """Return the confidence interval for the asymmetry intercept."""
+
+        return self.intercept_ci_low, self.intercept_ci_high
+
+    @property
+    def limit_ci(self) -> tuple[float, float]:
+        """Return the interval for the efficient-score limit coefficient."""
+
+        return self.limit_ci_low, self.limit_ci_high
+
+    @property
+    def display_limit_estimate(self) -> float:
+        """Return the limit coefficient on the odds-ratio scale."""
+
+        return math.exp(self.limit_estimate)
+
+    @property
+    def display_limit_ci(self) -> tuple[float, float]:
+        """Return the limit-coefficient interval on the odds-ratio scale."""
+
+        return math.exp(self.limit_ci_low), math.exp(self.limit_ci_high)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a detached, machine-readable representation."""
+
+        return {
+            "method": self.method,
+            "model": self.model,
+            "response": self.response,
+            "predictor": self.predictor,
+            "weight_method": self.weight_method,
+            "studies": self.k,
+            "measure": self.measure,
+            "effect_scale": self.effect_scale,
+            "display_scale": self.display_scale,
+            "confidence_level": self.confidence_level,
+            "intercept": self.intercept,
+            "intercept_standard_error": self.intercept_standard_error,
+            "intercept_ci_low": self.intercept_ci_low,
+            "intercept_ci_high": self.intercept_ci_high,
+            "statistic": self.statistic,
+            "statistic_name": self.statistic_name,
+            "distribution": self.distribution,
+            "df": self.df,
+            "pvalue": self.pvalue,
+            "limit_estimate": self.limit_estimate,
+            "limit_standard_error": self.limit_standard_error,
+            "limit_ci_low": self.limit_ci_low,
+            "limit_ci_high": self.limit_ci_high,
+            "display_limit_estimate": self.display_limit_estimate,
+            "display_limit_ci": self.display_limit_ci,
+            "residual_dispersion": self.residual_dispersion,
+            "uses_continuity_correction": self.uses_continuity_correction,
+            "condition_number": self.condition_number,
+            "warnings": self.warnings,
+        }
+
+    def __str__(self) -> str:
+        level = 100.0 * self.confidence_level
+        display_low, display_high = self.display_limit_ci
+        lines = [
+            "Harbord efficient-score test for funnel-plot asymmetry",
+            f"Studies: {self.k}",
+            (
+                f"Asymmetry intercept: {self.intercept:.6g} "
+                f"({level:g}% CI {self.intercept_ci_low:.6g} to "
+                f"{self.intercept_ci_high:.6g})"
+            ),
+            f"t({self.df})={self.statistic:.6g}, p={self.pvalue:.6g}",
+            (
+                "Efficient-score limit coefficient on the odds-ratio scale: "
+                f"{self.display_limit_estimate:.6g} "
+                f"({level:g}% CI {display_low:.6g} to {display_high:.6g})"
+            ),
+            "Model: efficient-score regression with multiplicative dispersion",
+        ]
+        if self.warnings:
+            lines.append("Notes:")
+            lines.extend(f"- {warning}" for warning in self.warnings)
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True, slots=True)
 class PetersTestResult:
     """Peters regression test for small-study effects in odds ratios."""
 
@@ -499,6 +615,164 @@ def egger_test(
         model="weighted_regression_multiplicative_dispersion",
         predictor="standard_error",
         condition_number=condition_number,
+        warnings=tuple(warnings),
+    )
+
+
+_HARBORD_REQUIRED_COLUMNS = frozenset(
+    {
+        "event_treat",
+        "n_treat",
+        "event_control",
+        "n_control",
+        "included",
+    }
+)
+
+
+def harbord_test(
+    result: MetaAnalysisResult,
+    *,
+    confidence_level: float | None = None,
+) -> HarbordTestResult:
+    """Run Harbord's efficient-score test for small-study effects."""
+
+    if result.measure != "OR":
+        raise UnsupportedMethodError(
+            "Harbord's test is implemented only for measure='OR'."
+        )
+    studies = result._study_results_view()
+    missing_columns = sorted(_HARBORD_REQUIRED_COLUMNS.difference(studies.columns))
+    if missing_columns:
+        raise UnsupportedMethodError(
+            "Harbord's test requires a result produced by meta_binary() with "
+            "retained two-group counts; missing study fields: "
+            + ", ".join(missing_columns)
+            + "."
+        )
+
+    level = _validate_confidence_level(
+        result.method.confidence_level if confidence_level is None else confidence_level
+    )
+    included = studies["included"].to_numpy(dtype=bool, copy=True)
+    included_studies = studies.loc[included]
+    if len(included_studies) < 3:
+        raise InsufficientStudiesError(
+            "Harbord's test requires at least three included studies."
+        )
+
+    event_treat = included_studies["event_treat"].to_numpy(dtype=np.float64, copy=True)
+    n_treat = included_studies["n_treat"].to_numpy(dtype=np.float64, copy=True)
+    event_control = included_studies["event_control"].to_numpy(
+        dtype=np.float64, copy=True
+    )
+    n_control = included_studies["n_control"].to_numpy(dtype=np.float64, copy=True)
+
+    non_event_treat = n_treat - event_treat
+    non_event_control = n_control - event_control
+    total_sample_size = n_treat + n_control
+    total_events = event_treat + event_control
+    total_nonevents = non_event_treat + non_event_control
+    if (
+        np.any(~np.isfinite(total_sample_size))
+        or np.any(total_sample_size <= 1.0)
+        or np.any(~np.isfinite(total_events))
+        or np.any(total_events <= 0.0)
+        or np.any(~np.isfinite(total_nonevents))
+        or np.any(total_nonevents <= 0.0)
+    ):
+        raise InvalidStudyDataError(
+            "Harbord's test requires finite total sample sizes greater than one "
+            "and positive total events and non-events in every included study."
+        )
+
+    treatment_fraction = n_treat / total_sample_size
+    control_fraction = n_control / total_sample_size
+    efficient_score = event_treat - total_events * treatment_fraction
+    # This is algebraically n_t*n_c*S*F / (N^2*(N-1)), arranged so no
+    # intermediate product exceeds the scale of the original finite counts.
+    smaller_margin = np.minimum(total_events, total_nonevents)
+    larger_margin = np.maximum(total_events, total_nonevents)
+    score_variance = (
+        treatment_fraction
+        * control_fraction
+        * smaller_margin
+        * (larger_margin / (total_sample_size - 1.0))
+    )
+    if np.any(~np.isfinite(score_variance)) or np.any(score_variance <= 0.0):
+        raise InvalidStudyDataError(
+            "Harbord's test produced non-positive or non-finite efficient-score "
+            "variances."
+        )
+
+    root_score_variance = np.sqrt(score_variance)
+    standardized_score = efficient_score / root_score_variance
+    fit = _fit_weighted_regression(
+        standardized_score,
+        root_score_variance,
+        np.ones(len(standardized_score), dtype=np.float64),
+        diagnostic_name="Harbord's test",
+        predictor_label="score variances",
+    )
+    # In Z/sqrt(V) = alpha + beta*sqrt(V), alpha is the asymmetry
+    # coefficient and beta is the efficient-score limit coefficient. This is
+    # equivalent to the V-weighted Z/V ~ 1 + 1/sqrt(V) regression used by
+    # meta::metabias(method.bias="Harbord").
+    statistic = fit.intercept / fit.intercept_standard_error
+    residual_dispersion = fit.relative_residual_dispersion
+    df = len(standardized_score) - 2
+    critical_value = float(t.ppf(0.5 + level / 2.0, df=df))
+    intercept_margin = critical_value * fit.intercept_standard_error
+    limit_margin = critical_value * fit.slope_standard_error
+    pvalue = float(2.0 * t.sf(abs(statistic), df=df))
+
+    warnings: list[str] = []
+    if len(standardized_score) < 10:
+        warnings.append(
+            "Funnel-asymmetry tests have low power with fewer than ten studies."
+        )
+    if result.method.pooling_method == "peto":
+        warnings.append(
+            "The source analysis uses Peto pooling; this diagnostic derives null "
+            "efficient scores directly from the retained two-group counts."
+        )
+    warnings.extend(
+        [
+            "Harbord's test is designed for comparative two-group binary outcomes "
+            "and should not be used for diagnostic-accuracy studies.",
+            "This test diagnoses an association between standardized efficient "
+            "scores and score precision; it does not by itself establish or "
+            "exclude publication bias.",
+        ]
+    )
+
+    return HarbordTestResult(
+        intercept=fit.intercept,
+        intercept_standard_error=fit.intercept_standard_error,
+        intercept_ci_low=fit.intercept - intercept_margin,
+        intercept_ci_high=fit.intercept + intercept_margin,
+        statistic=statistic,
+        statistic_name="t",
+        distribution="t",
+        df=df,
+        pvalue=pvalue,
+        limit_estimate=fit.slope,
+        limit_standard_error=fit.slope_standard_error,
+        limit_ci_low=fit.slope - limit_margin,
+        limit_ci_high=fit.slope + limit_margin,
+        residual_dispersion=residual_dispersion,
+        confidence_level=level,
+        k=len(standardized_score),
+        measure="OR",
+        effect_scale="log",
+        display_scale="exp",
+        method="harbord",
+        model="efficient_score_regression_multiplicative_dispersion",
+        response="standardized_efficient_score",
+        predictor="sqrt_efficient_score_variance",
+        weight_method="efficient_score_variance_equivalent",
+        uses_continuity_correction=False,
+        condition_number=fit.condition_number,
         warnings=tuple(warnings),
     )
 

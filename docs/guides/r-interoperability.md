@@ -26,6 +26,7 @@ fixtures used by this project.
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 | Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
+| Harbord binary-OR test | `result.harbord_test()` | manual documented score regression | `metabias(..., method.bias="Harbord")` |
 | Peters binary-OR test | `result.peters_test()` | manual documented WLS | `metabias(..., method.bias="Peters")` |
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.
@@ -232,6 +233,26 @@ coefficient, while `limit_estimate` is the extrapolated effect as the standard
 error tends to zero. Review the dedicated
 [small-study-effects guide](small-study-effects.md) before treating similarly
 named R functions as numerically interchangeable.
+
+## Harbord regression for binary odds ratios
+
+```python
+harbord = binary_or_result.harbord_test()
+```
+
+corresponds to:
+
+```r
+metabias(binary_or_fit, method.bias = "Harbord")
+```
+
+PyMetaAnalysis calculates the null efficient score `Z` and score variance `V`
+directly from retained treatment/control counts. It fits the standardized form
+`Z/sqrt(V)` on `sqrt(V)`, which is algebraically equivalent to the
+`V`-weighted `Z/V` on `1/sqrt(V)` regression used by R `meta`. The intercept is
+the tested asymmetry coefficient, with multiplicative dispersion and
+`t_(k-2)` inference. Study-level continuity corrections and the source pooling
+method do not enter the score calculation.
 
 ## Peters regression for binary odds ratios
 

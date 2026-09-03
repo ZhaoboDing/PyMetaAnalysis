@@ -248,6 +248,41 @@ studies and identifiable variation in standard errors. Interpretation and
 effect-measure limitations are documented under
 [small-study effects](../guides/small-study-effects.md).
 
+## Harbord efficient-score test for binary odds ratios
+
+For an included two-group binary study, let `a_i` be treatment events,
+`n_ti` and `n_ci` the group sizes, `N_i=n_ti+n_ci`, `S_i` the total events,
+and `F_i=N_i-S_i`. The null efficient score and score variance are:
+
+```text
+Z_i = a_i - S_i * n_ti / N_i
+V_i = n_ti * n_ci * S_i * F_i / (N_i^2 * (N_i - 1))
+```
+
+Harbord regression is fitted in the standardized form:
+
+```text
+Z_i / sqrt(V_i) = alpha + beta * sqrt(V_i) + epsilon_i
+phi = sum(epsilon_i^2) / (k - 2)
+b = [alpha, beta]'
+Cov(b) = phi * (X' X)^(-1)
+```
+
+This is algebraically equivalent to fitting `Z_i/V_i` on `1/sqrt(V_i)` with
+weights `V_i`. `alpha`, reported as `HarbordTestResult.intercept`, is tested
+against zero with a two-sided `t_(k-2)` test. `beta` is reported as the
+efficient-score `limit_estimate` and is also available with an exponential
+display transformation; it is not an automatic replacement for the source
+pooled estimate.
+
+The implementation calculates `V_i` through bounded group fractions and raw
+event margins, then uses a column-scaled SVD rather than an explicit inverse.
+It does not apply or depend on study-level continuity corrections, source
+study-effect estimators, or source pooling weights. This matches
+`meta::metabias(method.bias="Harbord")` for two-group odds ratios.
+Applicability and interpretation limits are documented under
+[small-study effects](../guides/small-study-effects.md).
+
 ## Peters regression test for binary odds ratios
 
 For each included two-group binary study, let `y_i` be its conventional log

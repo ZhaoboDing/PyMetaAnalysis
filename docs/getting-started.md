@@ -176,14 +176,15 @@ It tests for funnel-plot asymmetry or small-study effects, not publication bias
 itself. Read [small-study effects](guides/small-study-effects.md) before using or
 interpreting it.
 
-For a two-group binary odds-ratio result, the outcome-specific Peters test is
-also available:
+For a two-group binary odds-ratio result, the outcome-specific Harbord and
+Peters tests are also available:
 
 ```python
+harbord = binary_or_result.harbord_test()
 peters = binary_or_result.peters_test()
 ```
 
-It requires the retained event and group-size counts from `meta_binary()`.
+They require the retained event and group-size counts from `meta_binary()`.
 
 See [plotting](guides/plotting.md) for every parameter, display-scale rules,
 axes composition, and interpretation cautions.

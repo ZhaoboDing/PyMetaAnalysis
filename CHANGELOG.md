@@ -12,6 +12,10 @@ Changes planned for the next release accumulate under `Unreleased`.
   Egger regression test for funnel-plot asymmetry with multiplicative
   dispersion, t inference, an explicitly labeled limit estimate, applicability
   warnings, and an independent R `metafor` reference fixture.
+- `MetaAnalysisResult.harbord_test()` implements the Harbord efficient-score
+  test for two-group binary odds ratios, without continuity correction, with
+  multiplicative dispersion, t inference, and an independent R `meta`
+  reference fixture.
 - `MetaAnalysisResult.peters_test()` implements the Peters regression test for
   two-group binary odds ratios, reusing the recorded study-level continuity
   correction and validating the slope, limit estimate, and multiplicative

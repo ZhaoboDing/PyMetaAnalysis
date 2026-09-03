@@ -215,6 +215,30 @@ diagnostic consumes only included study rows and does not modify or become part
 of the original result report. See
 [small-study effects](../guides/small-study-effects.md) before interpretation.
 
+### Harbord binary-OR asymmetry diagnostic
+
+`harbord_test(confidence_level=None)` returns an immutable `HarbordTestResult`
+for an eligible `meta_binary(..., measure="OR")` result. Its primary fields
+are:
+
+| Attribute | Meaning |
+| --- | --- |
+| `intercept`, `intercept_standard_error`, `intercept_ci` | Tested efficient-score asymmetry intercept and t interval |
+| `statistic`, `statistic_name`, `distribution`, `df`, `pvalue` | Distribution-explicit two-sided `t_(k-2)` test of a zero intercept |
+| `limit_estimate`, `limit_standard_error`, `limit_ci` | Efficient-score limit coefficient and interval |
+| `display_limit_estimate`, `display_limit_ci` | Limit coefficient and interval exponentiated to the OR scale |
+| `residual_dispersion` | Multiplicative residual dispersion in the standardized-score regression |
+| `method`, `model`, `response`, `predictor`, `weight_method` | Explicit diagnostic configuration and equivalent weighting form |
+| `uses_continuity_correction` | Always `False`; the score is calculated from raw counts |
+| `condition_number`, `warnings` | Scaled-design conditioning and applicability cautions |
+
+The standardized regression of `Z/sqrt(V)` on `sqrt(V)` is equivalent to a
+`V`-weighted regression of `Z/V` on `1/sqrt(V)`. It is independent of source
+pooling and study-level continuity correction. `to_dict()` returns a detached
+mapping, and the diagnostic does not modify or enter the original result
+report. See [small-study effects](../guides/small-study-effects.md) before
+interpretation.
+
 ### Peters binary-OR asymmetry diagnostic
 
 `peters_test(confidence_level=None)` returns an immutable `PetersTestResult`
