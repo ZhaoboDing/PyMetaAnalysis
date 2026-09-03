@@ -26,6 +26,7 @@ fixtures used by this project.
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 | Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
+| Peters binary-OR test | `result.peters_test()` | manual documented WLS | `metabias(..., method.bias="Peters")` |
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.
 One documented Python entry point per input shape keeps result types and
@@ -232,6 +233,27 @@ error tends to zero. Review the dedicated
 [small-study-effects guide](small-study-effects.md) before treating similarly
 named R functions as numerically interchangeable.
 
+## Peters regression for binary odds ratios
+
+```python
+peters = binary_or_result.peters_test()
+```
+
+corresponds to:
+
+```r
+metabias(binary_or_fit, method.bias = "Peters")
+```
+
+PyMetaAnalysis requires an OR result created by `meta_binary()` because Peters
+regression needs the original treatment/control counts. It reconstructs
+conventional continuity-corrected study log odds ratios, uses inverse total
+sample size as predictor and `S*F/N` weights, and applies multiplicative
+dispersion with `t_(k-2)` inference. `slope` is the tested coefficient;
+`limit_estimate` is the extrapolated log OR at infinite total sample size.
+The source common/random and MH/IV/Peto pooling choice does not enter this
+separate regression.
+
 ## Primary R references
 
 - [`metafor::rma.uni`](https://wviechtb.github.io/metafor/reference/rma.uni.html)
@@ -244,3 +266,4 @@ named R functions as numerically interchangeable.
 - [`meta::metabin`](https://search.r-project.org/CRAN/refmans/meta/html/metabin.html)
 - [`meta::metacont`](https://search.r-project.org/CRAN/refmans/meta/html/metacont.html)
 - [`meta::metacor`](https://search.r-project.org/CRAN/refmans/meta/html/metacor.html)
+- [`meta::metabias`](https://search.r-project.org/CRAN/refmans/meta/html/metabias.html)

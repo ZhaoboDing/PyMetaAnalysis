@@ -319,13 +319,14 @@ Every `MetaAnalysisResult` provides:
 | `leave_one_out()` | `LeaveOneOutResult` |
 | `cumulative(...)` | `CumulativeMetaAnalysisResult` |
 | `egger_test(confidence_level=None)` | `EggerTestResult` |
+| `peters_test(confidence_level=None)` | `PetersTestResult` |
 | `forest(...)` | Matplotlib `Axes` |
 | `funnel(...)` | Matplotlib `Axes` |
 
-`SubgroupMetaAnalysisResult` omits `funnel()` and `egger_test()`; use its
-`overall` or individual `groups` results when either diagnostic is
-scientifically appropriate. Its sensitivity methods return subgroup composite
-result classes.
+`SubgroupMetaAnalysisResult` omits `funnel()`, `egger_test()`, and
+`peters_test()`; use its `overall` or individual `groups` results when a
+diagnostic is scientifically appropriate. Its sensitivity methods return
+subgroup composite result classes.
 
 `MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
 `to_dataframe()`, `predict(new_data)`, `test_moderator(name)`,
@@ -370,6 +371,17 @@ as predictor, inverse sampling-variance weights, multiplicative dispersion,
 and a `t_(k-2)` reference distribution. See
 [small-study effects](../guides/small-study-effects.md) for applicability and
 interpretation.
+
+### `peters_test()` parameters
+
+The optional `confidence_level` controls slope and limit-estimate intervals and
+defaults to the fitted analysis level. The test is available only for
+`meta_binary(..., measure="OR")` results with retained two-group counts. It
+uses inverse total sample size as predictor, `S*F/N` weights, multiplicative
+dispersion, and a `t_(k-2)` reference distribution. The recorded study-level
+continuity correction is reused when reconstructing conventional log odds
+ratios. See [small-study effects](../guides/small-study-effects.md) for the
+complete contract and interpretation limits.
 
 ## Configuration and diagnostics
 

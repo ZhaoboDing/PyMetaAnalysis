@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         SubgroupCumulativeMetaAnalysisResult,
         SubgroupLeaveOneOutResult,
     )
-    from .small_study_effects import EggerTestResult
+    from .small_study_effects import EggerTestResult, PetersTestResult
 else:
     Axes = Any
 
@@ -534,6 +534,17 @@ class MetaAnalysisResult:
         from .small_study_effects import egger_test
 
         return egger_test(self, confidence_level=confidence_level)
+
+    def peters_test(
+        self,
+        *,
+        confidence_level: float | None = None,
+    ) -> PetersTestResult:
+        """Run Peters' regression test for small-study effects in odds ratios."""
+
+        from .small_study_effects import peters_test
+
+        return peters_test(self, confidence_level=confidence_level)
 
     def forest(
         self,

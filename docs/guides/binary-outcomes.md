@@ -120,6 +120,24 @@ calculations. See [zero-event studies](zero-events.md) for details.
 Use `method="IV"` for random-effects RD or when inverse-variance common-effect
 pooling is the prespecified estimator.
 
+## Peters small-study-effect test for odds ratios
+
+An OR result retains the original two-group counts needed for Peters
+regression:
+
+```python
+peters = odds_ratio_result.peters_test()
+print(peters)
+```
+
+Call this only when the result was fitted with `measure="OR"`. The diagnostic
+reuses the recorded study-level continuity correction, but its result is
+otherwise independent of the source MH, IV, random-effects IV, or Peto pooling
+choice. It tests a log-OR-on-inverse-total-sample-size slope; it does not prove
+publication bias or replace the pooled estimate. See
+[small-study effects](small-study-effects.md) for the complete method and
+interpretation contract.
+
 ## Input validation
 
 Event counts and sample sizes must be finite, integer-valued, and non-negative;

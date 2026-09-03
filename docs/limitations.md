@@ -26,6 +26,8 @@ deferred functionality explicit.
 - forest and descriptive funnel plots;
 - the classical standard-error Egger regression test for funnel-plot
   asymmetry, with multiplicative dispersion and t inference;
+- the Peters regression test for two-group binary odds ratios with retained
+  counts and explicit study-level continuity-correction reuse;
 - structured provenance and reports;
 - study-level Meta-regression with numeric and explicitly encoded categorical
   moderators, generalized DL/PM/REML, normal/Hartung-Knapp inference, and
@@ -50,9 +52,10 @@ deferred functionality explicit.
   correlations, and corrections for measurement unreliability;
 - Knapp-Hartung variants beyond the two documented choices;
 - prediction-interval methods beyond the documented default and Riley rules;
-- random/mixed-effects Egger regression, Begg rank correlation, Harbord or
-  Peters binary-outcome tests, trim-and-fill, selection-model, or other
-  publication-bias procedures;
+- random/mixed-effects Egger regression, Begg rank correlation, Harbord and
+  other binary-outcome asymmetry tests, trim-and-fill, selection-model, or
+  other publication-bias procedures; Peters regression is limited to retained
+  two-group OR counts and is not a diagnostic-accuracy method;
 - Meta-regression DFFITS, covariance ratios, influence plots, or simulated and
   re-estimated VIF variants;
 - automatic conversion from confidence intervals, p-values, or raw papers to
@@ -92,10 +95,12 @@ scientifically prespecified, full-rank model when `k > p`.
 
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
 squared. The classical Egger test diagnoses a relationship between effects and
-standard errors and is underpowered with few studies; it can also be
-artefactual for measures such as OR and SMD. Neither visual nor tested
-asymmetry establishes publication bias, and a non-significant test does not
-exclude missing evidence.
+standard errors and can be artefactual for measures such as OR and SMD. Peters
+regression instead relates two-group study log odds ratios to inverse total
+sample size, but remains sensitive to its model assumptions and is not valid
+for diagnostic-accuracy data. Both tests are underpowered with few studies.
+Neither visual nor tested asymmetry establishes publication bias, and a
+non-significant test does not exclude missing evidence.
 
 Continuity corrections and RD boundary policies can materially affect sparse
 binary analyses. They must be chosen in the review protocol and reported.

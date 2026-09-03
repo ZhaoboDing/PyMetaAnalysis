@@ -1,4 +1,4 @@
-"""Cross-software regression tests against committed R/metafor results."""
+"""Cross-software regression tests against committed R reference results."""
 
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
 CORRELATION = _load_reference("correlation_metafor.json")
 SMALL_STUDY_EFFECTS = _load_reference("small_study_effects_metafor.json")
+PETERS_SMALL_STUDY_EFFECTS = _load_reference("peters_small_study_effects_meta.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
@@ -110,6 +111,13 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
     assert BINARY["iterative_control"] == GENERIC["iterative_control"]
     assert WORKFLOW["iterative_control"] == GENERIC["iterative_control"]
     assert META_REGRESSION["iterative_control"] == GENERIC["iterative_control"]
+
+
+def test_peters_fixture_records_a_compatible_r_environment() -> None:
+    assert PETERS_SMALL_STUDY_EFFECTS["generated_by"] == "R meta"
+    assert PETERS_SMALL_STUDY_EFFECTS["r_version"] == GENERIC["r_version"]
+    assert PETERS_SMALL_STUDY_EFFECTS["jsonlite_version"] == GENERIC["jsonlite_version"]
+    assert PETERS_SMALL_STUDY_EFFECTS["meta_version"] == "8.5.0"
 
 
 def _assert_regression_fit(

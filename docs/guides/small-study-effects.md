@@ -1,11 +1,11 @@
-# Small-study effects and Egger regression
+# Small-study effects and regression tests
 
-PyMetaAnalysis provides the classical Egger regression test as a companion to
-the descriptive funnel plot. The test examines whether study effects are
-associated with their standard errors. It is a diagnostic for funnel-plot
-asymmetry or small-study effects, not a direct test for publication bias.
+PyMetaAnalysis provides classical Egger regression and the Peters test for
+two-group binary odds ratios as companions to the descriptive funnel plot.
+They diagnose funnel-plot asymmetry or small-study effects; neither is a direct
+test for publication bias.
 
-## Run the test
+## Run the classical Egger test
 
 Start from any fitted `MetaAnalysisResult`:
 
@@ -36,7 +36,45 @@ ax = result.funnel()
 print(egger.statistic, egger.df, egger.pvalue)
 ```
 
-## Inspect the result
+## Peters test for binary odds ratios
+
+When the analysis was fitted from retained two-group counts with
+`meta_binary(..., measure="OR")`, use the outcome-specific Peters regression:
+
+```python
+odds_ratios = ma.meta_binary(
+    trials,
+    event_treat="event_treat",
+    n_treat="n_treat",
+    event_control="event_control",
+    n_control="n_control",
+    measure="OR",
+    method="MH",
+)
+
+peters = odds_ratios.peters_test()
+print(peters.statistic, peters.df, peters.pvalue)
+```
+
+The test reconstructs conventional study log odds ratios from the retained
+four-cell counts and the analysis's recorded study-level continuity correction.
+Its result is therefore independent of whether the source pooled estimate used
+MH, inverse variance, random-effects inverse variance, or Peto. If the source
+used Peto, a note makes the different study-effect construction explicit.
+
+The tested coefficient is `peters.slope`, the slope of log OR on inverse total
+sample size. `peters.limit_estimate` is the extrapolated log OR as total sample
+size tends to infinity; `display_limit_estimate` and `display_limit_ci` are on
+the OR scale. These are regression extrapolations, not replacements for the
+pooled estimate. The result also records `residual_dispersion`,
+`weight_method`, the continuity-correction contract, corrected-study count,
+and the scaled-design condition number.
+
+Peters regression is unavailable for generic effects whose original four-cell
+counts are no longer known, and for RR, RD, continuous, correlation, or
+diagnostic-accuracy analyses.
+
+## Inspect the Egger result
 
 The tested coefficient is the intercept in the standardized-normal-deviate
 form of the Egger regression:
@@ -136,17 +174,24 @@ PyMetaAnalysis therefore records an additional warning for:
 - standardized mean differences, for which the same association can produce
   distorted funnel plots.
 
-Those outcome-specific tests are not yet implemented. A generic effect labeled
-`GENERIC` cannot reveal how the supplied effect was constructed, so callers
-must assess this limitation themselves.
+Peters regression is available for OR analyses created by `meta_binary()`.
+Harbord's test is not yet implemented. A generic effect labeled `GENERIC`
+cannot reveal how the supplied effect was constructed, so callers must assess
+this limitation themselves.
+
+For Peters regression, total sample sizes must vary enough to identify the
+slope. The method uses `S*F/N` weights, where `S` and `F` are the raw total
+events and non-events. Its continuity correction affects only the reconstructed
+study log OR, not these marginal-count weights. At least three studies are
+mathematically required, and the same fewer-than-ten warning applies.
 
 ## Interpretation
 
-A small p-value indicates evidence that effects and standard errors are
-associated under this regression model. Possible explanations include genuine
-heterogeneity, design or population differences, selective outcome reporting,
-other non-reporting mechanisms, artefactual effect/standard-error correlation,
-and chance.
+A small p-value indicates evidence that study effects are associated with the
+selected small-study predictor: standard error for Egger or inverse total
+sample size for Peters. Possible explanations include genuine heterogeneity,
+design or population differences, selective outcome reporting, other
+non-reporting mechanisms, artefactual associations, and chance.
 
 A large p-value does not demonstrate symmetry or exclude missing evidence,
 especially with few studies. A small p-value does not establish publication
@@ -154,4 +199,7 @@ bias. Interpret the test alongside the funnel plot, heterogeneity, study
 characteristics, protocol information, and sensitivity analyses. The
 [original Egger paper](https://doi.org/10.1136/bmj.315.7109.629) and
 [`metafor::regtest`](https://wviechtb.github.io/metafor/reference/regtest.html)
-provide the methodological and software references for this implementation.
+provide the methodological and software references for the Egger
+implementation. The Peters implementation follows the documented
+[`meta::metabias`](https://search.r-project.org/CRAN/refmans/meta/html/metabias.html)
+contract and Peters et al. (2006), as cited there.

@@ -51,7 +51,7 @@ from .sensitivity import (
     SubgroupCumulativeMetaAnalysisResult,
     SubgroupLeaveOneOutResult,
 )
-from .small_study_effects import EggerTestResult
+from .small_study_effects import EggerTestResult, PetersTestResult
 
 __all__ = [
     "AnalysisProvenance",
@@ -80,6 +80,7 @@ __all__ = [
     "MethodConfig",
     "ModeratorSpec",
     "ModeratorTestResult",
+    "PetersTestResult",
     "ResultReport",
     "SubgroupMetaAnalysisResult",
     "SubgroupMetaAnalysisSummary",

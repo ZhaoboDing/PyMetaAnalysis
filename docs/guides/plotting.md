@@ -97,9 +97,9 @@ tau-squared.
 Funnel asymmetry can reflect small-study effects, heterogeneity, outcome
 selection, design differences, chance, or publication processes. It is not by
 itself evidence of publication bias. Use the separately documented classical
-[`result.egger_test()`](small-study-effects.md) when a formal regression
-diagnostic is appropriate; it does not change the plot or prove a publication
-mechanism.
+[`result.egger_test()`](small-study-effects.md), or `result.peters_test()` for
+an eligible binary OR analysis, when a formal regression diagnostic is
+appropriate. Neither changes the plot or proves a publication mechanism.
 
 ## Meta-regression bubble plots
 
