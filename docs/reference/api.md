@@ -362,7 +362,11 @@ Subgroup forest plots omit `pooled_label`. See [plotting](../guides/plotting.md)
 ### `funnel()` parameters
 
 Funnel plots accept `ax`, `effect_label`, `confidence_level`,
-`show_pseudo_confidence_interval`, `warn_on_few_studies`, and `log_scale`.
+`show_pseudo_confidence_interval`, `contour_levels`, `contour_colors`,
+`contour_reference`, `show_contour_legend`, `warn_on_few_studies`, and
+`log_scale`. Contour levels are strictly increasing confidence levels in
+`(0,1)` that define two-sided p-value bands around a display-scale null
+reference.
 
 ### `egger_test()` parameters
 

@@ -160,10 +160,13 @@ After installing the `plot` extra:
 ```python
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
+contour_ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
 ```
 
 Both methods return a Matplotlib `Axes` and never call `show()`. This keeps them
-usable in notebooks, scripts, tests, and composed figures.
+usable in notebooks, scripts, tests, and composed figures. Funnel contours show
+two-sided significance regions around the null effect; they do not estimate
+missing studies.
 
 The classical Egger regression test is available separately from plotting:
 

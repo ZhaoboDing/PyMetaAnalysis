@@ -25,6 +25,7 @@ fixtures used by this project.
 | Meta-regression collinearity | `regression.collinearity()` | `vif()` plus weighted design diagnostics | — |
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
+| Contour-enhanced funnel plot | `result.funnel(contour_levels=(...))` | `funnel(level=c(...), refline=...)` | `funnel(contour.levels=c(...), ref=...)` |
 | Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
 | Harbord binary-OR test | `result.harbord_test()` | manual documented score regression | `metabias(..., method.bias="Harbord")` |
 | Peters binary-OR test | `result.peters_test()` | manual documented WLS | `metabias(..., method.bias="Peters")` |

@@ -32,9 +32,14 @@ only the classical regression form.
 Pair the numerical result with the plot:
 
 ```python
-ax = result.funnel()
+ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
 print(egger.statistic, egger.df, egger.pvalue)
 ```
+
+The optional contours mark two-sided significance regions around the null
+effect. They can make it easier to see whether an apparently missing part of
+the funnel lies mainly in a non-significant region, but they do not establish
+that studies are missing.
 
 ## Harbord test for binary odds ratios
 
@@ -240,7 +245,9 @@ mechanisms, artefactual associations, and chance.
 A large p-value does not demonstrate symmetry or exclude missing evidence,
 especially with few studies. A small p-value does not establish publication
 bias. Interpret the test alongside the funnel plot, heterogeneity, study
-characteristics, protocol information, and sensitivity analyses. The
+characteristics, protocol information, and sensitivity analyses. Contour-
+enhanced funnels add useful significance context, but neither locate missing
+studies nor identify the mechanism behind asymmetry. The
 [original Egger paper](https://doi.org/10.1136/bmj.315.7109.629) and
 [`metafor::regtest`](https://wviechtb.github.io/metafor/reference/regtest.html)
 provide the methodological and software references for the Egger

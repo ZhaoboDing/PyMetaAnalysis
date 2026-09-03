@@ -23,7 +23,7 @@ deferred functionality explicit.
   warned common-effect representation when a random-effects subgroup contains
   only one included study;
 - leave-one-out and cumulative repeated-fit workflows;
-- forest and descriptive funnel plots;
+- forest, descriptive funnel, and contour-enhanced funnel plots;
 - the classical standard-error Egger regression test for funnel-plot
   asymmetry, with multiplicative dispersion and t inference;
 - the Harbord efficient-score test for two-group binary odds ratios without
@@ -96,8 +96,10 @@ or causal effects. The package warns below ten studies but does not prohibit a
 scientifically prespecified, full-rank model when `k > p`.
 
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
-squared. The classical Egger test diagnoses a relationship between effects and
-standard errors and can be artefactual for measures such as OR and SMD.
+squared. Significance contours show p-value regions around a chosen null but
+do not identify missing studies or the cause of asymmetry. The classical Egger
+test diagnoses a relationship between effects and standard errors and can be
+artefactual for measures such as OR and SMD.
 Harbord instead uses null efficient scores, while Peters relates two-group
 study log odds ratios to inverse total sample size; both remain sensitive to
 their model assumptions and are not valid for diagnostic-accuracy data. All
