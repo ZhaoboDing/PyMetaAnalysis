@@ -319,14 +319,15 @@ Every `MetaAnalysisResult` provides:
 | `leave_one_out()` | `LeaveOneOutResult` |
 | `cumulative(...)` | `CumulativeMetaAnalysisResult` |
 | `egger_test(confidence_level=None)` | `EggerTestResult` |
+| `harbord_test(confidence_level=None)` | `HarbordTestResult` |
 | `peters_test(confidence_level=None)` | `PetersTestResult` |
 | `forest(...)` | Matplotlib `Axes` |
 | `funnel(...)` | Matplotlib `Axes` |
 
-`SubgroupMetaAnalysisResult` omits `funnel()`, `egger_test()`, and
-`peters_test()`; use its `overall` or individual `groups` results when a
-diagnostic is scientifically appropriate. Its sensitivity methods return
-subgroup composite result classes.
+`SubgroupMetaAnalysisResult` omits `funnel()`, `egger_test()`,
+`harbord_test()`, and `peters_test()`; use its `overall` or individual `groups`
+results when a diagnostic is scientifically appropriate. Its sensitivity
+methods return subgroup composite result classes.
 
 `MetaRegressionResult` provides `summary()`, `method_details()`, `report()`,
 `to_dataframe()`, `predict(new_data)`, `test_moderator(name)`,
@@ -371,6 +372,17 @@ as predictor, inverse sampling-variance weights, multiplicative dispersion,
 and a `t_(k-2)` reference distribution. See
 [small-study effects](../guides/small-study-effects.md) for applicability and
 interpretation.
+
+### `harbord_test()` parameters
+
+The optional `confidence_level` controls asymmetry-intercept and limit-
+coefficient intervals and defaults to the fitted analysis level. The test is
+available only for `meta_binary(..., measure="OR")` results with retained
+two-group counts. It uses the null efficient score and score variance,
+multiplicative dispersion, and a `t_(k-2)` reference distribution. It does not
+use study-level continuity corrections or source pooling weights. See
+[small-study effects](../guides/small-study-effects.md) for the complete
+contract and interpretation limits.
 
 ### `peters_test()` parameters
 

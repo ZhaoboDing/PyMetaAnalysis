@@ -20,6 +20,7 @@ Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
+Rscript tests/reference/generate_harbord_small_study_effects_meta.R
 Rscript tests/reference/generate_peters_small_study_effects_meta.R
 ```
 
@@ -96,6 +97,11 @@ grouped categorical-moderator GVIF/GSIF for common and REML fits.
 linear hypotheses for normal and Hartung-Knapp inference.
 `small_study_effects_metafor.json` covers the classical Egger regression test
 with standard error as predictor and multiplicative residual dispersion.
+`harbord_small_study_effects_meta.json` covers the Harbord efficient-score
+regression for binary odds ratios, including its standardized-score form,
+multiplicative residual dispersion, and independence from continuity
+correction. It shares the Peters binary input table, which includes two
+single-arm zero-event studies.
 `peters_small_study_effects_meta.json` covers Peters regression for binary odds
 ratios, including its inverse-total-size predictor, `S*F/N` weights,
 multiplicative residual dispersion, and two single-zero corrected studies.

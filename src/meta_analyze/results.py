@@ -24,7 +24,11 @@ if TYPE_CHECKING:
         SubgroupCumulativeMetaAnalysisResult,
         SubgroupLeaveOneOutResult,
     )
-    from .small_study_effects import EggerTestResult, PetersTestResult
+    from .small_study_effects import (
+        EggerTestResult,
+        HarbordTestResult,
+        PetersTestResult,
+    )
 else:
     Axes = Any
 
@@ -534,6 +538,17 @@ class MetaAnalysisResult:
         from .small_study_effects import egger_test
 
         return egger_test(self, confidence_level=confidence_level)
+
+    def harbord_test(
+        self,
+        *,
+        confidence_level: float | None = None,
+    ) -> HarbordTestResult:
+        """Run Harbord's efficient-score test for small-study effects."""
+
+        from .small_study_effects import harbord_test
+
+        return harbord_test(self, confidence_level=confidence_level)
 
     def peters_test(
         self,

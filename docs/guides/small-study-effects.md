@@ -1,9 +1,9 @@
 # Small-study effects and regression tests
 
-PyMetaAnalysis provides classical Egger regression and the Peters test for
-two-group binary odds ratios as companions to the descriptive funnel plot.
-They diagnose funnel-plot asymmetry or small-study effects; neither is a direct
-test for publication bias.
+PyMetaAnalysis provides classical Egger regression plus Harbord and Peters
+tests for two-group binary odds ratios as companions to the descriptive funnel
+plot. They diagnose funnel-plot asymmetry or small-study effects; none is a
+direct test for publication bias.
 
 ## Run the classical Egger test
 
@@ -35,6 +35,44 @@ Pair the numerical result with the plot:
 ax = result.funnel()
 print(egger.statistic, egger.df, egger.pvalue)
 ```
+
+## Harbord test for binary odds ratios
+
+For an analysis fitted from retained two-group counts with
+`meta_binary(..., measure="OR")`, Harbord regression uses the efficient score
+and its variance:
+
+```python
+odds_ratios = ma.meta_binary(
+    trials,
+    event_treat="event_treat",
+    n_treat="n_treat",
+    event_control="event_control",
+    n_control="n_control",
+    measure="OR",
+    method="MH",
+)
+
+harbord = odds_ratios.harbord_test()
+print(harbord.statistic, harbord.df, harbord.pvalue)
+```
+
+`harbord.intercept` is the tested asymmetry coefficient in the standardized
+score regression. `harbord.limit_estimate` is its efficient-score limit
+coefficient; `display_limit_estimate` and `display_limit_ci` exponentiate that
+coefficient. Treat these as regression outputs, not replacements for the
+pooled estimate.
+
+Harbord derives null efficient scores directly from raw treatment/control
+counts. It does not use continuity-corrected study log odds ratios, so changing
+the source study-level correction does not change the diagnostic. It is also
+independent of whether the source analysis used MH, inverse variance,
+random-effects inverse variance, or Peto pooling. Single-arm zero-event studies
+remain usable when their total event and non-event margins are positive.
+
+The result records the standardized-score response, square-root score-variance
+predictor, equivalent weighting convention, residual dispersion, scaled-design
+condition number, and the fact that no continuity correction is used.
 
 ## Peters test for binary odds ratios
 
@@ -174,10 +212,15 @@ PyMetaAnalysis therefore records an additional warning for:
 - standardized mean differences, for which the same association can produce
   distorted funnel plots.
 
-Peters regression is available for OR analyses created by `meta_binary()`.
-Harbord's test is not yet implemented. A generic effect labeled `GENERIC`
-cannot reveal how the supplied effect was constructed, so callers must assess
-this limitation themselves.
+Harbord and Peters regression are available for OR analyses created by
+`meta_binary()`. A generic effect labeled `GENERIC` cannot reveal the original
+two-group counts, so neither binary-specific method accepts it.
+
+For Harbord regression, the efficient-score variances must vary enough to
+identify the asymmetry intercept. Every included study must have positive total
+events and non-events. The method uses raw counts and never applies the source
+continuity correction. At least three studies are mathematically required, and
+the same fewer-than-ten warning applies.
 
 For Peters regression, total sample sizes must vary enough to identify the
 slope. The method uses `S*F/N` weights, where `S` and `F` are the raw total
@@ -187,11 +230,12 @@ mathematically required, and the same fewer-than-ten warning applies.
 
 ## Interpretation
 
-A small p-value indicates evidence that study effects are associated with the
-selected small-study predictor: standard error for Egger or inverse total
-sample size for Peters. Possible explanations include genuine heterogeneity,
-design or population differences, selective outcome reporting, other
-non-reporting mechanisms, artefactual associations, and chance.
+A small p-value indicates evidence of the association defined by the selected
+diagnostic: effect with standard error for Egger, standardized efficient score
+with score precision for Harbord, or log OR with inverse total sample size for
+Peters. Possible explanations include genuine heterogeneity, design or
+population differences, selective outcome reporting, other non-reporting
+mechanisms, artefactual associations, and chance.
 
 A large p-value does not demonstrate symmetry or exclude missing evidence,
 especially with few studies. A small p-value does not establish publication
@@ -200,6 +244,7 @@ characteristics, protocol information, and sensitivity analyses. The
 [original Egger paper](https://doi.org/10.1136/bmj.315.7109.629) and
 [`metafor::regtest`](https://wviechtb.github.io/metafor/reference/regtest.html)
 provide the methodological and software references for the Egger
-implementation. The Peters implementation follows the documented
+implementation. The Harbord and Peters implementations follow the documented
 [`meta::metabias`](https://search.r-project.org/CRAN/refmans/meta/html/metabias.html)
-contract and Peters et al. (2006), as cited there.
+contract and the corresponding Harbord et al. (2006) and Peters et al. (2006)
+methods cited there.

@@ -34,6 +34,7 @@ WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
 CORRELATION = _load_reference("correlation_metafor.json")
 SMALL_STUDY_EFFECTS = _load_reference("small_study_effects_metafor.json")
+HARBORD_SMALL_STUDY_EFFECTS = _load_reference("harbord_small_study_effects_meta.json")
 PETERS_SMALL_STUDY_EFFECTS = _load_reference("peters_small_study_effects_meta.json")
 
 CLOSED_RTOL = 5e-13
@@ -118,6 +119,18 @@ def test_peters_fixture_records_a_compatible_r_environment() -> None:
     assert PETERS_SMALL_STUDY_EFFECTS["r_version"] == GENERIC["r_version"]
     assert PETERS_SMALL_STUDY_EFFECTS["jsonlite_version"] == GENERIC["jsonlite_version"]
     assert PETERS_SMALL_STUDY_EFFECTS["meta_version"] == "8.5.0"
+
+
+def test_harbord_fixture_records_the_same_meta_environment() -> None:
+    assert HARBORD_SMALL_STUDY_EFFECTS["generated_by"] == "R meta"
+    assert HARBORD_SMALL_STUDY_EFFECTS["r_version"] == GENERIC["r_version"]
+    assert (
+        HARBORD_SMALL_STUDY_EFFECTS["jsonlite_version"] == GENERIC["jsonlite_version"]
+    )
+    assert (
+        HARBORD_SMALL_STUDY_EFFECTS["meta_version"]
+        == PETERS_SMALL_STUDY_EFFECTS["meta_version"]
+    )
 
 
 def _assert_regression_fit(

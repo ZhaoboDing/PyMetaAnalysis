@@ -72,6 +72,10 @@ Property-based and targeted tests check invariants such as:
 - Classical Egger regression is invariant to study order and effect-location
   shifts; its weighted coefficients, multiplicative-dispersion covariance,
   t inference, and limit estimate match direct calculations.
+- Harbord regression is invariant to study order, source pooling, and
+  continuity-correction settings; treatment/control reversal negates its
+  score coefficients, while its efficient scores, variance, multiplicative
+  dispersion, and t inference match direct calculations.
 - Peters regression is invariant to study order and source pooling method;
   treatment/control reversal changes the log-scale coefficient signs, while
   its `S*F/N` weighting, correction reuse, covariance, and t inference match
@@ -105,6 +109,7 @@ The current fixture families cover:
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 | `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |
 | `small_study_effects_metafor.json` | Classical standard-error Egger regression intercept, multiplicative-dispersion standard errors, t test, and limit estimate |
+| `harbord_small_study_effects_meta.json` | Harbord efficient-score asymmetry intercept, limit coefficient, multiplicative dispersion, and t test for binary OR data with single-zero studies |
 | `peters_small_study_effects_meta.json` | Peters binary-OR slope, `S*F/N` weights, multiplicative dispersion, t test, limit estimate, and single-zero continuity corrections |
 
 Meta-regression is additionally covered by hand-calculated weighted least
@@ -150,6 +155,7 @@ Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
+Rscript tests/reference/generate_harbord_small_study_effects_meta.R
 Rscript tests/reference/generate_peters_small_study_effects_meta.R
 ```
 

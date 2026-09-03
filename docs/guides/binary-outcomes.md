@@ -120,21 +120,24 @@ calculations. See [zero-event studies](zero-events.md) for details.
 Use `method="IV"` for random-effects RD or when inverse-variance common-effect
 pooling is the prespecified estimator.
 
-## Peters small-study-effect test for odds ratios
+## Harbord and Peters small-study-effect tests for odds ratios
 
-An OR result retains the original two-group counts needed for Peters
-regression:
+An OR result retains the original two-group counts needed for both
+outcome-specific regressions:
 
 ```python
+harbord = odds_ratio_result.harbord_test()
 peters = odds_ratio_result.peters_test()
+print(harbord)
 print(peters)
 ```
 
-Call this only when the result was fitted with `measure="OR"`. The diagnostic
-reuses the recorded study-level continuity correction, but its result is
-otherwise independent of the source MH, IV, random-effects IV, or Peto pooling
-choice. It tests a log-OR-on-inverse-total-sample-size slope; it does not prove
-publication bias or replace the pooled estimate. See
+Call these only when the result was fitted with `measure="OR"`. Harbord uses
+null efficient scores and no continuity correction; Peters reconstructs study
+log odds ratios with the recorded study-level correction. Both are independent
+of the source MH, IV, random-effects IV, or Peto pooling choice. They diagnose
+different forms of small-study association and do not prove publication bias
+or replace the pooled estimate. See
 [small-study effects](small-study-effects.md) for the complete method and
 interpretation contract.
 
