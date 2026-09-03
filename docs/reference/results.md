@@ -215,6 +215,29 @@ diagnostic consumes only included study rows and does not modify or become part
 of the original result report. See
 [small-study effects](../guides/small-study-effects.md) before interpretation.
 
+### Peters binary-OR asymmetry diagnostic
+
+`peters_test(confidence_level=None)` returns an immutable `PetersTestResult`
+for an eligible `meta_binary(..., measure="OR")` result. Its primary fields
+are:
+
+| Attribute | Meaning |
+| --- | --- |
+| `slope`, `slope_standard_error`, `slope_ci` | Tested log-OR-on-`1/N` asymmetry slope and t interval |
+| `statistic`, `statistic_name`, `distribution`, `df`, `pvalue` | Distribution-explicit two-sided `t_(k-2)` test of a zero slope |
+| `limit_estimate`, `limit_standard_error`, `limit_ci` | Extrapolated log OR as total sample size tends to infinity |
+| `display_limit_estimate`, `display_limit_ci` | Extrapolated estimate and interval on the OR scale |
+| `residual_dispersion` | Multiplicative WLS residual dispersion using the canonical weights |
+| `method`, `model`, `predictor`, `weight_method` | Explicit diagnostic configuration |
+| `continuity_correction`, `correction_scope`, `corrected_studies` | Reused study-effect correction contract |
+| `condition_number`, `warnings` | Scaled-design conditioning and applicability cautions |
+
+The diagnostic reconstructs conventional study log odds ratios from retained
+four-cell counts, even if the source result used Peto pooling. Raw marginal
+totals define its `S*F/N` weights. `to_dict()` returns a detached mapping, and
+the diagnostic does not modify or enter the original result report. See
+[small-study effects](../guides/small-study-effects.md) before interpretation.
+
 ## `MetaRegressionResult`
 
 Meta-regression has no unique pooled effect, so this result deliberately omits

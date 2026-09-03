@@ -248,6 +248,42 @@ studies and identifiable variation in standard errors. Interpretation and
 effect-measure limitations are documented under
 [small-study effects](../guides/small-study-effects.md).
 
+## Peters regression test for binary odds ratios
+
+For each included two-group binary study, let `y_i` be its conventional log
+odds ratio, `N_i` its raw total sample size, `S_i` its raw total event count,
+and `F_i=N_i-S_i` its raw total non-event count. Peters regression fits:
+
+```text
+y_i = beta_0 + beta_1 * (1 / N_i) + epsilon_i
+w_i = S_i * F_i / N_i
+df = k - 2
+```
+
+With `X_i = [1, 1/N_i]` and `W=diag(w_i)`, the coefficients and multiplicative
+dispersion covariance are:
+
+```text
+b = (X' W X)^(-1) X' W y
+phi = sum(w_i * (y_i - X_i b)^2) / df
+Cov(b) = phi * (X' W X)^(-1)
+```
+
+The implementation uses scaled square-root weights and a column-scaled SVD;
+it does not explicitly invert the information matrix. The tested asymmetry
+coefficient is `beta_1`, reported as `PetersTestResult.slope` and compared with
+zero using a two-sided `t_(k-2)` test. `beta_0` is the log-OR limit estimate as
+total sample size tends to infinity and is also exposed on the OR display
+scale.
+
+Study log odds ratios are reconstructed from retained raw four-cell counts
+using the source result's recorded study-level continuity correction. The
+`S*F/N` weights and `1/N` predictor always use uncorrected raw margins. This
+matches `meta::metabias(method.bias="Peters")` for two-group odds ratios and
+does not depend on the source pooling model. Applicability and interpretation
+limits are documented under
+[small-study effects](../guides/small-study-effects.md).
+
 ## Meta-regression
 
 For `k` study effects, let `X` be the full-rank `k`-by-`p` design matrix. It

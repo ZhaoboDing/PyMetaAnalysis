@@ -12,6 +12,10 @@ Changes planned for the next release accumulate under `Unreleased`.
   Egger regression test for funnel-plot asymmetry with multiplicative
   dispersion, t inference, an explicitly labeled limit estimate, applicability
   warnings, and an independent R `metafor` reference fixture.
+- `MetaAnalysisResult.peters_test()` implements the Peters regression test for
+  two-group binary odds ratios, reusing the recorded study-level continuity
+  correction and validating the slope, limit estimate, and multiplicative
+  dispersion against an independent R `meta` reference fixture.
 
 ## 0.7.0 - 2026-09-02
 

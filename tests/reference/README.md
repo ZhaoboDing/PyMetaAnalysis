@@ -6,8 +6,8 @@ JSON and do not require R.
 
 ## Regeneration
 
-Install R plus the `jsonlite` and `metafor` packages, then run from the
-repository root:
+Install R plus the `jsonlite`, `metafor`, and `meta` packages, then run from
+the repository root:
 
 ```console
 Rscript tests/reference/generate_generic_metafor.R
@@ -20,6 +20,7 @@ Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
+Rscript tests/reference/generate_peters_small_study_effects_meta.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
@@ -29,15 +30,15 @@ useful for reviewing regenerated values before replacing a committed fixture:
 Rscript tests/reference/generate_generic_metafor.R regenerated.json
 ```
 
-Every fixture records the R, `metafor`, and `jsonlite` versions used to produce
-it. Generated values are stored at high precision and compared in Python with
-method-specific tolerances. R is intentionally not installed in routine CI;
-regeneration is a separate statistical-review action. The user-facing
-validation matrix and its limitations are documented in
+Every fixture records the R and `jsonlite` versions plus its applicable
+`metafor` or `meta` version. Generated values are stored at high precision and
+compared in Python with method-specific tolerances. R is intentionally not
+installed in routine CI; regeneration is a separate statistical-review
+action. The user-facing validation matrix and its limitations are documented in
 [`docs/validation.md`](../../docs/validation.md).
 
-The scripts use only documented `metafor` interfaces. They are retained as
-provenance and are not runtime library code.
+The scripts use only documented `metafor` or `meta` interfaces. They are
+retained as provenance and are not runtime library code.
 
 `workflow_metafor.json` covers common-effect subgroup differences, the
 single-study random-effects estimate used to validate the subgroup fallback,
@@ -95,3 +96,6 @@ grouped categorical-moderator GVIF/GSIF for common and REML fits.
 linear hypotheses for normal and Hartung-Knapp inference.
 `small_study_effects_metafor.json` covers the classical Egger regression test
 with standard error as predictor and multiplicative residual dispersion.
+`peters_small_study_effects_meta.json` covers Peters regression for binary odds
+ratios, including its inverse-total-size predictor, `S*F/N` weights,
+multiplicative residual dispersion, and two single-zero corrected studies.
