@@ -6,7 +6,7 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
-## 0.8.0 - 2026-09-03
+## 0.8.0 - 2026-09-04
 
 ### Added
 

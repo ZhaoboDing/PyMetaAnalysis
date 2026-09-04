@@ -122,7 +122,7 @@ workflow must version those artifacts separately.
 
 ## Stability and review status
 
-The package version is currently `0.7.0`. Public APIs and serialized schemas
+The package version is currently `0.8.0`. Public APIs and serialized schemas
 may change during the 0.x series. Pin versions in analysis environments and
 inspect changelog/schema updates before upgrading.
 

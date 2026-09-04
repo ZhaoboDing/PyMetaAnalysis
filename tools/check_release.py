@@ -36,6 +36,35 @@ def _citation_version() -> str:
     return match.group(1)
 
 
+def _citation_release_date() -> str:
+    text = (ROOT / "CITATION.cff").read_text(encoding="utf-8")
+    match = re.search(r"^date-released:\s*['\"]?([^'\"\s]+)", text, flags=re.MULTILINE)
+    if match is None:
+        raise ValueError("Could not read date-released from CITATION.cff")
+    return match.group(1)
+
+
+def _validate_release_documentation(version: str, release_date: str) -> None:
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    heading = f"## {version} - {release_date}"
+    if heading not in changelog:
+        raise ValueError(
+            "CHANGELOG.md needs a heading matching the CITATION.cff version and "
+            f"release date: {heading}"
+        )
+
+    documented_versions = {
+        "docs/index.md": f"PyMetaAnalysis {version}",
+        "docs/limitations.md": f"currently `{version}`",
+    }
+    for relative_path, expected in documented_versions.items():
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        if expected not in text:
+            raise ValueError(
+                f"{relative_path} does not describe the current version {version}"
+            )
+
+
 def _validate_tag(version: str, tag: str) -> None:
     expected = f"v{version}"
     if tag != expected:
@@ -67,6 +96,7 @@ def main() -> None:
         raise ValueError(f"Release versions do not match: {details}")
 
     version = next(iter(versions.values()))
+    _validate_release_documentation(version, _citation_release_date())
     if arguments.tag is not None:
         _validate_tag(version, arguments.tag)
 
