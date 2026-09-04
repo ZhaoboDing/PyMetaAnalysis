@@ -8,6 +8,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- `MetaAnalysisResult.funnel()` supports optional contour-enhanced two-sided
+  significance regions with validated levels, display-scale null references,
+  configurable colors and legend, while preserving pooled pseudo-limit lines.
 - `MetaAnalysisResult.egger_test()` implements the classical standard-error
   Egger regression test for funnel-plot asymmetry with multiplicative
   dispersion, t inference, an explicitly labeled limit estimate, applicability

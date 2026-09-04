@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Hashable, Mapping
+from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
@@ -598,6 +598,10 @@ class MetaAnalysisResult:
         effect_label: str | None = None,
         confidence_level: float | None = None,
         show_pseudo_confidence_interval: bool = True,
+        contour_levels: Sequence[float] | None = None,
+        contour_colors: Sequence[str] | None = None,
+        contour_reference: float | None = None,
+        show_contour_legend: bool = True,
         warn_on_few_studies: bool = True,
         log_scale: bool | None = None,
     ) -> Axes:
@@ -606,7 +610,8 @@ class MetaAnalysisResult:
         Matplotlib is an optional dependency. Install ``PyMetaAnalysis[plot]``
         before calling this method. Funnel asymmetry is a diagnostic for
         possible small-study effects and does not by itself establish
-        publication bias.
+        publication bias. Optional contours show null-centered two-sided
+        significance regions.
         """
 
         from .plotting import funnel_plot
@@ -617,6 +622,10 @@ class MetaAnalysisResult:
             effect_label=effect_label,
             confidence_level=confidence_level,
             show_pseudo_confidence_interval=show_pseudo_confidence_interval,
+            contour_levels=contour_levels,
+            contour_colors=contour_colors,
+            contour_reference=contour_reference,
+            show_contour_legend=show_contour_legend,
             warn_on_few_studies=warn_on_few_studies,
             log_scale=log_scale,
         )

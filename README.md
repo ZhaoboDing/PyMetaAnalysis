@@ -163,11 +163,13 @@ south_vs_east = regression.contrast(
 
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
+contour_ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
 ```
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
-are descriptive small-study-effect diagnostics. Classical Egger regression is
-available for general effects, while Harbord and Peters provide
+are descriptive small-study-effect diagnostics; optional significance contours
+show where two-sided p-value bands fall relative to the null. Classical Egger
+regression is available for general effects, while Harbord and Peters provide
 outcome-specific alternatives for two-group binary odds ratios. All include
 explicit applicability cautions. Neither a funnel plot nor any test proves
 publication bias.

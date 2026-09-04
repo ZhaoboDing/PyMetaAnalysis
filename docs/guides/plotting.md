@@ -83,6 +83,22 @@ appear toward the top. The vertical reference is the fitted pooled estimate.
 Pseudo confidence limits are centered on that estimate and do not include
 tau-squared.
 
+Add two-sided significance contours around the null effect with:
+
+```python
+ax = result.funnel(
+    contour_levels=(0.90, 0.95, 0.99),
+)
+```
+
+These confidence levels define the visible bands `0.05 < p <= 0.10`,
+`0.01 < p <= 0.05`, and `p <= 0.01`; the central `p > 0.10` region remains
+unshaded. The solid vertical line remains the fitted pooled estimate, while a
+dotted line marks the null used for the contours. When contours are enabled,
+their background replaces the ordinary blue pseudo-limit fill so the colors
+do not mix. The pseudo-limit boundary lines are still drawn unless
+`show_pseudo_confidence_interval=False`.
+
 ### Funnel parameters
 
 | Parameter | Meaning |
@@ -90,13 +106,37 @@ tau-squared.
 | `ax` | Existing axes; a new one is created when omitted |
 | `effect_label` | X-axis label |
 | `confidence_level` | Pseudo-limit level; defaults to the fitted level |
-| `show_pseudo_confidence_interval` | Draw the shaded pseudo-limit region |
+| `show_pseudo_confidence_interval` | Draw pooled pseudo-limit boundaries and, without contours, their shaded region |
+| `contour_levels` | Strictly increasing confidence levels in `(0,1)`; `None` disables contours |
+| `contour_colors` | One valid Matplotlib color per contour level; defaults to light-to-dark gray |
+| `contour_reference` | Contour null on the display scale; defaults to 1 for ratios and 0 otherwise |
+| `show_contour_legend` | Show the corresponding two-sided p-value bands |
 | `warn_on_few_studies` | Warn when fewer than 10 studies are plotted |
 | `log_scale` | Override the default logarithmic ratio axis |
 
+For example, customize the bands and null reference with:
+
+```python
+ax = result.funnel(
+    contour_levels=(0.90, 0.95),
+    contour_colors=("#fee2e2", "#ef4444"),
+    contour_reference=0.0,
+    show_contour_legend=True,
+)
+```
+
+`contour_reference` uses the displayed effect scale. It must therefore be
+positive for OR/RR results, whose default is `1`, and strictly between `-1`
+and `1` for displayed correlations. Boundaries are calculated on the model
+scale before the normal display transformation. Contours are always based on
+sampling standard errors and do not incorporate tau-squared.
+
 Funnel asymmetry can reflect small-study effects, heterogeneity, outcome
 selection, design differences, chance, or publication processes. It is not by
-itself evidence of publication bias. Use the separately documented classical
+itself evidence of publication bias. Contours help assess whether apparent
+missing areas are predominantly statistically non-significant, but they do not
+show that studies are actually missing or determine why asymmetry exists. Use
+the separately documented classical
 [`result.egger_test()`](small-study-effects.md), or `result.harbord_test()` /
 `result.peters_test()` for an eligible binary OR analysis, when a formal
 regression diagnostic is appropriate. None changes the plot or proves a

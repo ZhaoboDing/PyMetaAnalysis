@@ -190,7 +190,8 @@ See [report schema](report-schema.md) for the complete serialized structure.
 
 `forest()` and `funnel()` return Matplotlib axes without calling `show()`.
 Matplotlib is imported only when a plot is requested. Parameters and display-
-scale behavior are documented in [plotting](../guides/plotting.md).
+`funnel(contour_levels=(0.90, 0.95, 0.99))` adds reference-centered two-sided
+significance regions and an optional legend without altering the result.
 
 ### Egger funnel-asymmetry diagnostic
 

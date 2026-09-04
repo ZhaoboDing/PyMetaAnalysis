@@ -69,6 +69,10 @@ Property-based and targeted tests check invariants such as:
 - Bubble-plot coordinates, precision-weight marker areas, fitted predictions,
   interval bands, exclusions, and optional Matplotlib behavior are tested with
   a non-interactive backend.
+- Contour-enhanced funnel regions match direct normal-quantile calculations on
+  identity, exponentiated-ratio, and back-transformed-correlation scales;
+  colors, legends, null references, pseudo-limit interaction, and invalid
+  inputs are tested.
 - Classical Egger regression is invariant to study order and effect-location
   shifts; its weighted coefficients, multiplicative-dispersion covariance,
   t inference, and limit estimate match direct calculations.
