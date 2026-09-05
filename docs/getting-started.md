@@ -168,16 +168,19 @@ usable in notebooks, scripts, tests, and composed figures. Funnel contours show
 two-sided significance regions around the null effect; they do not estimate
 missing studies.
 
-The classical Egger regression test is available separately from plotting:
+The model-independent Begg-Mazumdar rank-correlation test and classical Egger
+regression test are available separately from plotting:
 
 ```python
+begg = result.begg_test()
 egger = result.egger_test()
+print(begg)
 print(egger)
 ```
 
-It tests for funnel-plot asymmetry or small-study effects, not publication bias
-itself. Read [small-study effects](guides/small-study-effects.md) before using or
-interpreting it.
+They test for funnel-plot asymmetry or small-study effects, not publication
+bias itself. Read [small-study effects](guides/small-study-effects.md) before
+using or interpreting them.
 
 For a two-group binary odds-ratio result, the outcome-specific Harbord and
 Peters tests are also available:

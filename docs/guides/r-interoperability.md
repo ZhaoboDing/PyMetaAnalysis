@@ -26,9 +26,18 @@ fixtures used by this project.
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 | Contour-enhanced funnel plot | `result.funnel(contour_levels=(...))` | `funnel(level=c(...), refline=...)` | `funnel(contour.levels=c(...), ref=...)` |
+| Begg-Mazumdar rank test | `result.begg_test()` | `ranktest()` | `metabias(..., method.bias="Begg")` (definition may differ) |
 | Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
 | Harbord binary-OR test | `result.harbord_test()` | manual documented score regression | `metabias(..., method.bias="Harbord")` |
 | Peters binary-OR test | `result.peters_test()` | manual documented WLS | `metabias(..., method.bias="Peters")` |
+
+`begg_test(exact=True)` matches `metafor::ranktest()`'s exact default for
+tie-free data. PyMetaAnalysis's `exact=None` automatic policy switches to the
+asymptotic calculation at 50 studies to avoid an unexpectedly expensive exact
+request; pass `exact=True` explicitly when that R-compatible behavior is
+required. Its optional continuity correction is independently checked against
+`stats::cor.test(..., method="kendall", exact=FALSE, continuity=TRUE)` on the
+same standardized response.
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.
 One documented Python entry point per input shape keeps result types and

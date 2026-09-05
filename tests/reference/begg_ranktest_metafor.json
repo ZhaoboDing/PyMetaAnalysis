@@ -1,0 +1,23 @@
+{
+  "generated_by": "R metafor",
+  "r_version": "R version 4.6.1 (2026-06-24 ucrt)",
+  "metafor_version": "5.0.1",
+  "jsonlite_version": "2.0.0",
+  "method": "ranktest",
+  "correlation_method": "Kendall's tau-b",
+  "inference_method": "exact",
+  "k": 12,
+  "tau": 0.33333333333333331,
+  "statistic": 22,
+  "pvalue": 0.15259045898802848,
+  "tied_asymptotic": {
+    "input_change": "variance[2] = variance[1]",
+    "tau": 0.35115526951766413,
+    "statistic": 1.5808898122339823,
+    "pvalue": 0.113903234135382
+  },
+  "tied_continuity_corrected": {
+    "statistic": 1.5121554725716355,
+    "pvalue": 0.13049431559629934
+  }
+}

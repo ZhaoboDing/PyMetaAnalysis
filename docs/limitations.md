@@ -24,6 +24,8 @@ deferred functionality explicit.
   only one included study;
 - leave-one-out and cumulative repeated-fit workflows;
 - forest, descriptive funnel, and contour-enhanced funnel plots;
+- the model-independent Begg-Mazumdar Kendall rank-correlation test, with exact
+  or tie-adjusted asymptotic inference;
 - the classical standard-error Egger regression test for funnel-plot
   asymmetry, with multiplicative dispersion and t inference;
 - the Harbord efficient-score test for two-group binary odds ratios without
@@ -54,8 +56,8 @@ deferred functionality explicit.
   correlations, and corrections for measurement unreliability;
 - Knapp-Hartung variants beyond the two documented choices;
 - prediction-interval methods beyond the documented default and Riley rules;
-- random/mixed-effects Egger regression, Begg rank correlation, other
-  binary-outcome asymmetry tests, trim-and-fill, selection-model, or other
+- random/mixed-effects Egger regression, other binary-outcome asymmetry tests,
+  trim-and-fill, selection-model, or other
   publication-bias procedures; Harbord and Peters regression are limited to
   retained two-group OR counts and are not diagnostic-accuracy methods;
 - Meta-regression DFFITS, covariance ratios, influence plots, or simulated and
@@ -97,7 +99,9 @@ scientifically prespecified, full-rank model when `k > p`.
 
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
 squared. Significance contours show p-value regions around a chosen null but
-do not identify missing studies or the cause of asymmetry. The classical Egger
+do not identify missing studies or the cause of asymmetry. The Begg-Mazumdar test
+for rank association between standardized centered effects and their sampling
+variances but does not identify its cause. The classical Egger
 test diagnoses a relationship between effects and standard errors and can be
 artefactual for measures such as OR and SMD.
 Harbord instead uses null efficient scores, while Peters relates two-group

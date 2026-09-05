@@ -210,6 +210,42 @@ proportion internally and is formatted as a percentage in human-readable
 output. With one study, Q is zero and its p-value, I-squared, and H-squared are
 unavailable.
 
+## Begg-Mazumdar rank-correlation test
+
+For included model-scale effects `y_i` and sampling variances `v_i`, first
+compute the common-effect center and standardized residual used by
+`metafor::ranktest()`:
+
+```text
+w_i = 1 / v_i
+theta = sum(w_i * y_i) / sum(w_i)
+v_bar = 1 / sum(w_i)
+y_i* = (y_i - theta) / sqrt(v_i - v_bar)
+```
+
+Then define Kendall's concordance statistic between `y_i*` and `v_i`:
+
+```text
+S = sum_(i<j) sign((y_i*-y_j*) * (v_i-v_j))
+tau_b = S / sqrt((n0-n1) * (n0-n2))
+n0 = k * (k-1) / 2
+```
+
+Here `n1` and `n2` are the numbers of tied pairs in standardized responses and
+variances.
+Without ties and for `k < 50`, the default two-sided p-value uses the exact
+permutation distribution of `S`. Otherwise the test uses the standard
+tie-adjusted null variance of `S` and a normal approximation. An optional
+continuity correction moves nonzero `S` one unit toward zero before
+standardization.
+
+The implementation computes tau-b with an `O(k log k)` rank algorithm and
+calculates tie moments without pairwise matrices. The result is independent of
+the fitted pooling model and matches `metafor::ranktest()`. It requires at
+least three studies and variation in both effects and variances. See
+[small-study effects](../guides/small-study-effects.md) for inference controls
+and interpretation limits.
+
 ## Classical Egger regression test
 
 For included study effect `y_i`, sampling variance `v_i`, and standard error
