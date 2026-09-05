@@ -8,6 +8,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- `MetaAnalysisResult.trim_and_fill()` implements Duval and Tweedie's L0 and
+  R0 trim-and-fill sensitivity analyses, with explicit or regression-selected
+  direction, auditable synthetic-study provenance, and fixed-version R
+  `metafor` reference validation.
 - `MetaAnalysisResult.begg_test()` implements the model-independent
   Begg-Mazumdar Kendall rank-correlation test for funnel-plot asymmetry, with
   exact inference when eligible, tie-adjusted asymptotic inference, optional

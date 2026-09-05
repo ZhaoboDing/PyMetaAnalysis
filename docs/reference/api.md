@@ -369,6 +369,14 @@ Funnel plots accept `ax`, `effect_label`, `confidence_level`,
 `(0,1)` that define two-sided p-value bands around a display-scale null
 reference.
 
+### `trim_and_fill()` parameters
+
+`trim_and_fill(*, side=None, estimator="L0", max_iterations=100)` runs Duval
+and Tweedie's iterative trim-and-fill sensitivity analysis. `side` accepts
+`"left"`, `"right"`, or automatic regression-based selection; `estimator`
+accepts `"L0"` or `"R0"`. The method requires inverse-variance pooling and
+returns `TrimAndFillResult`.
+
 ### `begg_test()` parameters
 
 `exact=None` selects exact two-sided Kendall inference for fewer than 50
