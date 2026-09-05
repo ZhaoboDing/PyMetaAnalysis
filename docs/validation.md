@@ -73,6 +73,11 @@ Property-based and targeted tests check invariants such as:
   identity, exponentiated-ratio, and back-transformed-correlation scales;
   colors, legends, null references, pseudo-limit interaction, and invalid
   inputs are tested.
+- Begg-Mazumdar rank correlation is invariant to study order, effect-location
+  shifts, positive variance rescaling, and the source pooling model; its
+  common-effect-centered standardized response, exact permutation inference,
+  tie-adjusted asymptotic variance, continuity correction, tie reporting, and
+  invalid inference combinations are tested.
 - Classical Egger regression is invariant to study order and effect-location
   shifts; its weighted coefficients, multiplicative-dispersion covariance,
   t inference, and limit estimate match direct calculations.
@@ -113,6 +118,7 @@ The current fixture families cover:
 | `meta_regression_collinearity_metafor.json` | Term VIF, categorical moderator GVIF, and dimension-adjusted inflation factors for common and REML Meta-regression |
 | `meta_regression_contrasts_metafor.json` | Individual linear-combination estimates, standard errors, z/t tests, and joint chi-squared/F tests across common, REML, and Hartung-Knapp fits |
 | `small_study_effects_metafor.json` | Classical standard-error Egger regression intercept, multiplicative-dispersion standard errors, t test, and limit estimate |
+| `begg_ranktest_metafor.json` | Begg-Mazumdar standardized response, Kendall tau-b, concordance statistic, exact two-sided p-value, and tied asymptotic inference |
 | `harbord_small_study_effects_meta.json` | Harbord efficient-score asymmetry intercept, limit coefficient, multiplicative dispersion, and t test for binary OR data with single-zero studies |
 | `peters_small_study_effects_meta.json` | Peters binary-OR slope, `S*F/N` weights, multiplicative dispersion, t test, limit estimate, and single-zero continuity corrections |
 

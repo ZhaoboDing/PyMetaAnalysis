@@ -193,6 +193,24 @@ Matplotlib is imported only when a plot is requested. Parameters and display-
 `funnel(contour_levels=(0.90, 0.95, 0.99))` adds reference-centered two-sided
 significance regions and an optional legend without altering the result.
 
+### Begg-Mazumdar funnel-asymmetry diagnostic
+
+`begg_test(exact=None, continuity_correction=False)` returns an immutable
+`BeggTestResult`. Its primary fields are:
+
+| Attribute | Meaning |
+| --- | --- |
+| `tau` | Kendall's tau-b between standardized centered effects and sampling variances |
+| `statistic`, `statistic_name`, `distribution`, `pvalue` | Exact Kendall S or asymptotic normal test output |
+| `inference_method`, `continuity_correction` | Resolved inference path and correction flag |
+| `response`, `predictor` | Explicit standardized-response and variance definitions |
+| `response_tied_pairs`, `variance_tied_pairs`, `joint_tied_pairs` | Explicit tie diagnostics |
+| `k`, `measure`, `effect_scale` | Included studies and source effect metadata |
+| `method`, `correlation_method`, `warnings` | Diagnostic identity and interpretation cautions |
+
+`to_dict()` returns a detached mapping. The diagnostic consumes only included
+study rows and neither modifies nor enters the source result report.
+
 ### Egger funnel-asymmetry diagnostic
 
 `egger_test(confidence_level=None)` returns an immutable `EggerTestResult` for

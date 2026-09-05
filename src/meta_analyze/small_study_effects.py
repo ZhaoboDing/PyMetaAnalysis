@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.stats import t
+from scipy.stats import kendalltau, norm, t
 
 from .exceptions import (
     InsufficientStudiesError,
@@ -376,6 +376,67 @@ class PetersTestResult:
 
 
 @dataclass(frozen=True, slots=True)
+class BeggTestResult:
+    """Begg-Mazumdar rank-correlation test for funnel-plot asymmetry."""
+
+    tau: float
+    statistic: float
+    statistic_name: str
+    distribution: str
+    pvalue: float
+    k: int
+    measure: str
+    effect_scale: str
+    method: str
+    correlation_method: str
+    response: str
+    predictor: str
+    inference_method: str
+    continuity_correction: bool
+    response_tied_pairs: int
+    variance_tied_pairs: int
+    joint_tied_pairs: int
+    warnings: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a detached, machine-readable representation."""
+
+        return {
+            "method": self.method,
+            "correlation_method": self.correlation_method,
+            "response": self.response,
+            "predictor": self.predictor,
+            "inference_method": self.inference_method,
+            "studies": self.k,
+            "measure": self.measure,
+            "effect_scale": self.effect_scale,
+            "tau": self.tau,
+            "statistic": self.statistic,
+            "statistic_name": self.statistic_name,
+            "distribution": self.distribution,
+            "pvalue": self.pvalue,
+            "continuity_correction": self.continuity_correction,
+            "response_tied_pairs": self.response_tied_pairs,
+            "variance_tied_pairs": self.variance_tied_pairs,
+            "joint_tied_pairs": self.joint_tied_pairs,
+            "warnings": self.warnings,
+        }
+
+    def __str__(self) -> str:
+        lines = [
+            "Begg-Mazumdar rank-correlation test for funnel-plot asymmetry",
+            f"Studies: {self.k}",
+            f"Kendall's tau-b: {self.tau:.6g}",
+            f"{self.statistic_name}={self.statistic:.6g}, p={self.pvalue:.6g}",
+            f"Inference: {self.inference_method}",
+        ]
+        if self.warnings:
+            lines.append("Notes:")
+            lines.extend(f"- {warning}" for warning in self.warnings)
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True, slots=True)
 class _WeightedRegressionFit:
     intercept: float
     intercept_standard_error: float
@@ -395,6 +456,179 @@ def _validate_confidence_level(value: float) -> float:
     ):
         raise InvalidStudyDataError("confidence_level must be between 0 and 1.")
     return float(value)
+
+
+def _tie_statistics(values: NDArray[np.float64]) -> tuple[int, int, int]:
+    """Return tied pairs and the two Kendall variance tie moments."""
+
+    _, counts = np.unique(values, return_counts=True)
+    tied = counts[counts > 1].astype(np.int64, copy=False)
+    pair_count = int(np.sum(tied * (tied - 1) // 2, dtype=np.int64))
+    third_moment = int(np.sum(tied * (tied - 1) * (tied - 2), dtype=np.int64))
+    weighted_moment = int(np.sum(tied * (tied - 1) * (2 * tied + 5), dtype=np.int64))
+    return pair_count, third_moment, weighted_moment
+
+
+def begg_test(
+    result: MetaAnalysisResult,
+    *,
+    exact: bool | None = None,
+    continuity_correction: bool = False,
+) -> BeggTestResult:
+    """Run the Begg-Mazumdar rank-correlation funnel-asymmetry test."""
+
+    if exact is not None and not isinstance(exact, bool):
+        raise InvalidStudyDataError("exact must be True, False, or None.")
+    if not isinstance(continuity_correction, bool):
+        raise InvalidStudyDataError("continuity_correction must be a boolean.")
+    if exact is True and continuity_correction:
+        raise InvalidStudyDataError(
+            "continuity_correction is available only for asymptotic inference."
+        )
+
+    studies = result._study_results_view()
+    included = studies["included"].to_numpy(dtype=bool, copy=True)
+    effect = studies.loc[included, "effect"].to_numpy(dtype=np.float64, copy=True)
+    variance = studies.loc[included, "variance"].to_numpy(dtype=np.float64, copy=True)
+    k = len(effect)
+    if k < 3:
+        raise InsufficientStudiesError(
+            "Begg's rank-correlation test requires at least three included studies."
+        )
+    if (
+        np.any(~np.isfinite(effect))
+        or np.any(~np.isfinite(variance))
+        or np.any(variance <= 0.0)
+    ):
+        raise InvalidStudyDataError(
+            "Begg's rank-correlation test requires finite effects and positive "
+            "sampling variances."
+        )
+    if np.all(effect == effect[0]) or np.all(variance == variance[0]):
+        raise InvalidStudyDataError(
+            "Begg's rank-correlation test requires variation in both effects and "
+            "sampling variances."
+        )
+
+    minimum_variance = float(np.min(variance))
+    relative_weight = minimum_variance / variance
+    weight_sum = float(np.sum(relative_weight))
+    center = float(np.dot(relative_weight, effect) / weight_sum)
+    pooled_variance = minimum_variance / weight_sum
+    residual_variance = variance - pooled_variance
+    if (
+        not np.isfinite(center)
+        or np.any(~np.isfinite(residual_variance))
+        or np.any(residual_variance <= 0.0)
+    ):
+        raise InvalidStudyDataError(
+            "Begg's rank-correlation test could not standardize effects with "
+            "positive finite residual variances."
+        )
+    response = (effect - center) / np.sqrt(residual_variance)
+
+    response_ties, response_moment_0, response_moment_1 = _tie_statistics(response)
+    variance_ties, variance_moment_0, variance_moment_1 = _tie_statistics(variance)
+    _, joint_counts = np.unique(
+        np.column_stack((response, variance)), axis=0, return_counts=True
+    )
+    joint_tied = joint_counts[joint_counts > 1].astype(np.int64, copy=False)
+    joint_ties = int(np.sum(joint_tied * (joint_tied - 1) // 2, dtype=np.int64))
+    total_pairs = k * (k - 1) // 2
+    if response_ties == total_pairs or variance_ties == total_pairs:
+        raise InvalidStudyDataError(
+            "Begg's rank-correlation test requires variation in both effects and "
+            "sampling variances."
+        )
+
+    has_ties = response_ties > 0 or variance_ties > 0
+    if exact is True and has_ties:
+        raise InvalidStudyDataError(
+            "Exact Kendall inference is unavailable when standardized responses "
+            "or variances contain ties."
+        )
+    use_exact = exact is True or (
+        exact is None and not has_ties and k < 50 and not continuity_correction
+    )
+    if use_exact:
+        correlation = kendalltau(
+            response,
+            variance,
+            method="exact",
+            variant="b",
+            alternative="two-sided",
+        )
+        tau = float(correlation.statistic)
+        concordance_statistic = int(round(tau * total_pairs))
+        statistic = float(concordance_statistic)
+        statistic_name = "Kendall S"
+        distribution = "exact"
+        pvalue = float(correlation.pvalue)
+        inference_method = "exact"
+    else:
+        correlation = kendalltau(
+            response,
+            variance,
+            method="asymptotic",
+            variant="b",
+            alternative="two-sided",
+        )
+        tau = float(correlation.statistic)
+        denominator = math.sqrt(
+            (total_pairs - response_ties) * (total_pairs - variance_ties)
+        )
+        concordance_statistic = int(round(tau * denominator))
+        sample_product = float(k * (k - 1))
+        statistic_variance = (
+            (sample_product * (2 * k + 5) - response_moment_1 - variance_moment_1)
+            / 18.0
+            + (2.0 * response_ties * variance_ties) / sample_product
+            + (response_moment_0 * variance_moment_0) / (9.0 * sample_product * (k - 2))
+        )
+        if not np.isfinite(statistic_variance) or statistic_variance <= 0.0:
+            raise InvalidStudyDataError(
+                "Begg's rank-correlation test could not compute a positive finite "
+                "null variance."
+            )
+        numerator = float(concordance_statistic)
+        if continuity_correction and numerator != 0.0:
+            numerator -= math.copysign(1.0, numerator)
+        statistic = numerator / math.sqrt(statistic_variance)
+        statistic_name = "z"
+        distribution = "normal"
+        pvalue = float(2.0 * norm.sf(abs(statistic)))
+        inference_method = "asymptotic"
+
+    if not np.isfinite(tau) or not np.isfinite(pvalue):
+        raise InvalidStudyDataError(
+            "Begg's rank-correlation test produced a non-finite result."
+        )
+
+    warnings: list[str] = []
+    if k < 10:
+        warnings.append(
+            "Funnel-asymmetry tests have low power with fewer than ten studies."
+        )
+    return BeggTestResult(
+        tau=tau,
+        statistic=statistic,
+        statistic_name=statistic_name,
+        distribution=distribution,
+        pvalue=pvalue,
+        k=k,
+        measure=result.measure,
+        effect_scale=result.effect_scale,
+        method="Begg-Mazumdar rank-correlation test",
+        correlation_method="Kendall's tau-b",
+        response="standardized centered effect",
+        predictor="sampling variance",
+        inference_method=inference_method,
+        continuity_correction=continuity_correction,
+        response_tied_pairs=response_ties,
+        variance_tied_pairs=variance_ties,
+        joint_tied_pairs=joint_ties,
+        warnings=tuple(warnings),
+    )
 
 
 def _fit_weighted_regression(

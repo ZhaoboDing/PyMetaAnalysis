@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         SubgroupLeaveOneOutResult,
     )
     from .small_study_effects import (
+        BeggTestResult,
         EggerTestResult,
         HarbordTestResult,
         PetersTestResult,
@@ -538,6 +539,22 @@ class MetaAnalysisResult:
         from .small_study_effects import egger_test
 
         return egger_test(self, confidence_level=confidence_level)
+
+    def begg_test(
+        self,
+        *,
+        exact: bool | None = None,
+        continuity_correction: bool = False,
+    ) -> BeggTestResult:
+        """Run the Begg-Mazumdar rank-correlation asymmetry test."""
+
+        from .small_study_effects import begg_test
+
+        return begg_test(
+            self,
+            exact=exact,
+            continuity_correction=continuity_correction,
+        )
 
     def harbord_test(
         self,

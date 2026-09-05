@@ -51,10 +51,16 @@ from .sensitivity import (
     SubgroupCumulativeMetaAnalysisResult,
     SubgroupLeaveOneOutResult,
 )
-from .small_study_effects import EggerTestResult, HarbordTestResult, PetersTestResult
+from .small_study_effects import (
+    BeggTestResult,
+    EggerTestResult,
+    HarbordTestResult,
+    PetersTestResult,
+)
 
 __all__ = [
     "AnalysisProvenance",
+    "BeggTestResult",
     "ConvergenceError",
     "CumulativeMetaAnalysisResult",
     "DesignInfo",

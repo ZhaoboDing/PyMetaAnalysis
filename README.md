@@ -145,6 +145,7 @@ Rows excluded by missing-value or sparse-data policies remain in
 ```python
 leave_one_out = result.leave_one_out().to_dataframe()
 cumulative = result.cumulative(order="publication_year").to_dataframe()
+begg = result.begg_test()
 egger = result.egger_test()
 harbord = binary_or_result.harbord_test()
 peters = binary_or_result.peters_test()
@@ -168,11 +169,12 @@ contour_ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
 are descriptive small-study-effect diagnostics; optional significance contours
-show where two-sided p-value bands fall relative to the null. Classical Egger
-regression is available for general effects, while Harbord and Peters provide
-outcome-specific alternatives for two-group binary odds ratios. All include
-explicit applicability cautions. Neither a funnel plot nor any test proves
-publication bias.
+show where two-sided p-value bands fall relative to the null. The generic
+Begg-Mazumdar rank-correlation and classical Egger regression tests are
+available for general effects, while Harbord and Peters provide outcome-
+specific alternatives for two-group binary odds ratios. All include explicit
+applicability cautions. Neither a funnel plot nor any test proves publication
+bias.
 Meta-regression leave-one-out results also expose a long-form coefficient
 change table. Exact influence diagnostics add externally standardized
 residuals, Cook's distance, DFBETAS, and explicit heuristic screening

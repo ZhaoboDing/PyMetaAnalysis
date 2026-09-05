@@ -318,13 +318,14 @@ Every `MetaAnalysisResult` provides:
 | `to_dataframe()` | Defensive copy of the study table |
 | `leave_one_out()` | `LeaveOneOutResult` |
 | `cumulative(...)` | `CumulativeMetaAnalysisResult` |
+| `begg_test(exact=None, continuity_correction=False)` | `BeggTestResult` |
 | `egger_test(confidence_level=None)` | `EggerTestResult` |
 | `harbord_test(confidence_level=None)` | `HarbordTestResult` |
 | `peters_test(confidence_level=None)` | `PetersTestResult` |
 | `forest(...)` | Matplotlib `Axes` |
 | `funnel(...)` | Matplotlib `Axes` |
 
-`SubgroupMetaAnalysisResult` omits `funnel()`, `egger_test()`,
+`SubgroupMetaAnalysisResult` omits `funnel()`, `begg_test()`, `egger_test()`,
 `harbord_test()`, and `peters_test()`; use its `overall` or individual `groups`
 results when a diagnostic is scientifically appropriate. Its sensitivity
 methods return subgroup composite result classes.
@@ -367,6 +368,17 @@ Funnel plots accept `ax`, `effect_label`, `confidence_level`,
 `log_scale`. Contour levels are strictly increasing confidence levels in
 `(0,1)` that define two-sided p-value bands around a display-scale null
 reference.
+
+### `begg_test()` parameters
+
+`exact=None` selects exact two-sided Kendall inference for fewer than 50
+studies when neither effects nor variances contain ties, and tie-adjusted
+asymptotic normal inference otherwise. `exact=True` requires tie-free data;
+`exact=False` always uses the asymptotic path. `continuity_correction=True`
+applies only to asymptotic inference and makes `exact=None` select that path.
+The test correlates common-effect-centered standardized residuals with sampling
+variances and is independent of the source pooling model. See
+[small-study effects](../guides/small-study-effects.md).
 
 ### `egger_test()` parameters
 

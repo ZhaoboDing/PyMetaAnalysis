@@ -34,6 +34,8 @@ WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
 CORRELATION = _load_reference("correlation_metafor.json")
 SMALL_STUDY_EFFECTS = _load_reference("small_study_effects_metafor.json")
+BEGG_RANKTEST = _load_reference("begg_ranktest_metafor.json")
+BEGG_RANKTEST = _load_reference("begg_ranktest_metafor.json")
 HARBORD_SMALL_STUDY_EFFECTS = _load_reference("harbord_small_study_effects_meta.json")
 PETERS_SMALL_STUDY_EFFECTS = _load_reference("peters_small_study_effects_meta.json")
 
@@ -99,6 +101,8 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
         WORKFLOW,
         META_REGRESSION,
         SMALL_STUDY_EFFECTS,
+        BEGG_RANKTEST,
+        BEGG_RANKTEST,
     ]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}

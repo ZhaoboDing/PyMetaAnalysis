@@ -1,9 +1,50 @@
-# Small-study effects and regression tests
+# Small-study effects and asymmetry tests
 
-PyMetaAnalysis provides classical Egger regression plus Harbord and Peters
-tests for two-group binary odds ratios as companions to the descriptive funnel
-plot. They diagnose funnel-plot asymmetry or small-study effects; none is a
-direct test for publication bias.
+PyMetaAnalysis provides the Begg-Mazumdar rank-correlation test, classical
+Egger regression, and Harbord and Peters tests for two-group binary odds ratios
+as companions to the descriptive funnel plot. They diagnose funnel-plot
+asymmetry or small-study effects; none is a direct test for publication bias.
+
+## Run the Begg-Mazumdar rank test
+
+Start from any fitted `MetaAnalysisResult`:
+
+```python
+begg = result.begg_test()
+print(begg.tau, begg.pvalue)
+```
+
+Following `metafor::ranktest()`, the test first centers included model-scale
+effects at their common-effect inverse-variance mean and standardizes each
+residual by `sqrt(v_i - 1/sum(1/v_i))`. It then computes Kendall's tau-b
+between those standardized residuals and sampling variances. The diagnostic is
+independent of the source common/random model, pooling weights, tau-squared
+estimator, and mean-effect inference.
+
+By default, PyMetaAnalysis uses an exact two-sided permutation distribution
+when there are no tied effects or variances and fewer than 50 studies. It uses
+the tie-adjusted asymptotic normal approximation otherwise. Control this
+explicitly with:
+
+```python
+exact = result.begg_test(exact=True)
+asymptotic = result.begg_test(exact=False)
+corrected = result.begg_test(
+    exact=False,
+    continuity_correction=True,
+)
+```
+
+Exact inference rejects tied data rather than silently switching methods.
+Requesting a continuity correction with `exact=None` selects asymptotic
+inference; `exact=True` and `continuity_correction=True` are incompatible.
+The result records the response and predictor definitions, inference path, and
+the numbers of standardized-response, variance, and joint tied pairs.
+
+This contract follows `metafor::ranktest(effect, variance)`. R `meta` also
+describes its Begg option in terms of standardized treatment estimates, but
+cross-package results should still be checked against the exact versions and
+inputs used.
 
 ## Run the classical Egger test
 
@@ -236,11 +277,13 @@ mathematically required, and the same fewer-than-ten warning applies.
 ## Interpretation
 
 A small p-value indicates evidence of the association defined by the selected
-diagnostic: effect with standard error for Egger, standardized efficient score
-with score precision for Harbord, or log OR with inverse total sample size for
-Peters. Possible explanations include genuine heterogeneity, design or
-population differences, selective outcome reporting, other non-reporting
-mechanisms, artefactual associations, and chance.
+diagnostic: standardized centered effect with sampling variance for Begg,
+effect with standard error
+for Egger, standardized efficient score with score precision for Harbord, or
+log OR with inverse total sample size for Peters. Possible explanations include
+genuine heterogeneity, design or population differences, selective outcome
+reporting, other non-reporting mechanisms, artefactual associations, and
+chance.
 
 A large p-value does not demonstrate symmetry or exclude missing evidence,
 especially with few studies. A small p-value does not establish publication
@@ -251,7 +294,10 @@ studies nor identify the mechanism behind asymmetry. The
 [original Egger paper](https://doi.org/10.1136/bmj.315.7109.629) and
 [`metafor::regtest`](https://wviechtb.github.io/metafor/reference/regtest.html)
 provide the methodological and software references for the Egger
-implementation. The Harbord and Peters implementations follow the documented
+implementation. The Begg implementation follows the documented
+[`metafor::ranktest`](https://wviechtb.github.io/metafor/reference/ranktest.html)
+contract and Begg and Mazumdar (1994). The Harbord and Peters implementations
+follow the documented
 [`meta::metabias`](https://search.r-project.org/CRAN/refmans/meta/html/metabias.html)
 contract and the corresponding Harbord et al. (2006) and Peters et al. (2006)
 methods cited there.

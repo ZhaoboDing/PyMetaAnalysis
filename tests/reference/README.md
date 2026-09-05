@@ -97,6 +97,10 @@ grouped categorical-moderator GVIF/GSIF for common and REML fits.
 linear hypotheses for normal and Hartung-Knapp inference.
 `small_study_effects_metafor.json` covers the classical Egger regression test
 with standard error as predictor and multiplicative residual dispersion.
+`begg_ranktest_metafor.json` covers the Begg-Mazumdar Kendall rank-correlation
+test, including exact and tied asymptotic two-sided p-values returned by
+`metafor::ranktest` and its underlying standardized-response
+`stats::cor.test(method="kendall")` calculations.
 `harbord_small_study_effects_meta.json` covers the Harbord efficient-score
 regression for binary odds ratios, including its standardized-score form,
 multiplicative residual dispersion, and independence from continuity

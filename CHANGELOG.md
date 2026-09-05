@@ -6,6 +6,13 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- `MetaAnalysisResult.begg_test()` implements the model-independent
+  Begg-Mazumdar Kendall rank-correlation test for funnel-plot asymmetry, with
+  exact inference when eligible, tie-adjusted asymptotic inference, optional
+  continuity correction, and an independent R `metafor` reference fixture.
+
 ## 0.8.0 - 2026-09-04
 
 ### Added
