@@ -5,6 +5,26 @@ Egger regression, and Harbord and Peters tests for two-group binary odds ratios
 as companions to the descriptive funnel plot. They diagnose funnel-plot
 asymmetry or small-study effects; none is a direct test for publication bias.
 
+## Run trim-and-fill sensitivity analysis
+
+Use `result.trim_and_fill()` to estimate and mirror potentially missing studies
+around an iteratively estimated center. The default L0 estimator and automatic
+side selection follow `metafor`; `estimator="R0"` and an explicit `side` are
+also available:
+
+```python
+filled = result.trim_and_fill(estimator="L0")
+print(filled)
+filled.augmented_studies
+filled.adjusted_result.summary()
+```
+
+The augmented table marks synthetic rows with `imputed=True` and identifies
+the observed study mirrored by each fill. The adjusted fit retains the source
+model, interval method, and tau-squared estimator. Treat this as sensitivity
+analysis: funnel asymmetry can have causes other than publication bias, and
+trim-and-fill relies on symmetry assumptions.
+
 ## Run the Begg-Mazumdar rank test
 
 Start from any fitted `MetaAnalysisResult`:

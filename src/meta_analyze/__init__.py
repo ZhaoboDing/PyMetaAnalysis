@@ -57,6 +57,7 @@ from .small_study_effects import (
     HarbordTestResult,
     PetersTestResult,
 )
+from .trim_fill import TrimAndFillResult
 
 __all__ = [
     "AnalysisProvenance",
@@ -96,6 +97,7 @@ __all__ = [
     "SubgroupMethodConfig",
     "Tau2ConfidenceInterval",
     "TransformationRecord",
+    "TrimAndFillResult",
     "UnsupportedMethodError",
     "meta_analysis",
     "meta_binary",

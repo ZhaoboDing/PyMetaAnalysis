@@ -4,6 +4,16 @@ Result objects are frozen dataclasses. Scalar outputs, method settings,
 diagnostics, warnings, provenance, and row-level data remain inspectable after
 fitting. DataFrame-returning properties provide defensive copies.
 
+## `TrimAndFillResult`
+
+This immutable result exposes the source and adjusted fits, selected side and
+estimator, estimated missing-study count (`k0`), its standard error and R0
+p-value where applicable, iteration metadata, original/adjusted estimates and
+tau-squared values, warnings, and a defensive `augmented_studies` table.
+
+The adjusted fit's provenance contains a `trim_and_fill_imputation`
+transformation whose affected rows identify the synthetic studies.
+
 ## `MetaAnalysisResult`
 
 ### Analysis identity

@@ -38,6 +38,7 @@ BEGG_RANKTEST = _load_reference("begg_ranktest_metafor.json")
 BEGG_RANKTEST = _load_reference("begg_ranktest_metafor.json")
 HARBORD_SMALL_STUDY_EFFECTS = _load_reference("harbord_small_study_effects_meta.json")
 PETERS_SMALL_STUDY_EFFECTS = _load_reference("peters_small_study_effects_meta.json")
+TRIMFILL = _load_reference("trimfill_metafor.json")
 
 CLOSED_RTOL = 5e-13
 CLOSED_ATOL = 5e-15
@@ -102,6 +103,7 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
         META_REGRESSION,
         SMALL_STUDY_EFFECTS,
         BEGG_RANKTEST,
+        TRIMFILL,
         BEGG_RANKTEST,
     ]
 

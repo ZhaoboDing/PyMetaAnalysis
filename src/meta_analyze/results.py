@@ -6,7 +6,7 @@ import math
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
         HarbordTestResult,
         PetersTestResult,
     )
+    from .trim_fill import TrimAndFillResult
 else:
     Axes = Any
 
@@ -554,6 +555,20 @@ class MetaAnalysisResult:
             self,
             exact=exact,
             continuity_correction=continuity_correction,
+        )
+
+    def trim_and_fill(
+        self,
+        *,
+        side: Literal["left", "right"] | None = None,
+        estimator: Literal["L0", "R0"] = "L0",
+        max_iterations: int = 100,
+    ) -> TrimAndFillResult:
+        """Run Duval and Tweedie's trim-and-fill sensitivity analysis."""
+        from .trim_fill import trim_and_fill
+
+        return trim_and_fill(
+            self, side=side, estimator=estimator, max_iterations=max_iterations
         )
 
     def harbord_test(

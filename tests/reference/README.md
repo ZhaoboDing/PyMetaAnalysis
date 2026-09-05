@@ -22,6 +22,7 @@ Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
 Rscript tests/reference/generate_harbord_small_study_effects_meta.R
 Rscript tests/reference/generate_peters_small_study_effects_meta.R
+Rscript tests/reference/generate_trimfill_metafor.R
 ```
 
 Each script accepts an optional output path as its first argument. This is
