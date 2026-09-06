@@ -121,6 +121,7 @@ The current fixture families cover:
 | `begg_ranktest_metafor.json` | Begg-Mazumdar standardized response, Kendall tau-b, concordance statistic, exact two-sided p-value, and tied asymptotic inference |
 | `harbord_small_study_effects_meta.json` | Harbord efficient-score asymmetry intercept, limit coefficient, multiplicative dispersion, and t test for binary OR data with single-zero studies |
 | `peters_small_study_effects_meta.json` | Peters binary-OR slope, `S*F/N` weights, multiplicative dispersion, t test, limit estimate, and single-zero continuity corrections |
+| `trimfill_metafor.json` | Eight common/REML L0/R0 cases with explicit left/right sides: missing-study count, adjusted estimate, tau-squared, and missing-count standard error/p-value |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -142,6 +143,14 @@ intercept but changes a through-origin model; the fixture also records
 Every artifact records the R and `jsonlite` versions plus the applicable
 `metafor` or `meta` version used to produce it. Method-specific numerical
 tolerances distinguish closed-form from iterative comparisons.
+
+Trim-and-fill's reference coverage is narrower than the design target: the
+fixture does not contain automatic-direction, imputed-row, CI, Q/I-squared,
+iteration or tied-input references. Its tests currently use `abs=1e-6` and
+pytest's default relative tolerance for numeric comparisons. The generator's
+recorded `iterative_control` is not passed to its R calls. These are open
+reference/tolerance review findings, not independently validated outputs; see
+the [review findings](statistical-review.md#initial-inspection-findings).
 
 Sparse RD reference tests make one intentional convention difference explicit:
 `metafor::escalc` corrects the displayed single-zero RD when correction is
@@ -165,6 +174,7 @@ Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
+Rscript tests/reference/generate_begg_ranktest_metafor.R
 Rscript tests/reference/generate_harbord_small_study_effects_meta.R
 Rscript tests/reference/generate_peters_small_study_effects_meta.R
 Rscript tests/reference/generate_trimfill_metafor.R
@@ -195,6 +205,10 @@ GitHub Actions runs:
 - a 1,000-study trim-and-fill performance smoke test and PNG rendering checks
   for observed/imputed markers composed with significance contours.
 
+These jobs currently run on Linux. Windows and macOS CI remain open gates in
+the [1.0 acceptance matrix](roadmap-1.0.md); a local Windows run does not close
+the full platform matrix. The API inventory is checked by the test suite.
+
 The configured branch-coverage floor is 90%.
 
 ## Reproduce local validation
@@ -215,6 +229,10 @@ python benchmarks/benchmark_core.py
 ```
 
 ## Validation boundary
+
+Formal review preparation and sign-off requirements are in the
+[independent statistical review checklist](statistical-review.md). None of
+its packets has been accepted merely by introducing that checklist.
 
 The project has cross-software regression coverage but has not yet undergone a
 formal independent statistical audit. Consequential analyses should pin the

@@ -6,6 +6,27 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+### Added
+
+- A 1.0 stabilization roadmap with release acceptance gates, independent
+  statistical-review packets, and proposed API compatibility/deprecation and
+  inference-default decisions. The review and final default decision remain
+  pending; this batch does not change statistical behavior or release metadata.
+- A versioned public API inventory and executable drift check covering exports,
+  call syntax/defaults, public result members, exception bases and schema
+  versions, exercised by the normal test suite.
+
+### Fixed
+
+- Validation documentation now lists Begg fixture regeneration and trim-and-fill
+  reference coverage, and distinguishes current Linux CI from the planned
+  cross-platform audit. Corrected the four-test small-study-effect description
+  and removed a duplicate Begg reference load.
+- Trim-and-fill fixture regeneration now honors an optional output path and
+  defaults to the committed reference directory. The roadmap records the
+  reproduced excluded-row failure and remaining reference/control-metadata
+  gaps as blocking follow-up work; statistical output is unchanged.
+
 ## 0.9.0 - 2026-09-06
 
 ### Added

@@ -34,6 +34,11 @@ python tools/inspect_distribution.py dist
 The CI matrix also tests Python 3.10–3.14 and declared dependency lower bounds.
 Install the `notebook` extra before running the notebook executor.
 
+The [1.0 roadmap](roadmap-1.0.md) defines the current stabilization batches and
+acceptance matrix. `python tools/check_api_contract.py` checks public surface
+drift against the reviewed 0.9 inventory and also runs as part of pytest.
+Review the [compatibility proposal](compatibility.md) before updating it.
+
 ## Statistical changes
 
 A change to an estimator, default, exclusion rule, warning threshold, or
