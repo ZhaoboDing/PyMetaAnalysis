@@ -87,12 +87,12 @@ lists unsupported methods explicitly.
 
 ## Project status
 
-PyMetaAnalysis 0.8.0 adds classical Egger regression plus Harbord and Peters
-tests for two-group odds ratios, together with optional contour-enhanced funnel
-plots. These small-study-effect diagnostics include explicit applicability
-warnings, documented interpretation limits, and independent R reference
-fixtures where corresponding implementations are available. The project has
-not undergone a formal external statistical audit. Pin the package version
+PyMetaAnalysis 0.9.0 adds the Begg-Mazumdar rank-correlation test and L0/R0
+trim-and-fill sensitivity analysis, including auditable synthetic-study
+provenance and filled funnel plots that compose with significance contours.
+These small-study-effect tools include explicit applicability warnings,
+documented interpretation limits, and independent R reference fixtures. The
+project has not undergone a formal external statistical audit. Pin the package version
 for consequential work and independently check important analyses. See the
 repository
 [changelog](https://github.com/ZhaoboDing/PyMetaAnalysis/blob/main/CHANGELOG.md)

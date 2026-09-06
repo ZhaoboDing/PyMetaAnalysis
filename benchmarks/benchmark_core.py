@@ -50,6 +50,11 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
     sd_control = rng.uniform(0.7, 1.6, size=studies)
     correlation = rng.uniform(-0.65, 0.65, size=studies)
     correlation_n = rng.integers(20, 300, size=studies)
+    generic_common = ma.meta_analysis(
+        effect=generic_effect,
+        variance=generic_variance,
+        model="common",
+    )
 
     return {
         "generic_random_reml": lambda: ma.meta_analysis(
@@ -58,6 +63,7 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
             model="random",
             tau2_method="REML",
         ),
+        "trim_fill_l0_common": lambda: generic_common.trim_and_fill(side="left"),
         "binary_rr_random_reml": lambda: ma.meta_binary(
             event_treat=event_treat,
             n_treat=n_treat,
