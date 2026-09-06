@@ -192,6 +192,8 @@ GitHub Actions runs:
 - execution of every committed example notebook;
 - release-metadata and distribution-content checks;
 - wheel and source-distribution builds plus an installed-wheel smoke test.
+- a 1,000-study trim-and-fill performance smoke test and PNG rendering checks
+  for observed/imputed markers composed with significance contours.
 
 The configured branch-coverage floor is 90%.
 

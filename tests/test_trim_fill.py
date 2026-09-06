@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +47,10 @@ def test_automatic_side_matches_metafor_regression_direction() -> None:
     automatic = result.trim_and_fill()
     explicit = result.trim_and_fill(side="right")
     assert automatic.side == "right"
+    assert automatic.side_selection == "standard_error_meta_regression"
+    assert automatic.side_selection_statistic is not None
+    assert automatic.side_selection_statistic < 0
+    assert automatic.iteration_trace[-1] == automatic.k0
     assert automatic.adjusted_estimate == pytest.approx(explicit.adjusted_estimate)
 
 
@@ -70,6 +75,8 @@ def test_r0_probability_and_serialization() -> None:
     payload = filled.to_dict()
     assert payload["k0_pvalue"] == 0.25
     assert len(payload["augmented_studies"]) == 11
+    assert payload["original_ci"] == filled.original_result.ci
+    assert payload["adjusted_ci"] == filled.adjusted_result.ci
     assert "sensitivity analysis" in str(filled)
 
 
@@ -101,6 +108,52 @@ def test_study_count_and_convergence_errors() -> None:
     one = meta_analysis(effect=[0.2], variance=[0.1], model="common")
     with pytest.raises(InsufficientStudiesError):
         one.trim_and_fill(side="left")
+    two = meta_analysis(effect=[0.1, 0.2], variance=[0.1, 0.1], model="common")
+    with pytest.raises(InsufficientStudiesError):
+        two.trim_and_fill(side="left")
     result = meta_analysis(effect=EFFECT, variance=VARIANCE, model="common")
     with pytest.raises(ConvergenceError):
         result.trim_and_fill(side="right", max_iterations=1)
+
+
+def test_filled_funnel_marks_synthetic_studies_and_renders(tmp_path: Path) -> None:
+    import matplotlib.pyplot as plt
+
+    filled = meta_analysis(
+        effect=EFFECT, variance=VARIANCE, model="common"
+    ).trim_and_fill(side="right")
+    axes = filled.funnel(contour_levels=(0.90, 0.95), warn_on_few_studies=False)
+    assert len(axes.collections) == 6
+    assert axes.collections[-1].get_facecolors().size == 0
+    assert {text.get_text() for text in axes.get_legend().get_texts()} >= {
+        "Observed study",
+        "Imputed study",
+    }
+    output = tmp_path / "trim-fill-funnel.png"
+    axes.figure.savefig(output, dpi=100)
+    assert output.stat().st_size > 1000
+    plt.close(axes.figure)
+
+
+def test_fill_labels_do_not_collide_and_source_is_unchanged() -> None:
+    source = meta_analysis(
+        effect=EFFECT,
+        variance=VARIANCE,
+        study=["Filled 1", *[f"Study {i}" for i in range(2, 11)]],
+        model="common",
+    )
+    before = source.study_results
+    filled = source.trim_and_fill(side="right")
+    assert filled.augmented_studies["study"].astype(str).is_unique
+    assert filled.source_result is source
+    assert source.study_results.equals(before)
+
+
+def test_k1000_performance_smoke() -> None:
+    effect = np.linspace(-1.0, 1.0, 1000)
+    variance = np.linspace(0.01, 0.1, 1000)
+    result = meta_analysis(effect=effect, variance=variance, model="common")
+    started = time.perf_counter()
+    filled = result.trim_and_fill(side="left")
+    assert time.perf_counter() - started < 5.0
+    assert 0 <= filled.k0 < 1000

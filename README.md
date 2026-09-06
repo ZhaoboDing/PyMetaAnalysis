@@ -149,6 +149,7 @@ begg = result.begg_test()
 egger = result.egger_test()
 harbord = binary_or_result.harbord_test()
 peters = binary_or_result.peters_test()
+filled = result.trim_and_fill()
 regression_deleted = regression.leave_one_out()
 regression_coefficient_changes = regression_deleted.coefficients
 regression_influence = regression.influence()
@@ -165,6 +166,7 @@ south_vs_east = regression.contrast(
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
 contour_ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
+filled_ax = filled.funnel(contour_levels=(0.90, 0.95, 0.99))
 ```
 
 Plotting methods return Matplotlib axes and never call `show()`. Funnel plots
@@ -173,8 +175,9 @@ show where two-sided p-value bands fall relative to the null. The generic
 Begg-Mazumdar rank-correlation and classical Egger regression tests are
 available for general effects, while Harbord and Peters provide outcome-
 specific alternatives for two-group binary odds ratios. All include explicit
-applicability cautions. Neither a funnel plot nor any test proves publication
-bias.
+applicability cautions. Trim-and-fill provides an observed-versus-imputed
+sensitivity scenario; synthetic studies are not newly discovered evidence.
+Neither a funnel plot nor any test proves publication bias.
 Meta-regression leave-one-out results also expose a long-form coefficient
 change table. Exact influence diagnostics add externally standardized
 residuals, Cook's distance, DFBETAS, and explicit heuristic screening

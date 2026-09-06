@@ -26,6 +26,7 @@ fixtures used by this project.
 | Meta-regression linear contrasts | `regression.contrast(...)` | `anova(..., X=..., rhs=...)` | — |
 | Cumulative analysis | `result.cumulative()` | `cumul()` | `metacum()` |
 | Contour-enhanced funnel plot | `result.funnel(contour_levels=(...))` | `funnel(level=c(...), refline=...)` | `funnel(contour.levels=c(...), ref=...)` |
+| Trim-and-fill | `result.trim_and_fill()` | `trimfill()` | `trimfill()` |
 | Begg-Mazumdar rank test | `result.begg_test()` | `ranktest()` | `metabias(..., method.bias="Begg")` (definition may differ) |
 | Classical Egger test | `result.egger_test()` | `regtest(..., model="lm", predictor="sei")` | `metabias(..., method.bias="Egger")` |
 | Harbord binary-OR test | `result.harbord_test()` | manual documented score regression | `metabias(..., method.bias="Harbord")` |
@@ -38,6 +39,11 @@ request; pass `exact=True` explicitly when that R-compatible behavior is
 required. Its optional continuity correction is independently checked against
 `stats::cor.test(..., method="kendall", exact=FALSE, continuity=TRUE)` on the
 same standardized response.
+
+`trim_and_fill()` follows `metafor::trimfill()` for L0/R0 rank estimators,
+automatic side selection, source-model refitting, and mirrored variances. Its
+result deliberately labels imputed rows as synthetic, exposes the selection
+slope and iteration trace, and requires at least three included studies.
 
 PyMetaAnalysis intentionally has no `metabin`, `metacont`, or `rma` aliases.
 One documented Python entry point per input shape keeps result types and

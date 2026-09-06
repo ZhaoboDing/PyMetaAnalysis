@@ -24,6 +24,7 @@ deferred functionality explicit.
   only one included study;
 - leave-one-out and cumulative repeated-fit workflows;
 - forest, descriptive funnel, and contour-enhanced funnel plots;
+- L0/R0 trim-and-fill sensitivity analysis with filled funnel plots;
 - the model-independent Begg-Mazumdar Kendall rank-correlation test, with exact
   or tie-adjusted asymptotic inference;
 - the classical standard-error Egger regression test for funnel-plot
@@ -57,7 +58,7 @@ deferred functionality explicit.
 - Knapp-Hartung variants beyond the two documented choices;
 - prediction-interval methods beyond the documented default and Riley rules;
 - random/mixed-effects Egger regression, other binary-outcome asymmetry tests,
-  trim-and-fill, selection-model, or other
+  selection-model, or other
   publication-bias procedures; Harbord and Peters regression are limited to
   retained two-group OR counts and are not diagnostic-accuracy methods;
 - Meta-regression DFFITS, covariance ratios, influence plots, or simulated and
@@ -110,6 +111,12 @@ their model assumptions and are not valid for diagnostic-accuracy data. All
 three tests are underpowered with few studies. Neither visual nor tested
 asymmetry establishes publication bias, and a non-significant test does not
 exclude missing evidence.
+
+Trim-and-fill assumes funnel asymmetry can be represented by missing studies
+mirrored around an estimated center. Genuine heterogeneity, design differences,
+effect-size artifacts, or other selection mechanisms can make it misleading.
+Imputed rows are synthetic sensitivity constructs: report observed and adjusted
+estimates together and never present them as newly found evidence.
 
 Continuity corrections and RD boundary policies can materially affect sparse
 binary analyses. They must be chosen in the review protocol and reported.

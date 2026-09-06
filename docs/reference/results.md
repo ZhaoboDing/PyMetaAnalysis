@@ -11,6 +11,12 @@ estimator, estimated missing-study count (`k0`), its standard error and R0
 p-value where applicable, iteration metadata, original/adjusted estimates and
 tau-squared values, warnings, and a defensive `augmented_studies` table.
 
+`source_result` aliases the immutable original fit. `side_selection` and
+`side_selection_statistic` distinguish explicit direction from the automatic
+standard-error meta-regression rule; `iteration_trace` records each successive
+missing-count estimate. `funnel()` draws observed markers solid and imputed
+markers hollow, and accepts the ordinary contour options.
+
 The adjusted fit's provenance contains a `trim_and_fill_imputation`
 transformation whose affected rows identify the synthetic studies.
 
