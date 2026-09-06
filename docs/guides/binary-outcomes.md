@@ -68,7 +68,7 @@ retains this caveat in `warnings` and Methods text.
 Use inverse-variance pooling for a random-effects binary analysis:
 
 ```python
-result = ma.meta_binary(
+odds_ratio_result = ma.meta_binary(
     studies,
     event_treat="events_t",
     n_treat="total_t",

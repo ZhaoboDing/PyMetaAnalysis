@@ -13,6 +13,17 @@ side selection follow `metafor`; `estimator="R0"` and an explicit `side` are
 also available:
 
 ```python
+import pandas as pd
+import meta_analyze as ma
+
+studies = pd.DataFrame(
+    {
+        "effect": [0.10, 0.15, 0.18, 0.22, 0.24, 0.29, 0.33, 0.37, 0.95, 1.15],
+        "variance": [0.04, 0.035, 0.03, 0.028, 0.025, 0.022, 0.02, 0.018, 0.012, 0.01],
+    }
+)
+studies["standard_error"] = studies["variance"] ** 0.5
+result = ma.meta_analysis(studies, effect="effect", variance="variance")
 filled = result.trim_and_fill(estimator="L0")
 print(filled)
 filled.augmented_studies
@@ -122,6 +133,14 @@ For an analysis fitted from retained two-group counts with
 and its variance:
 
 ```python
+trials = pd.DataFrame(
+    {
+        "event_treat": [1, 2, 4, 3, 5],
+        "n_treat": [80, 90, 100, 110, 120],
+        "event_control": [3, 5, 2, 4, 7],
+        "n_control": [85, 100, 110, 100, 125],
+    }
+)
 odds_ratios = ma.meta_binary(
     trials,
     event_treat="event_treat",

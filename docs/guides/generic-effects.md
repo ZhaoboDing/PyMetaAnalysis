@@ -56,6 +56,7 @@ finite, strictly positive values. A reported standard-error column can be used
 directly:
 
 ```python
+data = data.assign(standard_error=data["vi"] ** 0.5)
 result = ma.meta_analysis(
     data,
     effect="yi",

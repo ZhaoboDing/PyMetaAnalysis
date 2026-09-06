@@ -9,6 +9,10 @@ turning generated prose into an unreviewed publication claim.
 Every `MetaAnalysisResult` exposes an immutable provenance record:
 
 ```python
+import meta_analyze as ma
+
+inputs = dict(effect=[0.12, 0.35, -0.08, 0.21], variance=[0.04, 0.06, 0.03, 0.05])
+result = ma.meta_analysis(**inputs)
 provenance = result.provenance
 
 provenance.package_version
@@ -143,6 +147,7 @@ editing an exported payload does not mutate the report or fitted result.
 methods:
 
 ```python
+subgroups = ma.meta_analysis(**inputs, subgroup=["A", "A", "B", "B"])
 subgroup_report = subgroups.report()
 ```
 

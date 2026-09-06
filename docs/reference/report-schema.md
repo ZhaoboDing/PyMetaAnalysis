@@ -7,6 +7,9 @@ its own schema version, currently `1.0`.
 ## Export methods
 
 ```python
+import meta_analyze as ma
+
+result = ma.meta_analysis(effect=[0.1, 0.3, 0.2], variance=[0.02, 0.03, 0.01])
 report = result.report(include_studies=True)
 
 payload = report.to_dict()

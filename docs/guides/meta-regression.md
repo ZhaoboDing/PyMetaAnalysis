@@ -41,6 +41,7 @@ result = ma.meta_regression(
 
 print(result.summary())
 print(result.coefficients)
+numeric_result = result
 ```
 
 Numeric moderators are used exactly as supplied. PyMetaAnalysis does not
@@ -52,6 +53,9 @@ Every categorical moderator requires an ordered, complete list of levels. The
 first level is the treatment-coding reference:
 
 ```python
+studies = studies.assign(
+    region=["Europe", "Asia", "North America", "Europe", "Asia", "North America"]
+)
 result = ma.meta_regression(
     studies,
     effect="effect",
@@ -82,7 +86,7 @@ scientifically prespecified.
 Use a mapping when moderators are arrays rather than DataFrame column names:
 
 ```python
-result = ma.meta_regression(
+array_result = ma.meta_regression(
     effect=[0.10, 0.32, 0.45, 0.71],
     variance=[0.04, 0.05, 0.06, 0.08],
     moderators={"dose": [0.0, 1.0, 2.0, 3.0]},
@@ -195,7 +199,7 @@ After installing the `plot` extra, an intercept-containing model with exactly
 one numeric moderator can be displayed as a weighted bubble plot:
 
 ```python
-ax = result.bubble(
+ax = numeric_result.bubble(
     moderator_label="Mean age (years)",
     effect_label="Treatment effect",
     show_confidence_interval=True,
@@ -295,17 +299,17 @@ Inspect `result.design_info.term_names`, then define a scientific comparison by
 term name rather than coefficient position:
 
 ```python
-south_vs_east = result.contrast(
+north_america_vs_asia = result.contrast(
     {
-        "region[South]": 1.0,
-        "region[East]": -1.0,
+        "region[North America]": 1.0,
+        "region[Asia]": -1.0,
     },
-    name="South - East",
+    name="North America - Asia",
 )
 
-south_vs_east.table
-south_vs_east.contrast_matrix
-south_vs_east.joint_test
+north_america_vs_asia.table
+north_america_vs_asia.contrast_matrix
+north_america_vs_asia.joint_test
 ```
 
 The default null hypothesis is `C beta = 0`. Use `rhs=` for a nonzero null:
@@ -323,14 +327,14 @@ For several prespecified hypotheses, pass a named mapping of mappings:
 ```python
 contrasts = result.contrast(
     {
-        "South - East": {
-            "region[South]": 1.0,
-            "region[East]": -1.0,
+        "North America - Asia": {
+            "region[North America]": 1.0,
+            "region[Asia]": -1.0,
         },
         "Age slope": {"mean_age": 1.0},
     },
     rhs={
-        "South - East": 0.0,
+        "North America - Asia": 0.0,
         "Age slope": 0.02,
     },
 )

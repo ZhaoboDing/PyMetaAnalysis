@@ -49,7 +49,20 @@ print(result.study_results)
 DataFrame column names work directly:
 
 ```python
-result = ma.meta_analysis(
+import pandas as pd
+
+studies = pd.DataFrame(
+    {
+        "effect": [0.12, 0.35, -0.08, 0.21, 0.42, 0.28],
+        "variance": [0.04, 0.06, 0.03, 0.05, 0.07, 0.045],
+        "citation": ["A", "B", "C", "D", "E", "F"],
+        "region": ["Europe", "Asia", "North America"] * 2,
+        "mean_age": [42, 48, 51, 55, 60, 64],
+        "publication_year": [2001, 2004, 2006, 2008, 2011, 2015],
+    }
+)
+studies["se"] = studies["variance"] ** 0.5
+subgroups = ma.meta_analysis(
     studies,
     effect="effect",
     variance="variance",
@@ -143,8 +156,15 @@ Rows excluded by missing-value or sparse-data policies remain in
 ## Diagnostics, contrasts, and plots
 
 ```python
+binary_or_result = ma.meta_binary(
+    event_treat=[1, 2, 4, 3, 5],
+    n_treat=[80, 90, 100, 110, 120],
+    event_control=[3, 5, 2, 4, 7],
+    n_control=[85, 100, 110, 100, 125],
+    measure="OR",
+)
 leave_one_out = result.leave_one_out().to_dataframe()
-cumulative = result.cumulative(order="publication_year").to_dataframe()
+cumulative = subgroups.overall.cumulative(order="publication_year").to_dataframe()
 begg = result.begg_test()
 egger = result.egger_test()
 harbord = binary_or_result.harbord_test()
@@ -158,9 +178,9 @@ collinearity = regression.collinearity()
 term_vif = collinearity.term_vif
 moderator_gvif = collinearity.moderator_gvif
 condition_indices = collinearity.condition_indices
-south_vs_east = regression.contrast(
-    {"region[South]": 1.0, "region[East]": -1.0},
-    name="South - East",
+north_america_vs_asia = regression.contrast(
+    {"region[North America]": 1.0, "region[Asia]": -1.0},
+    name="North America - Asia",
 )
 
 ax = result.forest(show_prediction_interval=True)

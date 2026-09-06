@@ -61,6 +61,22 @@ every new page to `mkdocs.yml`; otherwise the build treats it as an omitted-file
 warning and fails under strict mode. Keep examples executable against the
 current public API and use canonical method names in saved-analysis examples.
 
+`tests/test_documentation.py` executes Python blocks from the README and every
+documentation page in page order. Each page starts with an empty namespace and
+a temporary working directory; inputs must be present in the visible examples.
+Use distinct names when later examples need different result types, and keep
+data columns and categorical contrast names consistent. Matplotlib uses the
+non-interactive Agg backend, every created figure is rendered, and report
+objects are checked through JSON export/parse round-trips. Figures are closed
+after each page, and files such as `forest.png` stay in the test directory.
+
+Only the public API's explicitly labeled signatures with `...` arguments are
+syntax-checked without execution. The exemption is restricted to that exact
+block in the test; it is not a general way to bypass failing examples.
+Parameter-only assignments elsewhere are valid Python and execute normally.
+Shell commands, R snippets and schema-shaped `text` blocks are outside this
+Python execution check; notebooks and pinned R fixtures have separate checks.
+
 The local root `DESIGN.md` is intentionally ignored and excluded from package
 artifacts. Accepted user-facing decisions belong in versioned guides or ADRs.
 

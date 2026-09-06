@@ -14,6 +14,18 @@ them suitable for notebooks, scripts, tests, and larger composed figures.
 ## Forest plots
 
 ```python
+import meta_analyze as ma
+
+trials = dict(
+    event_treat=[12, 8, 15, 6, 10, 9],
+    n_treat=[120, 95, 140, 80, 110, 100],
+    event_control=[18, 11, 19, 10, 16, 12],
+    n_control=[118, 100, 145, 82, 115, 105],
+    measure="RR",
+    method="IV",
+    model="random",
+)
+result = ma.meta_binary(**trials)
 ax = result.forest(
     effect_label="Risk ratio",
     pooled_label="Pooled RR",
@@ -59,6 +71,7 @@ be strictly positive.
 ## Subgroup forest plots
 
 ```python
+subgroups = ma.meta_binary(**trials, subgroup=["A", "A", "A", "B", "B", "B"])
 ax = subgroups.forest(
     show_prediction_interval=True,
     show_weights=True,
@@ -120,7 +133,7 @@ For example, customize the bands and null reference with:
 ax = result.funnel(
     contour_levels=(0.90, 0.95),
     contour_colors=("#fee2e2", "#ef4444"),
-    contour_reference=0.0,
+    contour_reference=1.0,
     show_contour_legend=True,
 )
 ```
@@ -160,6 +173,11 @@ An intercept-containing Meta-regression with exactly one numeric moderator
 provides:
 
 ```python
+regression = ma.meta_regression(
+    effect=[0.12, 0.35, -0.08, 0.21, 0.42, 0.28],
+    variance=[0.04, 0.06, 0.03, 0.05, 0.07, 0.045],
+    moderators={"dose": [0, 1, 2, 3, 4, 5]},
+)
 ax = regression.bubble(
     moderator_label="Dose",
     effect_label="Effect",

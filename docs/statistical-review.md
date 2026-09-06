@@ -105,16 +105,17 @@ The following changes start batch B; they do not close the formal review gates.
 | A3: trim-and-fill exclusions | Fixed as F1, retaining original exclusions in `original_result` and unique source/synthetic IDs in the adjusted table |
 | A4–A5: identical effects / singleton intermediate fit | No imputation for identical effects with unavailable rank uncertainty; random intermediate fits below two studies raise `ConvergenceError`. Both estimators and models tested |
 | B1–B4: numerical errors, zero HK, private table and validation | Domain exceptions at affected boundaries; zero HK covariance returns point intervals and unavailable joint tests with warnings; private DataFrame excluded from repr/equality; trim controls use domain exceptions |
-| C1–C2: H-squared and subset corrections | Existing definitions retained and explained in the methods and zero-event guides; these are conventions requiring review, not automatic changes |
+| C1: H-squared | Existing definitions retained and explained in the methods guide; this convention remains an independent-review input |
+| C2: subset corrections | Existing behavior documented; 32 workflow cases cover IV/MH, correction scopes, excluded rows, subgroup Wald tests, leave-one-out/cumulative recomputation and global provenance against direct calculations. No new warning or policy change |
 | C3/C6: interpretation | Begg always includes the publication-bias caveat; Egger/Begg warn when using Peto one-step study effects |
-| C4: changelog | 0.7 MH validation changes relabeled as breaking |
+| C4: changelog | 0.7 MH validation changes relabeled as breaking; categorical float matching stays under Changed with its compatibility-extension rationale |
 | C5: sensitivity conventions | Preserve `estimate_change = deleted - original`, DFBETAS' opposite numerator and DataFrame-returning sensitivity summaries; explicit API-freeze review item |
 | C7–C8: ranks / convergence | Document stable effect sorting before first ranks, limited tied-case reference coverage and success-only `converged=True`; nonconvergence still raises |
 | C9: contour overlap | Significance regions are disjoint adjacent bands; path membership and legend-color tests added |
 | C10: original-estimate marker | Deferred optional plotting enhancement; not a correctness or 1.0 gate |
 | C11: small-study-effect ADR | Current four-test conventions recorded in ADR 0009, pending independent 1.0 ratification |
 | C12: Peters metadata | R correction count restricted to included studies; regenerated fixture unchanged |
-| C13: schemas and examples | Document derived trim-and-fill provenance and API method; execute the complete getting-started tutorial with report JSON checks. Remaining complete examples stay under gate C4 |
+| C13: schemas and examples | Document derived trim-and-fill provenance and API method; execute README/documentation Python examples per page with plot rendering and report JSON checks. Fix missing setup, overwritten result types, inconsistent category names and invalid ratio references; only explicitly incomplete API signatures are exempt. Release-candidate validation under gate C4 remains pending |
 | C14–C15: correlations | Tests cross-check Egger/Begg/trim-and-fill on Fisher's z and reject binary-only tests; document the transform required for generic meta-regression |
 | C16–C17: warnings / observations | Retain outcome-specific wording and existing supported behavior; no speculative refactor |
 
