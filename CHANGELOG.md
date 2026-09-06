@@ -6,6 +6,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ## Unreleased
 
+## 0.9.0 - 2026-09-06
+
 ### Added
 
 - `MetaAnalysisResult.trim_and_fill()` implements Duval and Tweedie's L0 and

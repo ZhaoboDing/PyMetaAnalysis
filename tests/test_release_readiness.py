@@ -147,4 +147,5 @@ def test_core_benchmark_smoke(tmp_path: Path) -> None:
         "continuous_smd_random_reml",
         "correlation_random_reml",
         "meta_regression_multivariable_reml",
+        "trim_fill_l0_common",
     }
