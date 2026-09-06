@@ -142,6 +142,18 @@ the separately documented classical
 regression diagnostic is appropriate. None changes the plot or proves a
 publication mechanism.
 
+For a trim-and-fill result, `filled.funnel()` uses the same funnel geometry and
+options while drawing observed studies as solid points and imputed studies as
+hollow points:
+
+```python
+filled = result.trim_and_fill()
+ax = filled.funnel(contour_levels=(0.90, 0.95, 0.99))
+```
+
+The legend keeps the two study types distinct. Imputed points are synthetic
+sensitivity constructs, not newly discovered studies.
+
 ## Meta-regression bubble plots
 
 An intercept-containing Meta-regression with exactly one numeric moderator

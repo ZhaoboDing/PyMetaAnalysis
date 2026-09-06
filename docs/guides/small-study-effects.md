@@ -25,6 +25,12 @@ model, interval method, and tau-squared estimator. Treat this as sensitivity
 analysis: funnel asymmetry can have causes other than publication bias, and
 trim-and-fill relies on symmetry assumptions.
 
+Automatic direction selection records the standard-error meta-regression slope
+in `side_selection_statistic`; explicit selection records no statistic. Report
+the original and adjusted estimates together. Do not choose among Begg, Egger,
+Harbord, and Peters tests after inspecting whichever produces the smallest
+p-value: their responses, predictors, null hypotheses, and applicability differ.
+
 ## Run the Begg-Mazumdar rank test
 
 Start from any fitted `MetaAnalysisResult`:

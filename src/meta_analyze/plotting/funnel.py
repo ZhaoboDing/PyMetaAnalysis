@@ -133,6 +133,7 @@ def funnel_plot(
     show_contour_legend: bool = True,
     warn_on_few_studies: bool = True,
     log_scale: bool | None = None,
+    _imputed: NDArray[np.bool_] | None = None,
 ) -> Axes:
     """Draw a standard-error funnel plot and return its Matplotlib ``Axes``.
 
@@ -156,6 +157,12 @@ def funnel_plot(
     included = studies.loc[studies["included"]].reset_index(drop=True)
     if included.empty:
         raise ValueError("Funnel plot requires at least one included study.")
+    if _imputed is None:
+        imputed = np.zeros(len(included), dtype=np.bool_)
+    else:
+        imputed = np.asarray(_imputed, dtype=np.bool_)
+        if imputed.ndim != 1 or len(imputed) != len(included):
+            raise ValueError("The imputed-study mask must match included studies.")
     if warn_on_few_studies and len(included) < 10:
         warnings.warn(
             "Funnel plots are difficult to interpret with fewer than 10 studies; "
@@ -410,8 +417,8 @@ def funnel_plot(
         zorder=1,
     )
     ax.scatter(
-        displayed_effect,
-        standard_error,
+        displayed_effect[~imputed],
+        standard_error[~imputed],
         s=42.0,
         marker="o",
         color="#2f6f9f",
@@ -419,6 +426,18 @@ def funnel_plot(
         linewidths=0.6,
         zorder=2,
     )
+    if np.any(imputed):
+        ax.scatter(
+            displayed_effect[imputed],
+            standard_error[imputed],
+            s=48.0,
+            marker="o",
+            facecolors="none",
+            edgecolors="#2f6f9f",
+            linewidths=1.2,
+            zorder=3,
+            label="Imputed study",
+        )
     ax.set_ylim(plot_maximum_se, 0.0)
     ax.set_xlabel(effect_label or default_effect_label(result))
     ax.set_ylabel("Standard error")
@@ -429,6 +448,7 @@ def funnel_plot(
     ax.margins(x=0.08)
     if contour_xlim is not None:
         ax.set_xlim(*contour_xlim)
+    handles: list[Any] = []
     if resolved_contour_levels is not None and show_contour_legend:
         handles = [
             Patch(facecolor=color, alpha=0.85, label=label)
@@ -439,6 +459,30 @@ def funnel_plot(
             )
         ]
         ax.legend(handles=handles, title="Two-sided significance", loc="best")
+    if np.any(imputed):
+        from matplotlib.lines import Line2D
+
+        study_handles = [
+            Line2D(
+                [],
+                [],
+                marker="o",
+                linestyle="none",
+                markerfacecolor="#2f6f9f",
+                markeredgecolor="white",
+                label="Observed study",
+            ),
+            Line2D(
+                [],
+                [],
+                marker="o",
+                linestyle="none",
+                markerfacecolor="none",
+                markeredgecolor="#2f6f9f",
+                label="Imputed study",
+            ),
+        ]
+        ax.legend(handles=[*handles, *study_handles], loc="best")
     if created_axes:
         ax.figure.subplots_adjust(left=0.14, right=0.96, bottom=0.13, top=0.96)
     return ax

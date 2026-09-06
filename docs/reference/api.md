@@ -375,7 +375,7 @@ reference.
 and Tweedie's iterative trim-and-fill sensitivity analysis. `side` accepts
 `"left"`, `"right"`, or automatic regression-based selection; `estimator`
 accepts `"L0"` or `"R0"`. The method requires inverse-variance pooling and
-returns `TrimAndFillResult`.
+at least three included studies, and returns `TrimAndFillResult`.
 
 ### `begg_test()` parameters
 

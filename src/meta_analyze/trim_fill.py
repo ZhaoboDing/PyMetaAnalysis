@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from numbers import Integral
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -18,6 +19,8 @@ from .exceptions import (
 from .provenance import TransformationRecord
 
 if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
     from .results import MetaAnalysisResult
 
 TrimFillSide = Literal["left", "right"]
@@ -32,12 +35,15 @@ class TrimAndFillResult:
     original_result: MetaAnalysisResult
     side: TrimFillSide
     estimator: TrimFillEstimator
+    side_selection: str
+    side_selection_statistic: float | None
     k0: int
     k0_standard_error: float
     k0_pvalue: float | None
     iterations: int
     converged: bool
     max_iterations: int
+    iteration_trace: tuple[int, ...]
     original_estimate: float
     adjusted_estimate: float
     original_tau2: float
@@ -55,20 +61,59 @@ class TrimAndFillResult:
         """Return observed and imputed studies as a defensive copy."""
         return self._augmented_studies.copy(deep=True)
 
+    @property
+    def original_ci(self) -> tuple[float, float]:
+        """Return the source confidence interval on the model scale."""
+        return self.original_result.ci
+
+    @property
+    def adjusted_ci(self) -> tuple[float, float]:
+        """Return the adjusted confidence interval on the model scale."""
+        return self.adjusted_result.ci
+
+    @property
+    def display_original_estimate(self) -> float:
+        """Return the source estimate on its display scale."""
+        return self.original_result.display_estimate
+
+    @property
+    def display_adjusted_estimate(self) -> float:
+        """Return the adjusted estimate on the source display scale."""
+        return self.adjusted_result.display_estimate
+
+    @property
+    def display_original_ci(self) -> tuple[float, float]:
+        """Return the source confidence interval on its display scale."""
+        return self.original_result.display_ci
+
+    @property
+    def display_adjusted_ci(self) -> tuple[float, float]:
+        """Return the adjusted confidence interval on the source display scale."""
+        return self.adjusted_result.display_ci
+
     def to_dict(self) -> dict[str, Any]:
         """Return a detached, machine-readable summary."""
         return {
             "method": "trim_and_fill",
             "side": self.side,
             "estimator": self.estimator,
+            "side_selection": self.side_selection,
+            "side_selection_statistic": self.side_selection_statistic,
             "k0": self.k0,
             "k0_standard_error": self.k0_standard_error,
             "k0_pvalue": self.k0_pvalue,
             "iterations": self.iterations,
             "converged": self.converged,
             "max_iterations": self.max_iterations,
+            "iteration_trace": self.iteration_trace,
             "original_estimate": self.original_estimate,
+            "original_ci": self.original_ci,
             "adjusted_estimate": self.adjusted_estimate,
+            "adjusted_ci": self.adjusted_ci,
+            "display_original_estimate": self.display_original_estimate,
+            "display_original_ci": self.display_original_ci,
+            "display_adjusted_estimate": self.display_adjusted_estimate,
+            "display_adjusted_ci": self.display_adjusted_ci,
             "original_tau2": self.original_tau2,
             "adjusted_tau2": self.adjusted_tau2,
             "warnings": self.warnings,
@@ -86,6 +131,44 @@ class TrimAndFillResult:
         if self.warnings:
             lines.extend(("Notes:", *(f"- {warning}" for warning in self.warnings)))
         return "\n".join(lines)
+
+    @property
+    def source_result(self) -> MetaAnalysisResult:
+        """Return the immutable source fit used by the procedure."""
+        return self.original_result
+
+    def funnel(
+        self,
+        *,
+        ax: Axes | None = None,
+        effect_label: str | None = None,
+        confidence_level: float | None = None,
+        show_pseudo_confidence_interval: bool = True,
+        contour_levels: Sequence[float] | None = None,
+        contour_colors: Sequence[str] | None = None,
+        contour_reference: float | None = None,
+        show_contour_legend: bool = True,
+        warn_on_few_studies: bool = True,
+        log_scale: bool | None = None,
+    ) -> Axes:
+        """Draw observed studies solid and imputed studies hollow."""
+        from .plotting.funnel import funnel_plot
+
+        mask = self._augmented_studies["imputed"].to_numpy(dtype=bool, copy=True)
+        return funnel_plot(
+            self.adjusted_result,
+            ax=ax,
+            effect_label=effect_label,
+            confidence_level=confidence_level,
+            show_pseudo_confidence_interval=show_pseudo_confidence_interval,
+            contour_levels=contour_levels,
+            contour_colors=contour_colors,
+            contour_reference=contour_reference,
+            show_contour_legend=show_contour_legend,
+            warn_on_few_studies=warn_on_few_studies,
+            log_scale=log_scale,
+            _imputed=mask,
+        )
 
 
 def _fit(
@@ -112,7 +195,7 @@ def _fit(
 
 def _automatic_side(
     result: MetaAnalysisResult, effect: np.ndarray, variance: np.ndarray
-) -> TrimFillSide:
+) -> tuple[TrimFillSide, float]:
     from .regression_api import meta_regression
 
     if len(effect) < 3:
@@ -130,7 +213,8 @@ def _automatic_side(
         atol=result.method.atol,
         max_iter=result.method.max_iter,
     )
-    return "right" if float(regression.coefficients.iloc[1]["estimate"]) < 0 else "left"
+    slope = float(regression.coefficients.iloc[1]["estimate"])
+    return ("right" if slope < 0 else "left"), slope
 
 
 def _rank_first(values: np.ndarray) -> np.ndarray:
@@ -170,16 +254,20 @@ def trim_and_fill(
     variance0 = studies.loc[included, "variance"].to_numpy(dtype=float, copy=True)
     labels0 = studies.loc[included, "study"].to_numpy(dtype=object, copy=True)
     k = len(effect0)
-    if k < 2:
-        raise InsufficientStudiesError("trim_and_fill() requires at least 2 studies.")
-    resolved_side = (
-        _automatic_side(result, effect0, variance0) if side is None else side
-    )
+    if k < 3:
+        raise InsufficientStudiesError("trim_and_fill() requires at least 3 studies.")
+    if side is None:
+        resolved_side, side_statistic = _automatic_side(result, effect0, variance0)
+        side_selection = "standard_error_meta_regression"
+    else:
+        resolved_side, side_statistic = side, None
+        side_selection = "explicit"
     working = -effect0 if resolved_side == "right" else effect0
     order = np.argsort(working, kind="stable")
     yi, vi, labels = working[order], variance0[order], labels0[order]
 
     previous, k0, k0_se, iterations = -1, 0, math.sqrt(2.0), 0
+    iteration_trace: list[int] = []
     center, centered = result.estimate, yi - result.estimate
     while k0 != previous:
         previous, iterations = k0, iterations + 1
@@ -209,7 +297,8 @@ def trim_and_fill(
                 + 6.0 * k**2 * raw
             ) / 24.0
             k0_se = 4.0 * math.sqrt(max(0.0, var_sr)) / (2.0 * k - 1.0)
-        k0 = max(0, int(np.rint(raw)))
+        k0 = min(k - 1, max(0, int(np.rint(raw))))
+        iteration_trace.append(k0)
 
     if k0:
         tail = slice(k - k0, k)
@@ -219,9 +308,15 @@ def trim_and_fill(
             else -centered[tail] + center
         )
         mirror_variance, mirror_labels = vi[tail].copy(), labels[tail].copy()
-        filled_labels = np.asarray(
-            [f"Filled {i}" for i in range(1, k0 + 1)], dtype=object
-        )
+        observed_labels = {str(label) for label in labels0}
+        filled_labels_list: list[str] = []
+        candidate = 1
+        while len(filled_labels_list) < k0:
+            label = f"Filled {candidate}"
+            if label not in observed_labels:
+                filled_labels_list.append(label)
+            candidate += 1
+        filled_labels = np.asarray(filled_labels_list, dtype=object)
         adjusted = _fit(
             result,
             np.concatenate((effect0, mirror_effect)),
@@ -274,18 +369,26 @@ def trim_and_fill(
         original_result=result,
         side=resolved_side,
         estimator=cast("TrimFillEstimator", normalized_estimator),
+        side_selection=side_selection,
+        side_selection_statistic=side_statistic,
         k0=k0,
         k0_standard_error=max(0.0, k0_se),
         k0_pvalue=2.0 ** (-(k0 + 1)) if normalized_estimator == "R0" else None,
         iterations=iterations,
         converged=True,
         max_iterations=max_iterations,
+        iteration_trace=tuple(iteration_trace),
         original_estimate=result.estimate,
         adjusted_estimate=adjusted.estimate,
         original_tau2=result.tau2,
         adjusted_tau2=adjusted.tau2,
         warnings=(
             "Trim-and-fill is a sensitivity analysis, not proof of publication bias.",
+            *(
+                ("Trim-and-fill can be unstable with fewer than 10 studies.",)
+                if k < 10
+                else ()
+            ),
         ),
         _augmented_studies=table,
     )

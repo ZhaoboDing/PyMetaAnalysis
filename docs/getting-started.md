@@ -161,6 +161,8 @@ After installing the `plot` extra:
 ax = result.forest(show_prediction_interval=True)
 ax = result.funnel()
 contour_ax = result.funnel(contour_levels=(0.90, 0.95, 0.99))
+filled = result.trim_and_fill()
+filled_ax = filled.funnel(contour_levels=(0.90, 0.95, 0.99))
 ```
 
 Both methods return a Matplotlib `Axes` and never call `show()`. This keeps them

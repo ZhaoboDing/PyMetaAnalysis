@@ -355,6 +355,23 @@ does not depend on the source pooling model. Applicability and interpretation
 limits are documented under
 [small-study effects](../guides/small-study-effects.md).
 
+## Duval-Tweedie trim-and-fill
+
+For a chosen missing side, effects are oriented so the algorithm trims the
+upper tail, sorted, and centered on the current inverse-variance pooled fit.
+Absolute centered effects receive first-occurrence ranks with their original
+signs. L0 uses the positive signed-rank sum; R0 uses the most extreme negative
+signed rank. The non-negative integer missing count is iterated until stable,
+then the selected extreme effects are mirrored around the final center while
+retaining their sampling variances. Observed and imputed effects are refitted
+with the source common/random model and tau-squared estimator.
+
+With `side=None`, the sign of the sampling-standard-error coefficient from a
+source-model-compatible meta-regression selects the side, matching
+`metafor::trimfill()`. R0 reports its conventional test of `k0=0`; L0 does not
+manufacture a p-value. This is an exploratory sensitivity method whose symmetry
+assumption can fail under genuine heterogeneity or design differences.
+
 ## Meta-regression
 
 For `k` study effects, let `X` be the full-rank `k`-by-`p` design matrix. It
