@@ -213,10 +213,23 @@ the full platform matrix. The API inventory is checked by the test suite.
 
 The configured branch-coverage floor is 90%.
 
-The complete getting-started tutorial is executed sequentially in the test
-suite, including plotting, diagnostics and a report JSON export/parse check.
-All other Markdown Python snippets are syntax-checked; this is not a claim
-that every complete documentation example has passed an execution audit.
+Python examples in the README and documentation execute sequentially per page
+with visible input data, an empty namespace and a temporary working directory.
+Created figures render with Agg, report objects pass JSON export/parse checks,
+and the plotting guide writes a verified PNG. Only the explicitly labeled
+public API signatures with omitted `...` arguments are syntax-checked without
+execution. This does not execute shell commands, R snippets or schema-shaped
+text blocks. Notebook execution and R fixture validation remain separate.
+
+Binary workflow tests independently calculate corrected four-cell log ORs,
+sampling variances, IV/MH pooled estimates, Q and two-group Wald comparisons.
+They cover `if_any_zero`, `only_zero_studies` and `all_studies`, IV common/random
+fits, raw/explicitly corrected MH, and the distinction between study and pooling
+corrections. Excluded zero/missing rows, duplicated labels, source IDs, retained
+settings and correction provenance are checked across subgroups, leave-one-out
+and cumulative fits (including tied publication years). In particular,
+`if_any_zero` is reevaluated when the only informative zero-cell study is removed
+or added; source results remain unchanged.
 
 ## Reproduce local validation
 

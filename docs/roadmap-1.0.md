@@ -25,7 +25,8 @@ The repository inspection found:
 Inspection also reproduced an excluded-row trim-and-fill failure and found
 narrower R coverage than the design target, plus unwired generator-control
 metadata. The [initial findings](statistical-review.md#initial-inspection-findings)
-are blocking follow-up work, not accepted behavior.
+have implementation fixes and expanded references; independent sign-off and
+iteration-trace validation remain open, as recorded in the linked dispositions.
 
 The 0.9.0 release evidence reported 770 passing tests and 94.24% branch
 coverage. Those are historical results, not acceptance evidence for a later
@@ -100,6 +101,12 @@ Before freezing the API, explicitly review the opposite sign conventions of
 sensitivity `estimate_change` (deleted minus original) and regression DFBETAS
 (original minus deleted), and the DataFrame return type of sensitivity
 `summary()`. Preserve these contracts until a documented decision is accepted.
+
+The following workflow/documentation batch adds direct-calculation tests of
+subset corrections across IV/MH, subgroups, leave-one-out and cumulative fits,
+and executes the README and documentation Python examples with visible setup.
+This supplies further M1/M3/A2/C4 evidence. Rerun it on the release candidate;
+independent review and the OS/dependency matrix remain separate acceptance steps.
 
 Publish 0.10.0 only after its method/default decisions and API freeze have been
 accepted. Remind the maintainer before changing version metadata; use a separate

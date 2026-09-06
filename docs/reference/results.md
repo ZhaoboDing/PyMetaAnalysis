@@ -81,6 +81,9 @@ The definition differs by model and is specified under
 Random-effects inverse-variance results also provide:
 
 ```python
+import meta_analyze as ma
+
+result = ma.meta_analysis(effect=[0.1, 0.3, 0.2], variance=[0.02, 0.03, 0.01])
 interval = result.tau2_confidence_interval(
     confidence_level=None,
     atol=None,
@@ -210,6 +213,7 @@ and outcome-specific method options.
 `report(include_studies=True)` returns a detached `ResultReport`:
 
 ```python
+report = result.report()
 report.to_dict()
 report.to_json(indent=2)
 report.to_markdown()

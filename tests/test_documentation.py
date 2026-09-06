@@ -9,6 +9,8 @@ from urllib.parse import unquote
 
 import pytest
 
+import meta_analyze as ma
+
 ROOT = Path(__file__).parents[1]
 MARKDOWN_FILES = (
     ROOT / "README.md",
@@ -20,6 +22,11 @@ MARKDOWN_FILES = (
     ROOT / "tests" / "reference" / "README.md",
     ROOT / "tests" / "contracts" / "README.md",
     *sorted((ROOT / "docs").rglob("*.md")),
+)
+
+
+PYTHON_PAGES = tuple(
+    path for path in MARKDOWN_FILES if "```python\n" in path.read_text(encoding="utf-8")
 )
 
 
@@ -41,19 +48,45 @@ def test_python_documentation_blocks_parse(path: Path, block: str) -> None:
     compile(block, str(path), "exec")
 
 
-def test_getting_started_executes_and_report_round_trips() -> None:
-    """Run the complete tutorial in order, including optional plot workflows."""
+@pytest.mark.parametrize(
+    "path", PYTHON_PAGES, ids=lambda path: str(path.relative_to(ROOT))
+)
+def test_documentation_examples_execute(
+    path: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Execute visible examples in page order, without hidden input fixtures."""
+    import matplotlib
+
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    path = ROOT / "docs" / "getting-started.md"
-    blocks = re.findall(
-        r"```python\n(.*?)```", path.read_text(encoding="utf-8"), re.DOTALL
+    monkeypatch.chdir(tmp_path)
+    pattern = re.compile(
+        r"(?:<!-- example: fragment (.*?) -->\n)?```python\n(.*?)```", re.DOTALL
     )
+    source = path.read_text(encoding="utf-8")
     namespace: dict[str, object] = {}
     try:
-        for block in blocks:
-            exec(compile(block, str(path), "exec"), namespace)
-        assert json.loads(namespace["json_text"]) == namespace["payload"]
+        for match in pattern.finditer(source):
+            if match.group(1):
+                # Only the API's deliberately incomplete call signatures are
+                # fragments. A new exemption needs an explicit review here.
+                assert path == ROOT / "docs" / "reference" / "api.md"
+                assert match.group(1) == "call signatures with omitted arguments"
+                assert match.group(2).strip() == (
+                    "result = ma.meta_analysis(...)\n"
+                    'subgroups = ma.meta_analysis(..., subgroup="region")'
+                )
+                continue
+            line = source.count("\n", 0, match.start(2))
+            exec(compile("\n" * line + match.group(2), str(path), "exec"), namespace)
+        for value in namespace.values():
+            if isinstance(value, ma.ResultReport):
+                assert json.loads(value.to_json()) == value.to_dict()
+        for number in plt.get_fignums():
+            plt.figure(number).canvas.draw()
+        if path == ROOT / "docs" / "guides" / "plotting.md":
+            assert (tmp_path / "forest.png").stat().st_size > 1000
     finally:
         plt.close("all")
 

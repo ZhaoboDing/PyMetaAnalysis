@@ -10,6 +10,19 @@ study is influential or replace protocol-specified sensitivity analyses.
 Call `leave_one_out()` on any fitted `MetaAnalysisResult`:
 
 ```python
+import pandas as pd
+import meta_analyze as ma
+
+studies = pd.DataFrame(
+    {
+        "effect": [0.12, 0.35, -0.08, 0.21, 0.42, 0.28],
+        "variance": [0.04, 0.06, 0.03, 0.05, 0.07, 0.045],
+        "publication_year": [2001, 2004, 2004, 2008, 2011, 2015],
+        "dose": [0, 1, 2, 3, 4, 5],
+        "region": ["A", "A", "A", "B", "B", "B"],
+    }
+)
+result = ma.meta_analysis(studies, effect="effect", variance="variance")
 influence = result.leave_one_out()
 
 print(influence.to_dataframe())
@@ -41,6 +54,9 @@ to estimate tau-squared.
 omitting each included study:
 
 ```python
+regression = ma.meta_regression(
+    studies, effect="effect", variance="variance", moderators=["dose"]
+)
 diagnostics = regression.leave_one_out()
 
 print(diagnostics.table)
@@ -181,6 +197,9 @@ mistaken for a Q-based inconsistency series.
 The same methods are available on `SubgroupMetaAnalysisResult`:
 
 ```python
+subgroups = ma.meta_analysis(
+    studies, effect="effect", variance="variance", subgroup="region"
+)
 subgroup_influence = subgroups.leave_one_out()
 subgroup_cumulative = subgroups.cumulative(order="publication_year")
 ```

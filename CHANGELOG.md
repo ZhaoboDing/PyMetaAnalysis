@@ -8,6 +8,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- Executable checks for Python examples across the README and documentation,
+  with isolated page state, plot rendering and report JSON round-trips. Binary
+  workflow tests cover subset-dependent continuity corrections, subgroup tests,
+  exclusions and provenance in leave-one-out and cumulative analyses.
 - A 1.0 stabilization roadmap with release acceptance gates, independent
   statistical-review packets, and proposed API compatibility/deprecation and
   inference-default decisions. The review and final default decision remain
@@ -31,6 +35,8 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Fixed
 
+- Documentation examples now provide their inputs, preserve the intended result
+  types, use declared contrast levels and valid ratio-scale plot references.
 - Validation documentation now lists Begg fixture regeneration and trim-and-fill
   reference coverage, and distinguishes current Linux CI from the planned
   cross-platform audit. Corrected the four-test small-study-effect description
@@ -100,7 +106,9 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 - integer-valued floating-point categorical moderators now match declared
   integer levels while booleans remain distinct, supporting pandas columns
-  promoted to floating point by missing values;
+  promoted to floating point by missing values. This remains under Changed:
+  it accepts previously rejected inputs while preserving existing valid
+  categorical mappings; the MH rejection below tightens accepted calls;
 - estimator documentation now makes the pooled-mean-only Q-profile contract,
   the prefiltered `fit_peto()` input contract, and sparse MH RD boundary policy
   explicit;

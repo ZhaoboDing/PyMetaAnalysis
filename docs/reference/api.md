@@ -298,6 +298,9 @@ The four pooling entry points return `MetaAnalysisResult` without `subgroup=`
 and `SubgroupMetaAnalysisResult` with it. `meta_regression()` instead returns
 `MetaRegressionResult` and does not accept `subgroup=`.
 
+These call signatures omit the input data; they are not runnable examples.
+
+<!-- example: fragment call signatures with omitted arguments -->
 ```python
 result = ma.meta_analysis(...)
 subgroups = ma.meta_analysis(..., subgroup="region")

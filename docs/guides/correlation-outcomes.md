@@ -124,7 +124,7 @@ subgroups = ma.meta_correlation(
 )
 
 leave_one_out = result.leave_one_out().to_dataframe()
-cumulative = result.cumulative(order="publication_year").to_dataframe()
+cumulative = result.cumulative(order=studies["publication_year"]).to_dataframe()
 methods = result.method_details()
 report = result.report().to_dict()
 forest_ax = result.forest()

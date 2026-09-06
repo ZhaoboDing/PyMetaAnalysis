@@ -9,6 +9,16 @@ generic, binary, continuous, and correlation APIs.
 When `data=` is a pandas DataFrame, a string-valued input selects a column:
 
 ```python
+import pandas as pd
+import meta_analyze as ma
+
+studies = pd.DataFrame(
+    {
+        "log_effect": [0.12, 0.35, -0.08, 0.21],
+        "sampling_variance": [0.04, 0.06, 0.03, 0.05],
+        "citation": ["A", "B", "C", "D"],
+    }
+)
 result = ma.meta_analysis(
     data=studies,
     effect="log_effect",
@@ -77,8 +87,12 @@ The default `missing="raise"` stops when a required outcome value is missing.
 calculations:
 
 ```python
+incomplete = studies.rename(
+    columns={"log_effect": "effect", "sampling_variance": "variance"}
+)
+incomplete.loc[1, "effect"] = float("nan")
 result = ma.meta_analysis(
-    studies,
+    incomplete,
     effect="effect",
     variance="variance",
     missing="drop",

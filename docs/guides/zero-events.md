@@ -126,6 +126,15 @@ still be considered.
 ## Inspect what happened
 
 ```python
+import meta_analyze as ma
+
+result = ma.meta_binary(
+    event_treat=[0, 5, 8],
+    n_treat=[50, 60, 70],
+    event_control=[3, 7, 9],
+    n_control=[55, 65, 75],
+    measure="OR",
+)
 columns = [
     "study",
     "included",

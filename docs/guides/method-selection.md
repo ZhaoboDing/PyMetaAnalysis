@@ -122,6 +122,9 @@ A random-effects inverse-variance fit can invert generalized Q to quantify
 uncertainty around tau-squared:
 
 ```python
+import meta_analyze as ma
+
+result = ma.meta_analysis(effect=[0.1, 0.3, 0.2], variance=[0.02, 0.03, 0.01])
 heterogeneity_interval = result.tau2_confidence_interval()
 heterogeneity_interval.ci
 heterogeneity_interval.i2_ci
