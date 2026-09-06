@@ -74,3 +74,4 @@ nav:
               - Peto one-step odds ratio: adr/0006-peto-odds-ratio.md
               - Fisher z correlation pooling: adr/0007-fisher-z-correlation.md
               - Stable inference default (proposed): adr/0008-stable-inference-default.md
+              - Small-study-effect conventions: adr/0009-small-study-effect-conventions.md

@@ -84,7 +84,7 @@ def test_begg_result_is_immutable_auditable_and_printable() -> None:
     assert payload["response"] == "standardized centered effect"
     assert payload["predictor"] == "sampling variance"
     assert payload["studies"] == 12
-    assert payload["warnings"] == ()
+    assert any("publication bias" in note for note in payload["warnings"])
     assert "Begg-Mazumdar rank-correlation test" in str(result)
     assert "Kendall's tau-b" in str(result)
     with pytest.raises(FrozenInstanceError):
@@ -196,7 +196,7 @@ def test_auto_inference_uses_asymptotic_at_fifty_studies() -> None:
     ).begg_test()
 
     assert result.inference_method == "asymptotic"
-    assert result.warnings == ()
+    assert any("publication bias" in note for note in result.warnings)
 
 
 def test_joint_ties_are_reported_separately() -> None:

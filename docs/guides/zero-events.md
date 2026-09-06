@@ -28,6 +28,13 @@ Available scopes are:
 Setting the correction to zero or the scope to `none` is rejected when it
 leaves an OR/RR undefined or an effect variance non-positive.
 
+`if_any_zero` is evaluated separately within each fitted dataset, including
+subgroups and sensitivity refits. Removing the only zero-cell study can
+therefore change the effects and variances of other studies in that refit.
+Subgroup comparisons use those independently fitted groups. Prespecify this
+behavior in the analysis protocol; `all_studies` or `only_zero_studies` keeps
+each retained study's correction independent of the other included rows.
+
 For RR, a zero non-event cell is allowed when both arms still have positive
 event counts and the sampling variance is positive. For example, a study with
 events in every participant of one arm can be analyzed without correction.

@@ -32,6 +32,8 @@ test <- metabias(
 critical <- qt(0.975, df = test$df)
 slope <- unname(test$estimate[["bias"]])
 slope_se <- unname(test$estimate[["se.bias"]])
+included <- is.finite(analysis$TE) & is.finite(analysis$seTE) & analysis$seTE > 0
+stopifnot(sum(included) == analysis$k)
 
 reference <- list(
   generated_by = "R meta",
@@ -44,7 +46,7 @@ reference <- list(
   weight = "S * F / N",
   continuity_correction = 0.5,
   correction_scope = "only0",
-  corrected_studies = sum(analysis$incr.e > 0 | analysis$incr.c > 0),
+  corrected_studies = sum(included & (analysis$incr.e > 0 | analysis$incr.c > 0)),
   k = analysis$k,
   confidence_level = 0.95,
   slope = slope,

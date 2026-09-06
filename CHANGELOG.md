@@ -11,10 +11,23 @@ Changes planned for the next release accumulate under `Unreleased`.
 - A 1.0 stabilization roadmap with release acceptance gates, independent
   statistical-review packets, and proposed API compatibility/deprecation and
   inference-default decisions. The review and final default decision remain
-  pending; this batch does not change statistical behavior or release metadata.
+  pending; the normal inference default and release metadata are unchanged.
 - A versioned public API inventory and executable drift check covering exports,
   call syntax/defaults, public result members, exception bases and schema
   versions, exercised by the normal test suite.
+- Expanded trim-and-fill R references covering 24 explicit/automatic-side and
+  tied-input cases, with augmented rows, intervals, heterogeneity and explicit
+  solver controls. The complete getting-started tutorial now executes in tests.
+
+### Compatibility notes
+
+- Invalid trim-and-fill controls and affected low-level numerical inputs now
+  raise domain exceptions. Augmented trim-and-fill tables retain source row IDs,
+  add `mirror_source_row_id`, and allocate synthetic IDs beyond all source rows.
+  Identical effects return no imputation with unavailable rank uncertainty;
+  automatic direction records `side_selection="symmetric_effects"`.
+- Begg always records an interpretation caveat; Egger/Begg add a caveat for
+  Peto one-step study effects. Consumers must allow additional warning text.
 
 ### Fixed
 
@@ -23,9 +36,20 @@ Changes planned for the next release accumulate under `Unreleased`.
   cross-platform audit. Corrected the four-test small-study-effect description
   and removed a duplicate Begg reference load.
 - Trim-and-fill fixture regeneration now honors an optional output path and
-  defaults to the committed reference directory. The roadmap records the
-  reproduced excluded-row failure and remaining reference/control-metadata
-  gaps as blocking follow-up work; statistical output is unchanged.
+  defaults to the committed reference directory, applies the recorded controls,
+  and retains native and independently controlled augmented refits.
+- Extreme precision ratios no longer cause subtractive cancellation in DL or
+  false positive REML heterogeneity; residuals and weight traces use stable
+  algebra. Unrepresentable numerical boundaries raise explicit domain errors.
+- Zero-fill trim-and-fill fits no longer crash after source-row exclusions.
+  Original exclusions and synthetic-row provenance remain auditable. Identical
+  effects no longer create spurious R0 studies; random singleton intermediate
+  fits raise a descriptive convergence error. Negative L0 variance
+  approximations yield unavailable uncertainty instead of a false zero SE.
+- Exact zero-residual unmodified HK meta-regression returns point intervals and
+  unavailable joint tests with a warning, instead of failing a covariance solve.
+- Private trim-and-fill DataFrames no longer participate in repr/equality.
+  Funnel significance bands no longer overlap and blend adjacent legend colors.
 
 ## 0.9.0 - 2026-09-06
 
@@ -77,14 +101,17 @@ Changes planned for the next release accumulate under `Unreleased`.
 - integer-valued floating-point categorical moderators now match declared
   integer levels while booleans remain distinct, supporting pandas columns
   promoted to floating point by missing values;
-- MH pooling corrections now use `None` as the context-sensitive scope default;
-  explicitly supplying either MH-only option to IV or Peto pooling raises an
-  error, and non-MH method metadata no longer records unused MH settings;
 - estimator documentation now makes the pooled-mean-only Q-profile contract,
   the prefiltered `fit_peto()` input contract, and sparse MH RD boundary policy
   explicit;
 - fixed-version `metafor` references now cover a two-study Hartung-Knapp
   interval and Q-profile intervals reached through random-effects subgroups.
+
+### Breaking changes
+
+- MH pooling corrections now use `None` as the context-sensitive scope default;
+  explicitly supplying either MH-only option to IV or Peto pooling raises an
+  error, and non-MH method metadata no longer records unused MH settings.
 
 ### Fixed
 

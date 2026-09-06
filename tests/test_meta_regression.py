@@ -11,6 +11,40 @@ import meta_analyze as ma
 from meta_analyze.estimators import fit_meta_regression
 
 
+@pytest.mark.parametrize("slope", [0.0, 2.0])
+def test_zero_residual_hk_retains_degenerate_fit_and_unavailable_joint_tests(
+    slope: float,
+) -> None:
+    x = np.array([-2, -1, 0, 0, 1, 2])
+    result = ma.meta_regression(
+        effect=slope * x,
+        variance=[1.0] * 6,
+        moderators={"x": x},
+        inference_method="hartung_knapp",
+    )
+    assert result.diagnostics.residual_scale == 0.0
+    assert (result.coefficients.standard_error == 0).all()
+    assert (result.coefficients.ci_low == result.coefficients.ci_high).all()
+    assert np.isnan(result.global_test.statistic)
+    assert np.isnan(result.global_test.pvalue)
+    if slope == 0.0:
+        assert result.coefficients.pvalue.isna().all()
+    assert np.isnan(result.test_moderator("x").pvalue)
+    contrast = result.contrast({"x": 1.0})
+    assert np.isnan(contrast.joint_test.pvalue)
+    assert any("unavailable" in note for note in contrast.warnings)
+    assert any("variance is zero" in note for note in result.warnings)
+    assert result.report().to_dict()["global_moderator_test"]["pvalue"] is None
+    safeguarded = ma.meta_regression(
+        effect=slope * x,
+        variance=[1.0] * 6,
+        moderators={"x": x},
+        inference_method="hartung_knapp_adhoc",
+    )
+    assert np.isfinite(safeguarded.global_test.pvalue)
+    assert (safeguarded.coefficients.standard_error > 0).all()
+
+
 def _regression_frame() -> pd.DataFrame:
     return pd.DataFrame(
         {

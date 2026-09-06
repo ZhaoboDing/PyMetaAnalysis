@@ -351,12 +351,17 @@ def funnel_plot(
         configure_log_axis(ax)
 
     if contour_xlim is not None:
-        for (contour_lower, contour_upper), color in zip(
-            contour_boundaries, contour_palette, strict=True
+        for index, ((contour_lower, contour_upper), color) in enumerate(
+            zip(contour_boundaries, contour_palette, strict=True)
         ):
+            if index + 1 < len(contour_boundaries):
+                outer_lower, outer_upper = contour_boundaries[index + 1]
+            else:
+                outer_lower = np.full_like(standard_error_grid, contour_xlim[0])
+                outer_upper = np.full_like(standard_error_grid, contour_xlim[1])
             ax.fill_betweenx(
                 standard_error_grid,
-                contour_xlim[0],
+                outer_lower,
                 contour_lower,
                 color=color,
                 alpha=0.85,
@@ -365,7 +370,7 @@ def funnel_plot(
             ax.fill_betweenx(
                 standard_error_grid,
                 contour_upper,
-                contour_xlim[1],
+                outer_upper,
                 color=color,
                 alpha=0.85,
                 zorder=0,

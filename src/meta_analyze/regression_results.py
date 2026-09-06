@@ -12,7 +12,7 @@ from scipy.stats import chi2, f, norm, t
 
 from .config import MetaRegressionMethodConfig
 from .design_matrix import DesignInfo, build_prediction_design_matrix
-from .exceptions import InvalidStudyDataError
+from .estimators.meta_regression import _wald_statistic
 from .provenance import AnalysisProvenance
 from .results import HeterogeneityResult
 
@@ -345,13 +345,7 @@ class MetaRegressionResult:
         )
         estimates = self._coefficient_vector[indices]
         covariance = self._coefficient_covariance[np.ix_(indices, indices)]
-        try:
-            wald = float(estimates @ np.linalg.solve(covariance, estimates))
-        except np.linalg.LinAlgError as error:  # pragma: no cover - validated fit
-            raise InvalidStudyDataError(
-                f"Moderator test for {moderator!r} could not be solved."
-            ) from error
-        wald = max(0.0, wald)
+        wald = _wald_statistic(estimates, covariance)
         term_count = len(terms)
         if self.method.inference_method == "normal":
             return ModeratorTestResult(

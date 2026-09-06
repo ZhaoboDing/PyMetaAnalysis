@@ -188,6 +188,13 @@ For a two-group binary odds-ratio result, the outcome-specific Harbord and
 Peters tests are also available:
 
 ```python
+binary_or_result = ma.meta_binary(
+    event_treat=[1, 2, 4, 3, 5],
+    n_treat=[80, 90, 100, 110, 120],
+    event_control=[3, 5, 2, 4, 7],
+    n_control=[85, 100, 110, 100, 125],
+    measure="OR",
+)
 harbord = binary_or_result.harbord_test()
 peters = binary_or_result.peters_test()
 ```

@@ -67,16 +67,17 @@ Keep the public validation status accurate throughout the review.
 
 ## Initial inspection findings
 
-These findings were identified during foundation work against 0.9.0. They are
-not an independent audit and remain open until fixed and reviewed.
+These findings were identified during foundation work against 0.9.0. The
+historical evidence below explains the follow-up; implementation fixes do
+not themselves constitute independent sign-off.
 
 | ID | Observed evidence | Required disposition |
 | --- | --- | --- |
-| F1 | `trim_and_fill(side="left")` with the missing-row example below estimates no missing studies, then assigns 10 imputation flags to an 11-row table and raises pandas `ValueError` | Correct excluded-row handling; test zero/nonzero fill, original row IDs and provenance consistency; blocks M5/A2 |
-| F2 | `trimfill_metafor.json` has only eight explicit-side cases and five output fields; numeric comparisons in `test_trim_fill.py` use `abs=1e-6` plus implicit pytest relative tolerance | Add independent automatic-direction, ties, imputed-row, interval/heterogeneity and iteration evidence; justify tolerances per output; blocks M5/M6 |
-| F3 | The trim-and-fill generator records tolerance `1e-10` and 1000 iterations but passes neither to `rma()` or `trimfill()` | Reconcile actual R controls and metadata, regenerate separately and review numerical differences; blocks M6 |
+| F1 | 0.9.0 zero-fill adjusted table included excluded rows and raised a pandas length error | Fixed with included-only adjusted fits, stable source IDs and synthetic IDs; zero/nonzero fill and duplicate-label provenance tests added. Independent review pending |
+| F2 | 0.9.0 trim-and-fill fixture had eight explicit-side cases and five fields with loose tolerances | Expanded to 24 cases with auto direction, ties, augmented rows, intervals and heterogeneity; explicit tighter tolerances. Independent iteration evidence and M5/M6 sign-off remain open |
+| F3 | 0.9.0 generator recorded controls it did not pass to R | Controls now passed; native augmented refit retained alongside an explicitly controlled independent refit. Regenerated with pinned packages; M6 sign-off pending |
 
-Minimal F1 reproducer (the expected successful behavior is not yet implemented):
+F1 regression example (now expected to succeed):
 
 ```python
 import math
@@ -89,9 +90,36 @@ result = ma.meta_analysis(
     missing="drop",
 )
 filled = result.trim_and_fill(side="left")
+assert filled.k0 == 0
+assert filled.adjusted_result.k == 10
 ```
 
-The foundation batch fixes the generator's output-path interface so reviewers
-can write a candidate without replacing the golden artifact; it does not change
-R computation or repair F1–F3. Address these findings at the start of batch B,
-before treating the current trim-and-fill result/provenance behavior as frozen.
+## September 2026 review disposition
+
+The supplied code-review suggestions were checked against the implementation.
+The following changes start batch B; they do not close the formal review gates.
+
+| Suggestions | Disposition and evidence |
+| --- | --- |
+| A1–A2: REML/DL cancellation | Positive pair-product trace and anchored residuals; exact rational two-/three-study oracles, precision ratios through `1e300`, row permutations, leave-one-out and subgroups in `test_numerical_stability.py` |
+| A3: trim-and-fill exclusions | Fixed as F1, retaining original exclusions in `original_result` and unique source/synthetic IDs in the adjusted table |
+| A4–A5: identical effects / singleton intermediate fit | No imputation for identical effects with unavailable rank uncertainty; random intermediate fits below two studies raise `ConvergenceError`. Both estimators and models tested |
+| B1–B4: numerical errors, zero HK, private table and validation | Domain exceptions at affected boundaries; zero HK covariance returns point intervals and unavailable joint tests with warnings; private DataFrame excluded from repr/equality; trim controls use domain exceptions |
+| C1–C2: H-squared and subset corrections | Existing definitions retained and explained in the methods and zero-event guides; these are conventions requiring review, not automatic changes |
+| C3/C6: interpretation | Begg always includes the publication-bias caveat; Egger/Begg warn when using Peto one-step study effects |
+| C4: changelog | 0.7 MH validation changes relabeled as breaking |
+| C5: sensitivity conventions | Preserve `estimate_change = deleted - original`, DFBETAS' opposite numerator and DataFrame-returning sensitivity summaries; explicit API-freeze review item |
+| C7–C8: ranks / convergence | Document stable effect sorting before first ranks, limited tied-case reference coverage and success-only `converged=True`; nonconvergence still raises |
+| C9: contour overlap | Significance regions are disjoint adjacent bands; path membership and legend-color tests added |
+| C10: original-estimate marker | Deferred optional plotting enhancement; not a correctness or 1.0 gate |
+| C11: small-study-effect ADR | Current four-test conventions recorded in ADR 0009, pending independent 1.0 ratification |
+| C12: Peters metadata | R correction count restricted to included studies; regenerated fixture unchanged |
+| C13: schemas and examples | Document derived trim-and-fill provenance and API method; execute the complete getting-started tutorial with report JSON checks. Remaining complete examples stay under gate C4 |
+| C14–C15: correlations | Tests cross-check Egger/Begg/trim-and-fill on Fisher's z and reject binary-only tests; document the transform required for generic meta-regression |
+| C16–C17: warnings / observations | Retain outcome-specific wording and existing supported behavior; no speculative refactor |
+
+For zero-residual HK regression, direct R checks with `metafor` 5.0-1
+confirmed zero covariance and unavailable joint Wald inference. Exact rational
+oracles validate the extreme-weight pooling cases where double-precision R
+calculations are not an appropriate sole reference. See
+[validation](validation.md) for fixture controls and tolerance changes.

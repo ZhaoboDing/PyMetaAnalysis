@@ -20,6 +20,46 @@ REFERENCE = json.loads(
 R_T_QUANTILE_ATOL = 1e-11
 
 
+def test_correlation_diagnostics_use_fisher_z_and_transform_egger_limits() -> None:
+    correlations = np.tanh(
+        np.array([0.10, 0.15, 0.18, 0.22, 0.24, 0.29, 0.33, 0.37, 0.95, 1.15])
+    )
+    sizes = np.arange(30, 130, 10)
+    source = ma.meta_correlation(correlation=correlations, n=sizes, model="common")
+    generic = ma.meta_analysis(
+        effect=np.arctanh(correlations), variance=1 / (sizes - 3), model="common"
+    )
+    egger = source.egger_test()
+    assert egger.pvalue == generic.egger_test().pvalue
+    assert egger.display_limit_estimate == pytest.approx(np.tanh(egger.limit_estimate))
+    np.testing.assert_allclose(egger.display_limit_ci, np.tanh(egger.limit_ci))
+    assert source.begg_test().pvalue == generic.begg_test().pvalue
+    for diagnostic in (source.harbord_test, source.peters_test):
+        with pytest.raises(ma.UnsupportedMethodError):
+            diagnostic()
+    filled = source.trim_and_fill(side="right")
+    expected = generic.trim_and_fill(side="right")
+    assert filled.k0 == expected.k0
+    assert filled.adjusted_estimate == expected.adjusted_estimate
+    assert filled.adjusted_result.effect_scale == "fisher_z"
+    np.testing.assert_allclose(filled.display_adjusted_ci, np.tanh(filled.adjusted_ci))
+
+
+def test_egger_and_begg_warn_when_consuming_peto_study_effects() -> None:
+    source = ma.meta_binary(
+        event_treat=[1, 2, 4, 3, 5],
+        n_treat=[80, 90, 100, 110, 120],
+        event_control=[3, 5, 2, 4, 7],
+        n_control=[85, 100, 110, 100, 125],
+        measure="OR",
+        method="Peto",
+        model="common",
+    )
+    for diagnostic in (source.egger_test(), source.begg_test()):
+        assert any("Peto one-step" in note for note in diagnostic.warnings)
+        assert any("publication bias" in note for note in diagnostic.warnings)
+
+
 def _reference_result() -> ma.MetaAnalysisResult:
     return ma.meta_analysis(
         REFERENCE_DATA,
