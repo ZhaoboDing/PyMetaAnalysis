@@ -82,10 +82,18 @@ python tools/inspect_distribution.py dist
 python benchmarks/benchmark_core.py
 ```
 
-Independent external statistical review is not a release gate. Release notes
-and the [validation status](validation.md) must accurately describe the
-evidence available for the released commit and must not imply that a formal
-audit has occurred when it has not.
+For the 1.0 stabilization cycle, independent external statistical review is a
+release gate: follow the [roadmap acceptance matrix](roadmap-1.0.md) and
+[review checklist](statistical-review.md). Earlier 0.x releases did not require
+this gate. Release notes and the [validation status](validation.md) must
+accurately describe the evidence for the released commit and must not imply
+that a formal audit has occurred when it has not.
+
+The 0.10 foundation batch does not bump the version. Remind the maintainer
+before changing version metadata in a release PR. RC preparation must also
+verify prerelease metadata, installation selection, and tag handling; do not
+assume final-version smoke commands exercise an RC. Creating a development
+draft PR does not authorize merging, tagging, or PyPI publication.
 
 ### Statistical release acceptance checks
 

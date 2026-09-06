@@ -1,0 +1,740 @@
+{
+  "exports": {
+    "meta_analyze.AnalysisProvenance": {
+      "constructor": "(package_version, schema_version, analysis_type, data_source, input_fields, row_count, included_rows, excluded_rows, transformations=())",
+      "fields": [
+        "package_version",
+        "schema_version",
+        "analysis_type",
+        "data_source",
+        "input_fields",
+        "row_count",
+        "included_rows",
+        "excluded_rows",
+        "transformations"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "column_mapping"
+      ]
+    },
+    "meta_analyze.BeggTestResult": {
+      "constructor": "(tau, statistic, statistic_name, distribution, pvalue, k, measure, effect_scale, method, correlation_method, response, predictor, inference_method, continuity_correction, response_tied_pairs, variance_tied_pairs, joint_tied_pairs, warnings)",
+      "fields": [
+        "tau",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "pvalue",
+        "k",
+        "measure",
+        "effect_scale",
+        "method",
+        "correlation_method",
+        "response",
+        "predictor",
+        "inference_method",
+        "continuity_correction",
+        "response_tied_pairs",
+        "variance_tied_pairs",
+        "joint_tied_pairs",
+        "warnings"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.ConvergenceError": {
+      "exception_bases": [
+        "MetaAnalysisError",
+        "RuntimeError"
+      ]
+    },
+    "meta_analyze.CumulativeMetaAnalysisResult": {
+      "fields": [
+        "original",
+        "results",
+        "warnings"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "final",
+        "table"
+      ]
+    },
+    "meta_analyze.DesignInfo": {
+      "constructor": "(intercept, moderators, term_names)",
+      "fields": [
+        "intercept",
+        "moderators",
+        "term_names"
+      ],
+      "methods": {
+        "terms_for": "(self, moderator)"
+      },
+      "properties": [
+        "moderator_names"
+      ]
+    },
+    "meta_analyze.EggerTestResult": {
+      "constructor": "(intercept, intercept_standard_error, intercept_ci_low, intercept_ci_high, statistic, statistic_name, distribution, df, pvalue, limit_estimate, limit_standard_error, limit_ci_low, limit_ci_high, confidence_level, k, measure, effect_scale, display_scale, method, model, predictor, condition_number, warnings)",
+      "fields": [
+        "intercept",
+        "intercept_standard_error",
+        "intercept_ci_low",
+        "intercept_ci_high",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "df",
+        "pvalue",
+        "limit_estimate",
+        "limit_standard_error",
+        "limit_ci_low",
+        "limit_ci_high",
+        "confidence_level",
+        "k",
+        "measure",
+        "effect_scale",
+        "display_scale",
+        "method",
+        "model",
+        "predictor",
+        "condition_number",
+        "warnings"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "display_limit_ci",
+        "display_limit_estimate",
+        "intercept_ci",
+        "limit_ci"
+      ]
+    },
+    "meta_analyze.FitDiagnostics": {
+      "constructor": "(converged, iterations, tau2_at_boundary)",
+      "fields": [
+        "converged",
+        "iterations",
+        "tau2_at_boundary"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.HarbordTestResult": {
+      "constructor": "(intercept, intercept_standard_error, intercept_ci_low, intercept_ci_high, statistic, statistic_name, distribution, df, pvalue, limit_estimate, limit_standard_error, limit_ci_low, limit_ci_high, residual_dispersion, confidence_level, k, measure, effect_scale, display_scale, method, model, response, predictor, weight_method, uses_continuity_correction, condition_number, warnings)",
+      "fields": [
+        "intercept",
+        "intercept_standard_error",
+        "intercept_ci_low",
+        "intercept_ci_high",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "df",
+        "pvalue",
+        "limit_estimate",
+        "limit_standard_error",
+        "limit_ci_low",
+        "limit_ci_high",
+        "residual_dispersion",
+        "confidence_level",
+        "k",
+        "measure",
+        "effect_scale",
+        "display_scale",
+        "method",
+        "model",
+        "response",
+        "predictor",
+        "weight_method",
+        "uses_continuity_correction",
+        "condition_number",
+        "warnings"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "display_limit_ci",
+        "display_limit_estimate",
+        "intercept_ci",
+        "limit_ci"
+      ]
+    },
+    "meta_analyze.HeterogeneityResult": {
+      "constructor": "(q, df, pvalue, i2, h2, i2_method='q_based')",
+      "fields": [
+        "q",
+        "df",
+        "pvalue",
+        "i2",
+        "h2",
+        "i2_method"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.InputFieldProvenance": {
+      "constructor": "(role, source, column=None)",
+      "fields": [
+        "role",
+        "source",
+        "column"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.InsufficientStudiesError": {
+      "exception_bases": [
+        "MetaAnalysisError",
+        "ValueError"
+      ]
+    },
+    "meta_analyze.InvalidStudyDataError": {
+      "exception_bases": [
+        "MetaAnalysisError",
+        "ValueError"
+      ]
+    },
+    "meta_analyze.LeaveOneOutResult": {
+      "fields": [
+        "original",
+        "results",
+        "warnings"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "failed",
+        "table"
+      ]
+    },
+    "meta_analyze.LinearContrastTestResult": {
+      "constructor": "(contrasts, statistic, statistic_name, distribution, df_num, df_denom, pvalue)",
+      "fields": [
+        "contrasts",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "df_num",
+        "df_denom",
+        "pvalue"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.MetaAnalysisError": {
+      "exception_bases": [
+        "Exception"
+      ]
+    },
+    "meta_analyze.MetaAnalysisResult": {
+      "fields": [
+        "estimate",
+        "standard_error",
+        "ci_low",
+        "ci_high",
+        "prediction_interval",
+        "tau2",
+        "heterogeneity",
+        "k",
+        "model",
+        "measure",
+        "effect_scale",
+        "display_scale",
+        "method",
+        "diagnostics",
+        "provenance",
+        "warnings"
+      ],
+      "methods": {
+        "begg_test": "(self, *, exact=None, continuity_correction=False)",
+        "cumulative": "(self, *, order=None, ascending=True, collapse=False)",
+        "egger_test": "(self, *, confidence_level=None)",
+        "forest": "(self, *, ax=None, effect_label=None, pooled_label=None, show_prediction_interval=True, show_weights=True, null_value=None, log_scale=None)",
+        "funnel": "(self, *, ax=None, effect_label=None, confidence_level=None, show_pseudo_confidence_interval=True, contour_levels=None, contour_colors=None, contour_reference=None, show_contour_legend=True, warn_on_few_studies=True, log_scale=None)",
+        "harbord_test": "(self, *, confidence_level=None)",
+        "leave_one_out": "(self)",
+        "method_details": "(self)",
+        "peters_test": "(self, *, confidence_level=None)",
+        "report": "(self, *, include_studies=True)",
+        "summary": "(self)",
+        "tau2_confidence_interval": "(self, *, confidence_level=None, atol=None, max_iter=None)",
+        "to_dataframe": "(self)",
+        "trim_and_fill": "(self, *, side=None, estimator='L0', max_iterations=100)"
+      },
+      "properties": [
+        "ci",
+        "display_ci",
+        "display_estimate",
+        "display_prediction_interval",
+        "excluded_studies",
+        "h2",
+        "i2",
+        "i2_method",
+        "q",
+        "q_df",
+        "q_pvalue",
+        "source_data",
+        "study_results"
+      ]
+    },
+    "meta_analyze.MetaAnalysisSummary": {
+      "fields": [],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.MetaRegressionCollinearityResult": {
+      "fields": [
+        "original",
+        "raw_condition_number",
+        "weighted_scaled_condition_number",
+        "condition_index_reference",
+        "variance_proportion_reference",
+        "warnings"
+      ],
+      "methods": {},
+      "properties": [
+        "concerning_dimensions",
+        "condition_indices",
+        "moderator_gvif",
+        "term_vif",
+        "variance_proportions"
+      ]
+    },
+    "meta_analyze.MetaRegressionContrastResult": {
+      "fields": [
+        "original",
+        "joint_test",
+        "pvalue_adjustment",
+        "warnings"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "contrast_matrix",
+        "table"
+      ]
+    },
+    "meta_analyze.MetaRegressionDiagnostics": {
+      "constructor": "(converged, iterations, tau2_at_boundary, rank, condition_number, residual_scale)",
+      "fields": [
+        "converged",
+        "iterations",
+        "tau2_at_boundary",
+        "rank",
+        "condition_number",
+        "residual_scale"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.MetaRegressionInfluenceResult": {
+      "fields": [
+        "original",
+        "leave_one_out",
+        "studentized_residual_reference",
+        "cook_distance_threshold",
+        "dfbetas_threshold",
+        "warnings"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "dfbetas",
+        "failed",
+        "flagged",
+        "results",
+        "table"
+      ]
+    },
+    "meta_analyze.MetaRegressionLeaveOneOutResult": {
+      "fields": [
+        "original",
+        "results",
+        "warnings"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "coefficients",
+        "failed",
+        "table"
+      ]
+    },
+    "meta_analyze.MetaRegressionMethodConfig": {
+      "constructor": "(model, tau2_method, inference_method, confidence_level, intercept, moderator_names, term_names, categorical_references, prediction_interval_method, missing, atol, max_iter)",
+      "fields": [
+        "model",
+        "tau2_method",
+        "inference_method",
+        "confidence_level",
+        "intercept",
+        "moderator_names",
+        "term_names",
+        "categorical_references",
+        "prediction_interval_method",
+        "missing",
+        "atol",
+        "max_iter"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.MetaRegressionResult": {
+      "fields": [
+        "k",
+        "p",
+        "residual_df",
+        "model",
+        "tau2",
+        "tau2_null",
+        "pseudo_r2",
+        "pseudo_r2_raw",
+        "heterogeneity",
+        "global_test",
+        "method",
+        "diagnostics",
+        "design_info",
+        "provenance",
+        "warnings"
+      ],
+      "methods": {
+        "bubble": "(self, *, ax=None, moderator_label=None, effect_label='Effect', show_confidence_interval=True, show_prediction_interval=False)",
+        "collinearity": "(self)",
+        "contrast": "(self, contrasts, *, name='contrast', rhs=0.0)",
+        "influence": "(self)",
+        "leave_one_out": "(self)",
+        "method_details": "(self)",
+        "predict": "(self, new_data)",
+        "report": "(self, *, include_studies=True)",
+        "summary": "(self)",
+        "test_moderator": "(self, moderator)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "classic_coefficient_covariance",
+        "coefficient_covariance",
+        "coefficients",
+        "design_matrix",
+        "excluded_studies",
+        "source_data",
+        "study_results"
+      ]
+    },
+    "meta_analyze.MetaRegressionSummary": {
+      "fields": [],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.MethodConfig": {
+      "constructor": "(model, pooling_method, tau2_method, ci_method, confidence_level, prediction_interval_method, missing, atol, max_iter, options)",
+      "fields": [
+        "model",
+        "pooling_method",
+        "tau2_method",
+        "ci_method",
+        "confidence_level",
+        "prediction_interval_method",
+        "missing",
+        "atol",
+        "max_iter",
+        "options"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.ModeratorSpec": {
+      "constructor": "(name, kind, term_names, levels=(), reference=None)",
+      "fields": [
+        "name",
+        "kind",
+        "term_names",
+        "levels",
+        "reference"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.ModeratorTestResult": {
+      "constructor": "(moderator, terms, statistic, statistic_name, distribution, df_num, df_denom, pvalue)",
+      "fields": [
+        "moderator",
+        "terms",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "df_num",
+        "df_denom",
+        "pvalue"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.PetersTestResult": {
+      "constructor": "(slope, slope_standard_error, slope_ci_low, slope_ci_high, statistic, statistic_name, distribution, df, pvalue, limit_estimate, limit_standard_error, limit_ci_low, limit_ci_high, residual_dispersion, confidence_level, k, measure, effect_scale, display_scale, method, model, predictor, weight_method, continuity_correction, correction_scope, corrected_studies, condition_number, warnings)",
+      "fields": [
+        "slope",
+        "slope_standard_error",
+        "slope_ci_low",
+        "slope_ci_high",
+        "statistic",
+        "statistic_name",
+        "distribution",
+        "df",
+        "pvalue",
+        "limit_estimate",
+        "limit_standard_error",
+        "limit_ci_low",
+        "limit_ci_high",
+        "residual_dispersion",
+        "confidence_level",
+        "k",
+        "measure",
+        "effect_scale",
+        "display_scale",
+        "method",
+        "model",
+        "predictor",
+        "weight_method",
+        "continuity_correction",
+        "correction_scope",
+        "corrected_studies",
+        "condition_number",
+        "warnings"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "display_limit_ci",
+        "display_limit_estimate",
+        "limit_ci",
+        "slope_ci"
+      ]
+    },
+    "meta_analyze.ResultReport": {
+      "fields": [],
+      "methods": {
+        "to_dict": "(self)",
+        "to_json": "(self, *, indent=2)",
+        "to_markdown": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.SubgroupCumulativeMetaAnalysisResult": {
+      "constructor": "(groups, overall)",
+      "fields": [
+        "groups",
+        "overall"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.SubgroupLeaveOneOutResult": {
+      "constructor": "(groups, overall)",
+      "fields": [
+        "groups",
+        "overall"
+      ],
+      "methods": {
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.SubgroupMetaAnalysisResult": {
+      "fields": [
+        "groups",
+        "overall",
+        "q_between",
+        "q_between_df",
+        "q_between_pvalue",
+        "i2_between",
+        "method",
+        "warnings"
+      ],
+      "methods": {
+        "cumulative": "(self, *, order=None, ascending=True, collapse=False)",
+        "forest": "(self, *, ax=None, effect_label=None, show_prediction_interval=True, show_weights=True, null_value=None, log_scale=None)",
+        "leave_one_out": "(self)",
+        "method_details": "(self)",
+        "report": "(self, *, include_studies=True)",
+        "summary": "(self)",
+        "to_dataframe": "(self)"
+      },
+      "properties": [
+        "excluded_studies",
+        "study_results"
+      ]
+    },
+    "meta_analyze.SubgroupMetaAnalysisSummary": {
+      "fields": [],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.SubgroupMethodConfig": {
+      "constructor": "(model, tau2_strategy, test_method, subgroup_missing)",
+      "fields": [
+        "model",
+        "tau2_strategy",
+        "test_method",
+        "subgroup_missing"
+      ],
+      "methods": {},
+      "properties": []
+    },
+    "meta_analyze.Tau2ConfidenceInterval": {
+      "constructor": "(estimate, ci_low, ci_high, tau, tau_ci_low, tau_ci_high, i2, i2_ci_low, i2_ci_high, h2, h2_ci_low, h2_ci_high, confidence_level, method, is_empty, iterations, warnings)",
+      "fields": [
+        "estimate",
+        "ci_low",
+        "ci_high",
+        "tau",
+        "tau_ci_low",
+        "tau_ci_high",
+        "i2",
+        "i2_ci_low",
+        "i2_ci_high",
+        "h2",
+        "h2_ci_low",
+        "h2_ci_high",
+        "confidence_level",
+        "method",
+        "is_empty",
+        "iterations",
+        "warnings"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "ci",
+        "h2_ci",
+        "i2_ci",
+        "tau_ci"
+      ]
+    },
+    "meta_analyze.TransformationRecord": {
+      "constructor": "(name, parameters=(), affected_rows=())",
+      "fields": [
+        "name",
+        "parameters",
+        "affected_rows"
+      ],
+      "methods": {
+        "to_dict": "(self)"
+      },
+      "properties": []
+    },
+    "meta_analyze.TrimAndFillResult": {
+      "fields": [
+        "adjusted_result",
+        "original_result",
+        "side",
+        "estimator",
+        "side_selection",
+        "side_selection_statistic",
+        "k0",
+        "k0_standard_error",
+        "k0_pvalue",
+        "iterations",
+        "converged",
+        "max_iterations",
+        "iteration_trace",
+        "original_estimate",
+        "adjusted_estimate",
+        "original_tau2",
+        "adjusted_tau2",
+        "warnings"
+      ],
+      "methods": {
+        "funnel": "(self, *, ax=None, effect_label=None, confidence_level=None, show_pseudo_confidence_interval=True, contour_levels=None, contour_colors=None, contour_reference=None, show_contour_legend=True, warn_on_few_studies=True, log_scale=None)",
+        "to_dict": "(self)"
+      },
+      "properties": [
+        "adjusted_ci",
+        "augmented_studies",
+        "display_adjusted_ci",
+        "display_adjusted_estimate",
+        "display_original_ci",
+        "display_original_estimate",
+        "original_ci",
+        "source_result"
+      ]
+    },
+    "meta_analyze.UnsupportedMethodError": {
+      "exception_bases": [
+        "MetaAnalysisError",
+        "ValueError"
+      ]
+    },
+    "meta_analyze.__version__": {
+      "type": "str"
+    },
+    "meta_analyze.meta_analysis": {
+      "signature": "(data=None, *, effect, variance=None, standard_error=None, study=None, subgroup=None, model='random', tau2_method=None, ci_method='normal', confidence_level=0.95, missing='raise', atol=1e-10, max_iter=1000)"
+    },
+    "meta_analyze.meta_binary": {
+      "signature": "(data=None, *, event_treat, n_treat, event_control, n_control, study=None, subgroup=None, measure='RR', method='MH', model='common', tau2_method=None, ci_method='normal', confidence_level=0.95, continuity_correction=0.5, correction_scope='only_zero_studies', rd_zero_variance='correct', mh_continuity_correction=None, mh_correction_scope=None, missing='raise', atol=1e-10, max_iter=1000)"
+    },
+    "meta_analyze.meta_continuous": {
+      "signature": "(data=None, *, mean_treat, sd_treat, n_treat, mean_control, sd_control, n_control, study=None, subgroup=None, measure='MD', model='random', tau2_method=None, ci_method='normal', confidence_level=0.95, smd_variance=None, missing='raise', atol=1e-10, max_iter=1000)"
+    },
+    "meta_analyze.meta_correlation": {
+      "signature": "(data=None, *, correlation, n, study=None, subgroup=None, measure='ZCOR', model='random', tau2_method=None, ci_method='normal', confidence_level=0.95, missing='raise', atol=1e-10, max_iter=1000)"
+    },
+    "meta_analyze.meta_regression": {
+      "signature": "(data=None, *, effect, variance=None, standard_error=None, moderators, categorical=None, study=None, model='mixed', tau2_method=None, inference_method='normal', intercept=True, confidence_level=0.95, prediction_interval_method='default', missing='raise', atol=1e-10, max_iter=1000)"
+    },
+    "meta_analyze.plotting.bubble_plot": {
+      "signature": "(result, *, ax=None, moderator_label=None, effect_label='Effect', show_confidence_interval=True, show_prediction_interval=False)"
+    },
+    "meta_analyze.plotting.forest_plot": {
+      "signature": "(result, *, ax=None, effect_label=None, pooled_label=None, show_prediction_interval=True, show_weights=True, null_value=None, log_scale=None)"
+    },
+    "meta_analyze.plotting.funnel_plot": {
+      "signature": "(result, *, ax=None, effect_label=None, confidence_level=None, show_pseudo_confidence_interval=True, contour_levels=None, contour_colors=None, contour_reference=None, show_contour_legend=True, warn_on_few_studies=True, log_scale=None)"
+    },
+    "meta_analyze.plotting.subgroup_forest_plot": {
+      "signature": "(result, *, ax=None, effect_label=None, show_prediction_interval=True, show_weights=True, null_value=None, log_scale=None)"
+    }
+  },
+  "inventory_format": 1,
+  "schemas": {
+    "provenance": "1.0",
+    "report": "1.2"
+  }
+}

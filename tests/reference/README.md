@@ -20,6 +20,7 @@ Rscript tests/reference/generate_meta_regression_influence_metafor.R
 Rscript tests/reference/generate_meta_regression_collinearity_metafor.R
 Rscript tests/reference/generate_meta_regression_contrasts_metafor.R
 Rscript tests/reference/generate_small_study_effects_metafor.R
+Rscript tests/reference/generate_begg_ranktest_metafor.R
 Rscript tests/reference/generate_harbord_small_study_effects_meta.R
 Rscript tests/reference/generate_peters_small_study_effects_meta.R
 Rscript tests/reference/generate_trimfill_metafor.R
@@ -110,3 +111,11 @@ single-arm zero-event studies.
 `peters_small_study_effects_meta.json` covers Peters regression for binary odds
 ratios, including its inverse-total-size predictor, `S*F/N` weights,
 multiplicative residual dispersion, and two single-zero corrected studies.
+
+`trimfill_metafor.json` covers eight L0/R0 trim-and-fill cases for common and
+REML fits with explicit left/right sides. It stores only `k0`, adjusted
+estimate, tau-squared, `k0_standard_error` and `k0_pvalue`. Automatic direction,
+imputed rows, CI, Q/I-squared, iteration traces and ties are not R-validated by
+this artifact. Its recorded `iterative_control` is not wired to the R calls,
+and its Python comparison tolerances still need method-specific review. See
+the [review findings](../../docs/statistical-review.md#initial-inspection-findings).

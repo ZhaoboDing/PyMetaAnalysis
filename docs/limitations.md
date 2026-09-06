@@ -101,14 +101,14 @@ scientifically prespecified, full-rank model when `k > p`.
 Funnel plots are descriptive. Their pseudo confidence limits exclude tau-
 squared. Significance contours show p-value regions around a chosen null but
 do not identify missing studies or the cause of asymmetry. The Begg-Mazumdar test
-for rank association between standardized centered effects and their sampling
+checks rank association between standardized centered effects and their sampling
 variances but does not identify its cause. The classical Egger
 test diagnoses a relationship between effects and standard errors and can be
 artefactual for measures such as OR and SMD.
 Harbord instead uses null efficient scores, while Peters relates two-group
 study log odds ratios to inverse total sample size; both remain sensitive to
 their model assumptions and are not valid for diagnostic-accuracy data. All
-three tests are underpowered with few studies. Neither visual nor tested
+four tests are underpowered with few studies. Neither visual nor tested
 asymmetry establishes publication bias, and a non-significant test does not
 exclude missing evidence.
 
@@ -140,3 +140,7 @@ inspect changelog/schema updates before upgrading.
 The implementation is tested against independent R fixtures but has not yet
 received a formal external statistical audit. See [validation](validation.md)
 for the exact evidence and boundary.
+
+The [1.0 roadmap](roadmap-1.0.md) tracks independent review, defaults, API
+compatibility, and end-to-end acceptance. Its proposed policies do not imply
+that the current release has passed those gates.
