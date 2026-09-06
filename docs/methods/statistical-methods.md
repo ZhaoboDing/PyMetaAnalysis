@@ -57,6 +57,16 @@ tau^2_DL = max(0, (Q - df) / C)
 
 DL is closed form and records zero iterations.
 
+Internally, `C` is evaluated as `2 * sum(i < j, w_i * w_j) / sum(w_i)`
+using relative weights and cumulative sums. This avoids subtracting nearly
+equal totals when one study dominates. Residual calculations first subtract
+the highest-weight study's effect, then center those offsets. The REML score
+also divides by the positive weight trace before subtraction. These are
+algebraic rearrangements, not a rule that forces extreme inputs to zero
+heterogeneity. Unrepresentable relative precisions raise
+`InvalidStudyDataError`; an unrepresentable iterative bracket raises
+`ConvergenceError`.
+
 ### Paule-Mandel
 
 PM solves:
@@ -163,6 +173,11 @@ Common-effect IV, MH, and Peto results use Q-based inconsistency:
 I^2 = max(0, (Q - df) / Q)
 H^2 = Q / df
 ```
+
+This Q-based `H^2` is untruncated and can be below one when `Q < df`, while
+`I^2` is truncated at zero (also when Q is zero). Consequently,
+`H^2 = 1 / (1 - I^2)` does not hold after that truncation. This existing
+convention differs from the tau-squared-based definition below.
 
 Random-effects results use the fitted `tau^2` and a typical within-study
 variance:
@@ -372,6 +387,16 @@ source-model-compatible meta-regression selects the side, matching
 manufacture a p-value. This is an exploratory sensitivity method whose symmetry
 assumption can fail under genuine heterogeneity or design differences.
 
+First-occurrence ranks are assigned after a stable sort of the oriented
+effects. Tied inputs have dedicated R comparisons, but those cases do not
+establish equivalence for every possible tie pattern. If all included effects
+are identical, no studies are imputed and missing-count uncertainty is
+unavailable; this is an explicit boundary policy, whereas the pinned
+`metafor` R0 implementation errors on that input. A negative L0 variance
+approximation likewise yields an unavailable standard error, not zero.
+Random-effects intermediate refits must retain at least two studies;
+otherwise the operation raises `ConvergenceError` without an adjusted fit.
+
 ## Meta-regression
 
 For `k` study effects, let `X` be the full-rank `k`-by-`p` design matrix. It
@@ -443,6 +468,14 @@ tests divide their Wald statistic by the number of tested terms and use an F
 distribution with that numerator df and `k-p` denominator df.
 `hartung_knapp_adhoc` replaces `q` with `max(1, q)`; unmodified
 `hartung_knapp` retains `q` and warns when it is below one.
+
+With exactly zero residual dispersion, unmodified HK covariance is zero and
+coefficient intervals collapse to points. Scalar tests report an undefined
+statistic for `0 / 0` and signed infinity for a nonzero coefficient divided by
+zero. Global, moderator, and joint contrast tests are unavailable because
+their covariance cannot be inverted. The result records a warning and reports
+serialize unavailable statistics as JSON `null`. No automatic safeguard is
+applied; `hartung_knapp_adhoc` remains a separate explicit choice.
 
 The global moderator test covers every non-intercept term.
 `test_moderator(name)` covers every encoded term for one original moderator,

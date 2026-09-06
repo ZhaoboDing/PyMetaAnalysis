@@ -105,7 +105,7 @@ The nested `provenance` object contains:
 | `package_version` | Version that fitted the result |
 | `schema_version` | Provenance schema identifier (`"1.0"`) |
 | `analysis_type` | `generic`, `binary`, `continuous`, `correlation`, or `meta_regression` |
-| `data_source` | `pandas_dataframe`, `array_like`, or `derived_subset` |
+| `data_source` | `pandas_dataframe`, `array_like`, `derived_subset`, or `derived_trim_and_fill` |
 | `input_fields` | Ordered input source records |
 | `column_mapping` | Public input roles mapped to DataFrame columns |
 | `row_count` | Number of rows represented by this provenance record |
@@ -124,6 +124,12 @@ name, parameters, affected_rows
 
 Parameters contain resolved settings, not inferred defaults. A transformation
 with an empty `affected_rows` list still records that the policy was configured.
+
+For `derived_trim_and_fill`, observed row IDs retain their original input
+positions; synthetic IDs start above the largest source row ID. The augmented
+fit contains only included observed rows and synthetic rows. Transformation
+row references are restricted to that fit; the original result retains the
+complete input/exclusion history. See [trim-and-fill results](results.md#trimandfillresult).
 
 ## Subgroup report
 

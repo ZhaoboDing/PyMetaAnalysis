@@ -201,6 +201,10 @@ def test_contour_regions_match_two_sided_identity_scale_boundaries(
         critical = norm.ppf(0.5 + level / 2.0)
         assert fills[2 * level_index][2][index] == pytest.approx(-critical * y)
         assert fills[2 * level_index + 1][1][index] == pytest.approx(critical * y)
+        if level_index + 1 < len(levels):
+            outer = norm.ppf(0.5 + levels[level_index + 1] / 2.0)
+            assert fills[2 * level_index][1][index] == pytest.approx(-outer * y)
+            assert fills[2 * level_index + 1][2][index] == pytest.approx(outer * y)
 
     null_line = next(line for line in axes.lines if line.get_linestyle() == ":")
     np.testing.assert_allclose(null_line.get_xdata(), [0.0, 0.0])
@@ -294,6 +298,36 @@ def test_contour_colors_and_legend_can_be_configured() -> None:
         regions[2].get_facecolor()[0], (*to_rgba(colors[1])[:3], 0.85)
     )
     assert axes.get_legend() is None
+    plt.close(axes.figure)
+
+
+def test_high_contrast_bands_have_disjoint_interiors_and_matching_legend() -> None:
+    axes = _generic_result().funnel(
+        contour_levels=(0.90, 0.95, 0.99),
+        contour_colors=("red", "green", "blue"),
+        warn_on_few_studies=False,
+    )
+    regions = _filled_regions(axes)
+    y = 0.5 * max(_generic_result().study_results.standard_error)
+    critical = norm.ppf([0.95, 0.975, 0.995])
+    for band, x in enumerate(
+        [
+            0.5 * (critical[0] + critical[1]) * y,
+            0.5 * (critical[1] + critical[2]) * y,
+            1.1 * critical[2] * y,
+        ]
+    ):
+        hits = [
+            index
+            for index, region in enumerate(regions)
+            if region.get_paths()[0].contains_point((x, y))
+        ]
+        assert hits == [2 * band + 1]
+    handles = axes.get_legend().get_patches()
+    for index, handle in enumerate(handles):
+        np.testing.assert_allclose(
+            handle.get_facecolor(), regions[2 * index].get_facecolor()[0]
+        )
     plt.close(axes.figure)
 
 

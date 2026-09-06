@@ -25,6 +25,13 @@ model, interval method, and tau-squared estimator. Treat this as sensitivity
 analysis: funnel asymmetry can have causes other than publication bias, and
 trim-and-fill relies on symmetry assumptions.
 
+The minimum input is three included studies, but this does not guarantee that
+every trimmed intermediate model is estimable. A random-effects refit must
+retain at least two studies; otherwise `ConvergenceError` explains the failed
+trimming step. Invalid estimator/iteration argument types raise
+`InvalidStudyDataError` (a `MetaAnalysisError`). Identical effects produce no
+fill and an explicit note that rank-based uncertainty is unavailable.
+
 Automatic direction selection records the standard-error meta-regression slope
 in `side_selection_statistic`; explicit selection records no statistic. Report
 the original and adjusted estimates together. Do not choose among Begg, Egger,
@@ -282,7 +289,7 @@ PyMetaAnalysis therefore records an additional warning for:
 - odds ratios, for which binary-outcome alternatives such as Harbord or Peters
   may be preferable;
 - standardized mean differences, for which the same association can produce
-  distorted funnel plots.
+distorted funnel plots.
 
 Harbord and Peters regression are available for OR analyses created by
 `meta_binary()`. A generic effect labeled `GENERIC` cannot reveal the original

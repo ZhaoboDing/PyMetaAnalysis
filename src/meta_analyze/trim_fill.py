@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from numbers import Integral
 from typing import TYPE_CHECKING, Any, Literal, cast
 
@@ -14,6 +14,7 @@ import pandas as pd
 from .exceptions import (
     ConvergenceError,
     InsufficientStudiesError,
+    InvalidStudyDataError,
     UnsupportedMethodError,
 )
 from .provenance import TransformationRecord
@@ -49,7 +50,7 @@ class TrimAndFillResult:
     original_tau2: float
     adjusted_tau2: float
     warnings: tuple[str, ...]
-    _augmented_studies: pd.DataFrame
+    _augmented_studies: pd.DataFrame = field(repr=False, compare=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -239,24 +240,29 @@ def trim_and_fill(
     if side not in (None, "left", "right"):
         raise UnsupportedMethodError("side must be 'left', 'right', or None.")
     if not isinstance(estimator, str):
-        raise TypeError("estimator must be a string.")
+        raise InvalidStudyDataError("estimator must be a string.")
     normalized_estimator = estimator.upper()
     if normalized_estimator not in ("L0", "R0"):
         raise UnsupportedMethodError("estimator must be 'L0' or 'R0'.")
     if isinstance(max_iterations, bool) or not isinstance(max_iterations, Integral):
-        raise TypeError("max_iterations must be an integer.")
+        raise InvalidStudyDataError("max_iterations must be an integer.")
     if max_iterations < 1:
-        raise ValueError("max_iterations must be at least 1.")
+        raise InvalidStudyDataError("max_iterations must be at least 1.")
 
     studies = result._study_results_view()
     included = studies["included"].to_numpy(dtype=bool, copy=True)
     effect0 = studies.loc[included, "effect"].to_numpy(dtype=float, copy=True)
     variance0 = studies.loc[included, "variance"].to_numpy(dtype=float, copy=True)
     labels0 = studies.loc[included, "study"].to_numpy(dtype=object, copy=True)
+    row_ids0 = studies.loc[included, "row_id"].to_numpy(dtype=int, copy=True)
     k = len(effect0)
     if k < 3:
         raise InsufficientStudiesError("trim_and_fill() requires at least 3 studies.")
-    if side is None:
+    identical_effects = bool(np.all(effect0 == effect0[0]))
+    if side is None and identical_effects:
+        resolved_side, side_statistic = "left", None
+        side_selection = "symmetric_effects"
+    elif side is None:
         resolved_side, side_statistic = _automatic_side(result, effect0, variance0)
         side_selection = "standard_error_meta_regression"
     else:
@@ -269,14 +275,19 @@ def trim_and_fill(
     previous, k0, k0_se, iterations = -1, 0, math.sqrt(2.0), 0
     iteration_trace: list[int] = []
     center, centered = result.estimate, yi - result.estimate
-    while k0 != previous:
+    while k0 != previous and not identical_effects:
         previous, iterations = k0, iterations + 1
         if iterations > max_iterations:
             raise ConvergenceError(
                 f"Trim-and-fill did not converge within {max_iterations} iterations."
             )
-        if k - k0 < 1:
-            raise ConvergenceError("Trim-and-fill removed every study.")
+        minimum = 2 if result.model == "random" else 1
+        if k - k0 < minimum:
+            raise ConvergenceError(
+                f"Trim-and-fill cannot refit the {result.model}-effects model: "
+                f"trimming {k0} of {k} studies leaves fewer than {minimum}. "
+                "No adjusted result was produced."
+            )
         center = _fit(result, yi[: k - k0], vi[: k - k0], labels[: k - k0]).estimate
         centered = yi - center
         signed = np.sign(centered) * _rank_first(np.abs(centered))
@@ -296,7 +307,11 @@ def trim_and_fill(
                 - 18.0 * k * raw
                 + 6.0 * k**2 * raw
             ) / 24.0
-            k0_se = 4.0 * math.sqrt(max(0.0, var_sr)) / (2.0 * k - 1.0)
+            k0_se = (
+                4.0 * math.sqrt(var_sr) / (2.0 * k - 1.0)
+                if var_sr >= 0.0
+                else float("nan")
+            )
         k0 = min(k - 1, max(0, int(np.rint(raw))))
         iteration_trace.append(k0)
 
@@ -308,6 +323,7 @@ def trim_and_fill(
             else -centered[tail] + center
         )
         mirror_variance, mirror_labels = vi[tail].copy(), labels[tail].copy()
+        mirror_row_ids = row_ids0[order][tail]
         observed_labels = {str(label) for label in labels0}
         filled_labels_list: list[str] = []
         candidate = 1
@@ -325,20 +341,35 @@ def trim_and_fill(
         )
     else:
         mirror_labels = np.empty(0, dtype=object)
-        adjusted = result
+        mirror_row_ids = np.empty(0, dtype=int)
+        adjusted = _fit(result, effect0, variance0, labels0)
 
     table = adjusted._study_results_view().copy(deep=True)
+    first_synthetic_row = int(studies["row_id"].max()) + 1
+    synthetic_rows = tuple(range(first_synthetic_row, first_synthetic_row + k0))
+    table["row_id"] = np.r_[row_ids0, np.asarray(synthetic_rows, dtype=int)]
     table["imputed"] = np.r_[np.zeros(k, dtype=bool), np.ones(k0, dtype=bool)]
     table["mirror_source"] = np.r_[np.full(k, None, dtype=object), mirror_labels]
-    synthetic_rows = tuple(range(k, k + k0))
+    table["mirror_source_row_id"] = np.r_[
+        np.full(k, None, dtype=object), mirror_row_ids
+    ]
+    observed_rows = set(int(row) for row in row_ids0)
     provenance = replace(
         result.provenance,
         data_source="derived_trim_and_fill",
         row_count=k + k0,
-        included_rows=tuple(range(k + k0)),
+        included_rows=tuple(int(row) for row in table["row_id"]),
         excluded_rows=(),
         transformations=(
-            *result.provenance.transformations,
+            *(
+                replace(
+                    record,
+                    affected_rows=tuple(
+                        row for row in record.affected_rows if row in observed_rows
+                    ),
+                )
+                for record in result.provenance.transformations
+            ),
             TransformationRecord(
                 name="trim_and_fill_imputation",
                 parameters=(
@@ -372,8 +403,12 @@ def trim_and_fill(
         side_selection=side_selection,
         side_selection_statistic=side_statistic,
         k0=k0,
-        k0_standard_error=max(0.0, k0_se),
-        k0_pvalue=2.0 ** (-(k0 + 1)) if normalized_estimator == "R0" else None,
+        k0_standard_error=float("nan") if identical_effects else k0_se,
+        k0_pvalue=(
+            2.0 ** (-(k0 + 1))
+            if normalized_estimator == "R0" and not identical_effects
+            else None
+        ),
         iterations=iterations,
         converged=True,
         max_iterations=max_iterations,
@@ -384,6 +419,14 @@ def trim_and_fill(
         adjusted_tau2=adjusted.tau2,
         warnings=(
             "Trim-and-fill is a sensitivity analysis, not proof of publication bias.",
+            *(
+                (
+                    "All included effects are identical; no studies were imputed and "
+                    "rank-based missing-count uncertainty is unavailable.",
+                )
+                if identical_effects
+                else ()
+            ),
             *(
                 ("Trim-and-fill can be unstable with fewer than 10 studies.",)
                 if k < 10

@@ -1,9 +1,111 @@
 from __future__ import annotations
 
+import warnings
+from fractions import Fraction
+from itertools import permutations
+
 import numpy as np
 import pytest
 
 import meta_analyze as ma
+from meta_analyze.estimators import estimate_tau2
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+@pytest.mark.parametrize("variances", [[1e-18, 1.0], [1e-30, 1e30], [1e-150, 1e150]])
+def test_random_extreme_precision_ratio_preserves_boundary(
+    method: str, variances: list[float]
+) -> None:
+    # For k=2 all three estimators have tau2=max(0, (d**2-v1-v2)/2).
+    exact = max(Fraction(0), (Fraction(1) - sum(map(Fraction, variances))) / 2)
+    assert exact == 0
+    for order in ([0, 1], [1, 0]):
+        result = ma.meta_analysis(
+            effect=np.array([1.0, 2.0])[order],
+            variance=np.array(variances)[order],
+            tau2_method=method,
+        )
+        assert result.tau2 == 0.0
+        assert result.diagnostics.converged
+        assert result.diagnostics.tau2_at_boundary
+        expected_variance = 1 / sum(1 / Fraction(v) for v in variances)
+        assert result.standard_error == pytest.approx(
+            float(expected_variance) ** 0.5, rel=2e-15
+        )
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+def test_extreme_precision_does_not_force_a_positive_root_to_zero(method: str) -> None:
+    variances = np.array([1e-30, 1.0])
+    expected = float((Fraction(4) - sum(map(Fraction, variances))) / 2)
+    estimate = estimate_tau2(np.array([0.0, 2.0]), variances, method=method)
+    assert estimate.value == pytest.approx(expected, rel=2e-10)
+    assert not estimate.boundary
+
+
+def test_dl_extreme_precision_matches_exact_rational_oracle_and_refits() -> None:
+    effects = [0.0, 10.0, -10.0]
+    variances = [1e-18, 1.0, 1.0]
+    weights = [1 / Fraction(v) for v in variances]
+    mean = sum(w * Fraction(y) for w, y in zip(weights, effects, strict=True)) / sum(
+        weights
+    )
+    q = sum(
+        w * (Fraction(y) - mean) ** 2 for w, y in zip(weights, effects, strict=True)
+    )
+    c = sum(weights) - sum(w * w for w in weights) / sum(weights)
+    expected = float((q - 2) / c)
+    for order in permutations(range(3)):
+        result = ma.meta_analysis(
+            effect=np.array(effects)[list(order)],
+            variance=np.array(variances)[list(order)],
+            tau2_method="DL",
+        )
+        assert result.tau2 == pytest.approx(expected, rel=2e-15)
+        assert np.isfinite(result.i2)
+        assert np.isfinite(result.h2)
+    source = ma.meta_analysis(
+        effect=[0.1, 0.1, 0.2, 0.3],
+        standard_error=[1e-9, 1e-9, 1, 1],
+        tau2_method="DL",
+    )
+    assert len(source.leave_one_out().results) == 4
+    grouped = ma.meta_analysis(
+        effect=[0.1, 0.2, 0.3, 0.1, 0.2, 0.3],
+        variance=[1e-18, 1, 1, 1e-18, 1, 1],
+        subgroup=["a", "a", "a", "b", "b", "b"],
+        tau2_method="DL",
+    )
+    assert all(group.tau2 == 0 for group in grouped.groups.values())
+
+
+@pytest.mark.parametrize("model", ["common", "random"])
+def test_unrepresentable_precision_ratio_raises_domain_error_without_warnings(
+    model: str,
+) -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        with pytest.raises(ma.InvalidStudyDataError, match="Variance ratio"):
+            ma.meta_analysis(effect=[1e160, 0], variance=[1e-300, 1e300], model=model)
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+def test_unrepresentable_tau2_raises_domain_error_without_warnings(method: str) -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        with pytest.raises(ma.MetaAnalysisError):
+            ma.meta_analysis(
+                effect=[1e200, -1e200], variance=[1, 1], tau2_method=method
+            )
+
+
+@pytest.mark.parametrize("method", ["DL", "PM", "REML"])
+@pytest.mark.parametrize("variances", [[0.0, 1.0], [-1.0, 1.0], [np.nan, 1.0]])
+def test_low_level_tau2_rejects_invalid_variances_with_domain_error(
+    method: str, variances: list[float]
+) -> None:
+    with pytest.raises(ma.InvalidStudyDataError):
+        estimate_tau2(np.array([0.0, 1.0]), np.array(variances), method=method)
 
 
 def test_common_model_scales_weights_at_float64_minimum_variance() -> None:

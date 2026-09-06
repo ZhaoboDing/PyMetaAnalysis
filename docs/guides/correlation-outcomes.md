@@ -135,6 +135,21 @@ Forest and funnel x-coordinates are back-transformed correlations on a linear
 axis by default. Funnel standard errors remain model-scale Fisher's z standard
 errors.
 
+## Correlation moderators and diagnostics
+
+`meta_regression()` accepts generic effects and variances, not raw `r, n`
+arguments. To analyze moderators of correlations, first validate `abs(r) < 1`
+and integer sample sizes `n >= 4`, then supply `atanh(r)` as the effect and
+`1 / (n - 3)` as the variance. See the
+[meta-regression guide](meta-regression.md) for moderator encoding. Predictions
+from this generic regression remain on Fisher's z scale; apply `tanh` to fitted
+values and interval endpoints for a correlation display. A regression slope
+on the z scale is not a constant additive change in correlation.
+
+On a `meta_correlation()` result, Begg, Egger and trim-and-fill operate directly
+on the stored Fisher's z effects and variances. Harbord and Peters require raw
+binary OR tables and are unavailable for correlations.
+
 ## Independence boundary
 
 This API assumes one independent effect per study. Repeated outcomes,

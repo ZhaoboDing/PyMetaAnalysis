@@ -112,10 +112,18 @@ single-arm zero-event studies.
 ratios, including its inverse-total-size predictor, `S*F/N` weights,
 multiplicative residual dispersion, and two single-zero corrected studies.
 
-`trimfill_metafor.json` covers eight L0/R0 trim-and-fill cases for common and
-REML fits with explicit left/right sides. It stores only `k0`, adjusted
-estimate, tau-squared, `k0_standard_error` and `k0_pvalue`. Automatic direction,
-imputed rows, CI, Q/I-squared, iteration traces and ties are not R-validated by
-this artifact. Its recorded `iterative_control` is not wired to the R calls,
-and its Python comparison tolerances still need method-specific review. See
-the [review findings](../../docs/statistical-review.md#initial-inspection-findings).
+`trimfill_metafor.json` covers 24 L0/R0 cases for common and REML fits,
+including left/right/automatic direction and tied inputs. It stores missing
+counts and uncertainty, augmented effects/variances and imputed flags, adjusted
+estimate/SE/CI, tau-squared, Q, I-squared and H-squared. Recorded controls are
+passed explicitly. The native `trimfill()` refit is retained for auditability;
+detailed expected values use an independent `rma()` fit to the returned
+augmented data with the recorded REML controls, because the native final refit
+can use default controls. Tolerances are `rtol=5e-13, atol=5e-15` for
+common-effect statistics and missing-count uncertainty, and
+`rtol=2e-10, atol=2e-11` for REML/derived rows. Negative L0 variance
+approximations are recorded as unavailable. The fixture also records the
+pinned R0 error for identical effects, where PyMetaAnalysis intentionally
+returns no imputation with a warning. Independent iteration-trace validation
+and formal review remain open; see the
+[review findings](../../docs/statistical-review.md#initial-inspection-findings).

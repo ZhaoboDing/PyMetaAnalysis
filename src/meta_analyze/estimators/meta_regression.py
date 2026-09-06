@@ -334,7 +334,7 @@ def _coefficient_statistics(
     statistics = np.divide(
         coefficients,
         standard_errors,
-        out=np.zeros_like(coefficients),
+        out=np.full_like(coefficients, np.nan),
         where=standard_errors > 0.0,
     )
     nonzero_with_zero_se = (standard_errors == 0.0) & (coefficients != 0.0)
@@ -384,13 +384,7 @@ def _global_test(
             df_denom=None,
             pvalue=float("nan"),
         )
-    try:
-        wald = float(selected @ np.linalg.solve(selected_covariance, selected))
-    except np.linalg.LinAlgError as error:  # pragma: no cover - full rank checked
-        raise InvalidStudyDataError(
-            "Global moderator test could not be solved."
-        ) from error
-    wald = max(0.0, wald)
+    wald = _wald_statistic(selected, selected_covariance)
     if inference_method == "normal":
         return RegressionTestFit(
             statistic=wald,
@@ -409,6 +403,21 @@ def _global_test(
         df_denom=residual_df,
         pvalue=float(f.sf(statistic, term_count, residual_df)),
     )
+
+
+def _wald_statistic(
+    estimates: NDArray[np.float64], covariance: NDArray[np.float64]
+) -> float:
+    """Return a Wald statistic, unavailable for exactly zero HK covariance."""
+    if np.all(covariance == 0.0):
+        return float("nan")
+    try:
+        value = float(estimates @ np.linalg.solve(covariance, estimates))
+    except np.linalg.LinAlgError as error:
+        raise InvalidStudyDataError(
+            "Wald test covariance could not be solved."
+        ) from error
+    return max(0.0, value)
 
 
 def fit_meta_regression(
@@ -487,7 +496,7 @@ def fit_meta_regression(
         if residual_scale == 0.0:
             warnings.append(
                 "Hartung-Knapp variance is zero because the fitted model has no "
-                "weighted residual variation."
+                "weighted residual variation; joint Wald tests are unavailable."
             )
         distribution = "t"
 
@@ -508,7 +517,7 @@ def fit_meta_regression(
     statistics = np.divide(
         solution.coefficients,
         standard_errors,
-        out=np.zeros_like(solution.coefficients),
+        out=np.full_like(solution.coefficients, np.nan),
         where=standard_errors > 0.0,
     )
     nonzero_with_zero_se = (standard_errors == 0.0) & (solution.coefficients != 0.0)

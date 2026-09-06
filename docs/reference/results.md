@@ -20,6 +20,21 @@ markers hollow, and accepts the ordinary contour options.
 The adjusted fit's provenance contains a `trim_and_fill_imputation`
 transformation whose affected rows identify the synthetic studies.
 
+The augmented table contains included observed rows plus synthetic rows for
+both zero and nonzero fills. Observed `row_id` values retain source positions;
+new IDs start above every source row ID. `mirror_source` is a display label,
+while `mirror_source_row_id` uniquely identifies the observed row even with
+duplicate labels. Excluded inputs remain in `original_result`, not the augmented
+fit. Its transformation records reference only rows present in the adjusted fit.
+
+If all included effects are identical, no studies are imputed and missing-count
+uncertainty is unavailable (`k0_standard_error=NaN`, `k0_pvalue=None`). Automatic
+direction records `side_selection="symmetric_effects"` with a display side of
+`"left"`, no regression statistic and no iterations. A negative L0 variance
+approximation also produces an unavailable standard error rather than zero.
+`converged=True` means a successful return; non-convergence raises
+`ConvergenceError` and does not return a partial fit.
+
 ## `MetaAnalysisResult`
 
 ### Analysis identity

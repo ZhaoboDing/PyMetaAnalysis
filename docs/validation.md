@@ -121,7 +121,7 @@ The current fixture families cover:
 | `begg_ranktest_metafor.json` | Begg-Mazumdar standardized response, Kendall tau-b, concordance statistic, exact two-sided p-value, and tied asymptotic inference |
 | `harbord_small_study_effects_meta.json` | Harbord efficient-score asymmetry intercept, limit coefficient, multiplicative dispersion, and t test for binary OR data with single-zero studies |
 | `peters_small_study_effects_meta.json` | Peters binary-OR slope, `S*F/N` weights, multiplicative dispersion, t test, limit estimate, and single-zero continuity corrections |
-| `trimfill_metafor.json` | Eight common/REML L0/R0 cases with explicit left/right sides: missing-study count, adjusted estimate, tau-squared, and missing-count standard error/p-value |
+| `trimfill_metafor.json` | 24 common/REML L0/R0 cases with explicit/automatic sides and tied effects: missing counts, uncertainty, augmented effects/variances, imputed flags, adjusted estimate/SE/CI and Q/I-squared/H-squared |
 
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
@@ -144,13 +144,15 @@ Every artifact records the R and `jsonlite` versions plus the applicable
 `metafor` or `meta` version used to produce it. Method-specific numerical
 tolerances distinguish closed-form from iterative comparisons.
 
-Trim-and-fill's reference coverage is narrower than the design target: the
-fixture does not contain automatic-direction, imputed-row, CI, Q/I-squared,
-iteration or tied-input references. Its tests currently use `abs=1e-6` and
-pytest's default relative tolerance for numeric comparisons. The generator's
-recorded `iterative_control` is not passed to its R calls. These are open
-reference/tolerance review findings, not independently validated outputs; see
-the [review findings](statistical-review.md#initial-inspection-findings).
+Trim-and-fill comparisons use `rtol=5e-13, atol=5e-15` for common-effect
+statistics and missing-count uncertainty, and `rtol=2e-10, atol=2e-11` for
+REML and derived augmented rows. The generator passes the recorded REML
+threshold and iteration limit explicitly. Since `trimfill()`'s final fit can
+use its own defaults, the artifact retains that native output and independently
+refits the augmented data with explicit controls for the detailed reference.
+Iteration traces still lack an independent R reference, and selected tied
+cases do not establish universal tie equivalence. Formal method sign-off
+remains open; see the [review findings](statistical-review.md#initial-inspection-findings).
 
 Sparse RD reference tests make one intentional convention difference explicit:
 `metafor::escalc` corrects the displayed single-zero RD when correction is
@@ -210,6 +212,11 @@ the [1.0 acceptance matrix](roadmap-1.0.md); a local Windows run does not close
 the full platform matrix. The API inventory is checked by the test suite.
 
 The configured branch-coverage floor is 90%.
+
+The complete getting-started tutorial is executed sequentially in the test
+suite, including plotting, diagnostics and a report JSON export/parse check.
+All other Markdown Python snippets are syntax-checked; this is not a claim
+that every complete documentation example has passed an execution audit.
 
 ## Reproduce local validation
 

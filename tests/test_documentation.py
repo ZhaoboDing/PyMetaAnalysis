@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from urllib.parse import unquote
@@ -38,6 +39,23 @@ def _python_blocks() -> list[pytest.param]:
 @pytest.mark.parametrize(("path", "block"), _python_blocks())
 def test_python_documentation_blocks_parse(path: Path, block: str) -> None:
     compile(block, str(path), "exec")
+
+
+def test_getting_started_executes_and_report_round_trips() -> None:
+    """Run the complete tutorial in order, including optional plot workflows."""
+    import matplotlib.pyplot as plt
+
+    path = ROOT / "docs" / "getting-started.md"
+    blocks = re.findall(
+        r"```python\n(.*?)```", path.read_text(encoding="utf-8"), re.DOTALL
+    )
+    namespace: dict[str, object] = {}
+    try:
+        for block in blocks:
+            exec(compile(block, str(path), "exec"), namespace)
+        assert json.loads(namespace["json_text"]) == namespace["payload"]
+    finally:
+        plt.close("all")
 
 
 @pytest.mark.parametrize("path", MARKDOWN_FILES, ids=lambda path: str(path.name))

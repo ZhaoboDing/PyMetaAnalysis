@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from scipy.optimize import brentq
 from scipy.stats import chi2
 
-from .exceptions import ConvergenceError
+from .exceptions import ConvergenceError, InvalidStudyDataError
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,18 +28,52 @@ def weighted_mean(effect: NDArray[np.float64], weights: NDArray[np.float64]) -> 
 
     largest = float(np.max(weights))
     if not np.isfinite(largest) or largest <= 0.0:
-        raise ValueError("Weights must contain a finite, strictly positive value.")
+        raise InvalidStudyDataError(
+            "Weights must contain a finite, strictly positive value."
+        )
     scaled = weights / largest
     scaled_sum = float(np.sum(scaled))
     if not np.isfinite(scaled_sum) or scaled_sum <= 0.0:
-        raise ValueError("Weights must have a finite, strictly positive sum.")
+        raise InvalidStudyDataError(
+            "Weights must have a finite, strictly positive sum."
+        )
     if bool(np.all(effect == effect[0])):
         return float(effect[0])
     normalized = scaled / scaled_sum
-    estimate = float(np.dot(normalized, effect))
+    with np.errstate(over="ignore", invalid="ignore"):
+        estimate = float(np.dot(normalized, effect))
     if not np.isfinite(estimate):
-        raise ValueError("The weighted mean is not representable as a finite float.")
+        raise InvalidStudyDataError(
+            "The weighted mean is not representable as a finite float."
+        )
     return estimate
+
+
+def _weighted_residuals(
+    effect: NDArray[np.float64], weights: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Center before averaging so a dominant study retains its small residual."""
+    with np.errstate(over="ignore", invalid="ignore"):
+        offset = effect - effect[int(np.argmax(weights))]
+        if np.all(np.isfinite(offset)):
+            return np.asarray(offset - weighted_mean(offset, weights), dtype=np.float64)
+        return np.asarray(effect - weighted_mean(effect, weights), dtype=np.float64)
+
+
+def _weight_trace(weights: NDArray[np.float64]) -> float:
+    """Compute S1 - S2/S1 as positive pair products in linear time.
+
+    The usual subtraction loses all information when one precision dominates.
+    A reverse cumulative sum supplies sum(w[j], j > i) without subtracting a
+    dominant weight from the total.
+    """
+    tail_sums = np.cumsum(weights[:0:-1])[::-1]
+    trace = float(2.0 * np.dot(weights[:-1], tail_sums) / np.sum(weights))
+    if not np.isfinite(trace) or trace <= 0.0:
+        raise InvalidStudyDataError(
+            "Variance ratio is too large to resolve between-study precision."
+        )
+    return trace
 
 
 def _scaled_q_components(
@@ -52,14 +86,22 @@ def _scaled_q_components(
 
     scale = float(np.min(denominator))
     relative_weights = scale / denominator
-    resolved_estimate = (
-        weighted_mean(effect, relative_weights) if estimate is None else estimate
-    )
+    if np.any(relative_weights == 0.0):
+        raise InvalidStudyDataError(
+            "Variance ratio is too large to represent all relative weights."
+        )
     with np.errstate(over="ignore", invalid="ignore"):
-        residual = effect - resolved_estimate
-        numerator = float(np.dot(relative_weights, residual * residual))
+        residual = (
+            _weighted_residuals(effect, relative_weights)
+            if estimate is None
+            else effect - estimate
+        )
+        weighted_residual = np.sqrt(relative_weights) * residual
+        numerator = float(np.dot(weighted_residual, weighted_residual))
     if np.isnan(numerator):
-        raise ValueError("The weighted residual sum of squares is undefined.")
+        raise InvalidStudyDataError(
+            "The weighted residual sum of squares is undefined."
+        )
     return numerator, scale
 
 
@@ -67,7 +109,7 @@ def _unscale_nonnegative(value: float, scale: float) -> float:
     with np.errstate(over="ignore", invalid="ignore"):
         result = float(value / scale)
     if np.isnan(result):
-        raise ValueError("The weighted statistic is undefined.")
+        raise InvalidStudyDataError("The weighted statistic is undefined.")
     return result
 
 
@@ -91,7 +133,7 @@ def _q_profile_equation(
     with np.errstate(over="ignore", invalid="ignore"):
         denominator = variance + tau2
     if np.any(~np.isfinite(denominator)):
-        raise ValueError("Q-profile denominators must remain finite.")
+        raise InvalidStudyDataError("Q-profile denominators must remain finite.")
     numerator, scale = _scaled_q_components(effect, denominator)
     return float(numerator - target * scale)
 
@@ -279,12 +321,7 @@ def tau2_inconsistency(
 
     variance_scale = float(np.min(variance))
     relative_weights = variance_scale / variance
-    weight_sum = float(np.sum(relative_weights))
-    c_scaled = (
-        weight_sum - float(np.dot(relative_weights, relative_weights)) / weight_sum
-    )
-    if not np.isfinite(c_scaled) or c_scaled <= 0.0:
-        return float("nan"), float("nan")
+    c_scaled = _weight_trace(relative_weights)
 
     typical_variance = (k - 1) * variance_scale / c_scaled
     i2 = 1.0 / (1.0 + typical_variance / tau2)

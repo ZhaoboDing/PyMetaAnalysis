@@ -92,6 +92,15 @@ evidence. Resolve [ADR 0008](adr/0008-stable-inference-default.md), ratify the
 remaining defaults and [compatibility policy](compatibility.md), and review the
 inventory against the documented API. Announce any 0.9 breaking changes here.
 
+The first corrective batch is tracked in the
+[review disposition](statistical-review.md#september-2026-review-disposition).
+It repairs extreme-weight pooling and trim-and-fill boundaries and expands R
+references; it leaves the normal CI default and version metadata unchanged.
+Before freezing the API, explicitly review the opposite sign conventions of
+sensitivity `estimate_change` (deleted minus original) and regression DFBETAS
+(original minus deleted), and the DataFrame return type of sensitivity
+`summary()`. Preserve these contracts until a documented decision is accepted.
+
 Publish 0.10.0 only after its method/default decisions and API freeze have been
 accepted. Remind the maintainer before changing version metadata; use a separate
 release PR. An absent external reviewer leaves the relevant gates open.

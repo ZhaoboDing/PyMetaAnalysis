@@ -322,11 +322,12 @@ Every `MetaAnalysisResult` provides:
 | `egger_test(confidence_level=None)` | `EggerTestResult` |
 | `harbord_test(confidence_level=None)` | `HarbordTestResult` |
 | `peters_test(confidence_level=None)` | `PetersTestResult` |
+| `trim_and_fill(side=None, estimator="L0", max_iterations=100)` | `TrimAndFillResult` |
 | `forest(...)` | Matplotlib `Axes` |
 | `funnel(...)` | Matplotlib `Axes` |
 
 `SubgroupMetaAnalysisResult` omits `funnel()`, `begg_test()`, `egger_test()`,
-`harbord_test()`, and `peters_test()`; use its `overall` or individual `groups`
+`harbord_test()`, `peters_test()`, and `trim_and_fill()`; use its `overall` or individual `groups`
 results when a diagnostic is scientifically appropriate. Its sensitivity
 methods return subgroup composite result classes.
 

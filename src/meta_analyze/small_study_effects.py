@@ -604,7 +604,16 @@ def begg_test(
             "Begg's rank-correlation test produced a non-finite result."
         )
 
-    warnings: list[str] = []
+    warnings: list[str] = [
+        "This rank-correlation test does not by itself establish or exclude "
+        "publication bias."
+    ]
+    if result.method.pooling_method == "peto":
+        warnings.append(
+            "The source analysis uses Peto one-step study effects; their rare-outcome, "
+            "balanced-arm and modest-effect approximation also applies to this "
+            "diagnostic."
+        )
     if k < 10:
         warnings.append(
             "Funnel-asymmetry tests have low power with fewer than ten studies."
@@ -820,6 +829,12 @@ def egger_test(
             "For standardized mean differences, inherent association between study "
             "effects and their standard errors can create artifactual Egger-test "
             "asymmetry."
+        )
+    if result.method.pooling_method == "peto":
+        warnings.append(
+            "The source analysis uses Peto one-step study effects; their rare-outcome, "
+            "balanced-arm and modest-effect approximation also applies to this "
+            "diagnostic."
         )
     warnings.append(
         "This test diagnoses a relationship between effect estimates and standard "

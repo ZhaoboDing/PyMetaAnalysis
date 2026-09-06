@@ -12,6 +12,7 @@ import pandas as pd
 from numpy.typing import NDArray
 from scipy.stats import chi2, f, norm, t
 
+from .estimators.meta_regression import _wald_statistic
 from .exceptions import InvalidStudyDataError
 
 if TYPE_CHECKING:
@@ -275,13 +276,23 @@ def meta_regression_contrast(
     contrast_covariance = matrix @ coefficient_covariance @ matrix.T
     contrast_covariance = 0.5 * (contrast_covariance + contrast_covariance.T)
     variances = np.diag(contrast_covariance)
-    if np.any(variances <= 0.0):  # pragma: no cover - full rank covariance
+    zero_covariance = bool(np.all(contrast_covariance == 0.0))
+    if not zero_covariance and np.any(variances <= 0.0):
         raise InvalidStudyDataError(
             "Contrast covariance must have positive diagonal entries."
         )
     standard_errors = np.sqrt(variances)
     differences = contrast_estimates - rhs_values
-    statistics = differences / standard_errors
+    statistics = np.divide(
+        differences,
+        standard_errors,
+        out=np.full_like(differences, np.nan),
+        where=standard_errors > 0.0,
+    )
+    nonzero_with_zero_se = (standard_errors == 0.0) & (differences != 0.0)
+    statistics[nonzero_with_zero_se] = (
+        np.sign(differences[nonzero_with_zero_se]) * np.inf
+    )
     confidence_level = result.method.confidence_level
     alpha = 1.0 - confidence_level
     if result.method.inference_method == "normal":
@@ -298,13 +309,7 @@ def meta_regression_contrast(
         critical = float(t.ppf(1.0 - alpha / 2.0, df=result.residual_df))
     margin = critical * standard_errors
 
-    try:
-        wald = float(differences @ np.linalg.solve(contrast_covariance, differences))
-    except np.linalg.LinAlgError as error:  # pragma: no cover - rank checked above
-        raise InvalidStudyDataError(
-            "Joint contrast covariance could not be solved."
-        ) from error
-    wald = max(0.0, wald)
+    wald = _wald_statistic(differences, contrast_covariance)
     contrast_count = len(contrast_names)
     if result.method.inference_method == "normal":
         joint_test = LinearContrastTestResult(
@@ -354,7 +359,13 @@ def meta_regression_contrast(
         "Individual contrast p-values are unadjusted for multiple testing; "
         "the joint test evaluates the full prespecified hypothesis set."
     )
-    warnings = (multiple_testing_warning,) if contrast_count > 1 else ()
+    warnings: tuple[str, ...] = (
+        (multiple_testing_warning,) if contrast_count > 1 else ()
+    )
+    if zero_covariance:
+        warnings += (
+            "Contrast covariance is zero; the joint Wald test is unavailable.",
+        )
     return MetaRegressionContrastResult(
         original=result,
         joint_test=joint_test,
