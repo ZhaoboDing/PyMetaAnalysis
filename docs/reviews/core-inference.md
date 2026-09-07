@@ -72,11 +72,14 @@ python -m pytest tests/test_core_inference_review.py tests/test_r_references.py 
 ```
 
 `tests/test_core_inference_review.py` uses `rtol=5e-13, atol=5e-15` for
-closed-form fits and Q/p, `2e-10, 2e-11` for iterative fits and their derived
+closed-form fit arithmetic and Q/p, `2e-10, 2e-11` for iterative fits and their derived
 inconsistency statistics, and `2e-9, 1e-10` for prediction/QP bounds. The latter
 allow solver error propagated into tails; a near-zero statistic still has an
-explicit absolute bound. These match existing tolerance classes, and no
-tolerance was relaxed to resolve a discrepancy. Independent rational oracles
+explicit absolute bound. Mean HK CI endpoints additionally allow
+`5e-11 * R_t_critical * R_standard_error` absolute error for the separately
+tested t-quantile approximation in older supported SciPy versions (REF2 below).
+This allowance does not apply to SE, tau-squared, weights or inconsistency.
+Independent rational oracles
 use near-machine-precision SE checks. Equal-variance QP oracles use a relative
 bound of `2e-10` and an absolute bound scaled with squared effect units.
 
@@ -88,6 +91,7 @@ bound of `2e-10` and an absolute bound scaled with squared effect units.
 | CI2 | Squaring residual 1e160 before applying weight 1e-30 overflowed although its weighted contribution was finite | Apply square-root weights and residual df before squaring. A focused CI arithmetic test separates this behavior from tau-estimation range restrictions |
 | H1 | Three equal variances of 1e308 with tau-squared 1e307 produced I2=0, H2=1; correct values are 1/11 and 1.1 | Divide the variance scale by the scaled trace before multiplying by df; test k=3/5/10. Statistical definition unchanged |
 | REF1 | Default R QP search returned upper number 100 for four high-spread k=2/3 cases, without an R warning; `ub.sign` was `>` | Retain default-search endpoints and signs; compare Python with an explicitly extended R search. For balanced k=2 the actual upper bound is about 8145.8662, verified by the equal-variance formula. This was reference extraction/search scope, not a Python interval bug |
+| REF2 | Initial CI used the closed-form DL arithmetic tolerance for t quantiles too; Python 3.10 CI and minimum dependencies failed 30 HK endpoint comparisons each | Isolated SciPy 1.15.3 t quantiles differ from R by 2.026e-11, -1.239e-11 and 2.471e-11 relatively at df=1/2/9; the minimum-dependency CI shows about 3.761e-11 at df=2. Add explicit R quantiles, closed-form df=1/2 checks and a 5e-11 quantile budget propagated only into CI endpoints. Keep arithmetic tolerances unchanged |
 
 For equal variances v, the independent QP oracle is
 `sum((y_i-mean(y))^2) / chi2_quantile - v`. Tests cover positive and zero lower

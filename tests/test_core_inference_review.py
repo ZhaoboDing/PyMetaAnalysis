@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from fractions import Fraction
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,22 @@ def test_core_review_reference_environment_and_scope() -> None:
     assert all(len(case["fits"]) == 9 for case in CASES)
 
 
+@pytest.mark.parametrize("df", [1, 2, 4, 9])
+def test_mean_t_quantile_error_is_bounded_separately_from_fit_arithmetic(
+    df: int,
+) -> None:
+    expected = REFERENCE["mean_t_critical"][str(df)]
+    # Supported older SciPy versions differ from R by up to about 3.8e-11
+    # relatively here. Keep that budget out of variance/weight comparisons.
+    assert t.ppf(0.975, df) == pytest.approx(expected, rel=5e-11, abs=0)
+    if df == 1:
+        assert expected == pytest.approx(1 / math.tan(math.pi * 0.025), rel=5e-15)
+    elif df == 2:
+        assert expected == pytest.approx(
+            math.sqrt(2) * 0.95 / math.sqrt(1 - 0.95**2), rel=5e-15
+        )
+
+
 @pytest.mark.parametrize("case", CASES, ids=lambda case: case["id"])
 @pytest.mark.parametrize("fit_index", range(9))
 def test_core_inference_matches_pinned_metafor(
@@ -45,20 +62,25 @@ def test_core_inference_matches_pinned_metafor(
         ci_method=expected["ci_method"],
         atol=1e-12,
     )
-    # Iterative fits include solver error; DL is closed form. PI multiplies
-    # SE error by t_(k-2), so its absolute bound is separately stated below.
+    # Iterative fits include solver error; DL arithmetic is closed form.
     rtol, atol = (5e-13, 5e-15) if expected["tau2_method"] == "DL" else (2e-10, 2e-11)
     np.testing.assert_allclose(
-        [result.estimate, result.standard_error, *result.ci, result.tau2],
+        [result.estimate, result.standard_error, result.tau2],
         [
             expected["estimate"],
             expected["standard_error"],
-            *expected["ci"],
             expected["tau2"],
         ],
         rtol=rtol,
         atol=atol,
     )
+    ci_atol = atol
+    if expected["ci_method"] != "normal":
+        critical = REFERENCE["mean_t_critical"][str(case["k"] - 1)]
+        # Propagate only the separately tested t-quantile error into endpoints.
+        # An endpoint near zero needs a margin-based absolute error bound.
+        ci_atol += 5e-11 * critical * expected["standard_error"]
+    np.testing.assert_allclose(result.ci, expected["ci"], rtol=rtol, atol=ci_atol)
     np.testing.assert_allclose(
         result.study_results["normalized_weight"],
         expected["weights"],
