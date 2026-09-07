@@ -11,6 +11,7 @@ the repository root:
 
 ```console
 Rscript tests/reference/generate_generic_metafor.R
+Rscript tests/reference/generate_core_inference_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_correlation_metafor.R
@@ -54,6 +55,17 @@ its single-study row so that this difference remains explicit and auditable.
 tau-squared and the monotonic tau, I-squared, and H-squared transformations,
 plus a two-study Hartung-Knapp fit that exercises the `t` interval at one
 degree of freedom.
+
+`core_inference_metafor.json` expands the intercept-only review to 24 deterministic
+datasets (k=2/3/5/10, balanced/unbalanced variances, identical/low/high-spread
+effects), each with nine random fits, a common fit and Q-profile bounds. The
+generator requires R 4.6.1, metafor 5.0-1 and jsonlite 2.0.0, with explicit
+1e-12 solver controls and QP `tau2.max=100000`. It preserves native empty-set
+status and default-search bounds/signs: four cases exceed R's default upper
+search limit, whose numeric value alone is not a confidence endpoint.
+The [core review packet](../../docs/reviews/core-inference.md) describes formulas,
+tolerances, independent oracles and pending sign-off. These are implementation
+comparisons, not coverage simulations.
 
 `workflow_metafor.json` additionally includes Q-profile tau-squared intervals
 for random-effects subgroup fits, exercising the interval API on fitted group

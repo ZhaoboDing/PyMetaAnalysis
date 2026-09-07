@@ -323,7 +323,9 @@ def tau2_inconsistency(
     relative_weights = variance_scale / variance
     c_scaled = _weight_trace(relative_weights)
 
-    typical_variance = (k - 1) * variance_scale / c_scaled
+    # Divide first: df * scale can overflow even when the typical variance
+    # itself is finite (for equal variances, it must equal variance_scale).
+    typical_variance = (variance_scale / c_scaled) * (k - 1)
     i2 = 1.0 / (1.0 + typical_variance / tau2)
     h2 = 1.0 + tau2 / typical_variance
     return float(i2), float(h2)

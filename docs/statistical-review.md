@@ -26,6 +26,11 @@ and known intentional differences must be inspectable.
 
 ## Procedure and evidence record
 
+The [core inference packet](reviews/core-inference.md) prepares the intercept-only
+pooling, heterogeneity, HK, prediction and Q-profile evidence, including new
+boundary references and numerical corrections. It remains pending independent
+review and does not constitute sign-off for either of the first two packets.
+
 For every packet, copy the following record into a review PR or a committed
 review report. Do not mark a packet accepted with blank evidence fields.
 

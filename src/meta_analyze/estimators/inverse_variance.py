@@ -13,7 +13,7 @@ from ..exceptions import (
     InvalidStudyDataError,
     UnsupportedMethodError,
 )
-from ..heterogeneity import weighted_mean
+from ..heterogeneity import _weighted_residuals, weighted_mean
 from .tau2 import Tau2Estimate, estimate_tau2
 
 
@@ -49,16 +49,12 @@ def _confidence_interval(
         critical_value = float(norm.ppf(1.0 - alpha / 2.0))
     else:
         df = len(effect) - 1
-        if bool(np.all(effect == effect[0])):
-            # Weighted means can differ from an identical input value by one ULP,
-            # depending on the platform's floating-point reduction. The residual
-            # variation is mathematically zero in this case, so preserve that
-            # invariant explicitly instead of squaring the rounding error.
-            scale = 0.0
-        else:
-            residual = effect - estimate
-            scale = float(np.dot(weights, residual * residual) / df)
-        hk_variance = scale / float(np.sum(weights))
+        # Center on an observed effect before averaging: the rounded pooled
+        # estimate can lose residual information at a large common location.
+        # Apply weights and df before squaring to avoid intermediate overflow.
+        residual = _weighted_residuals(effect, weights)
+        weighted_residual = np.sqrt(weights / (df * float(np.sum(weights)))) * residual
+        hk_variance = float(np.dot(weighted_residual, weighted_residual))
         if ci_method == "hartung_knapp_adhoc":
             variance = max(classic_variance, hk_variance)
         else:

@@ -108,6 +108,12 @@ and executes the README and documentation Python examples with visible setup.
 This supplies further M1/M3/A2/C4 evidence. Rerun it on the release candidate;
 independent review and the OS/dependency matrix remain separate acceptance steps.
 
+The [core inference batch](reviews/core-inference.md) prepares the next M1/M2/M6
+packet: a formula/evidence map, 24 deterministic R boundary datasets, numerical
+HK and inconsistency fixes, and a concrete proposed default-CI recommendation.
+Independent sign-off and the regression-specific default review remain open;
+normal inference and version metadata are unchanged.
+
 Publish 0.10.0 only after its method/default decisions and API freeze have been
 accepted. Remind the maintainer before changing version metadata; use a separate
 release PR. An absent external reviewer leaves the relevant gates open.

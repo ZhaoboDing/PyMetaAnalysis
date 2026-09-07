@@ -63,6 +63,7 @@ nav:
           - Development and contribution: development.md
           - Road to 1.0: roadmap-1.0.md
           - Independent statistical review: statistical-review.md
+          - Core inference review packet: reviews/core-inference.md
           - Proposed compatibility policy: compatibility.md
           - Release process: releasing.md
           - Decisions:
