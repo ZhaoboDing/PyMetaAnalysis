@@ -8,6 +8,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- A core pooling/inference review packet with 24 deterministic pinned-R datasets,
+  216 random fits, Q-profile search-limit evidence and independent boundary
+  oracles. ADR 0008 now proposes retaining normal inference, pending independent
+  review; statistical defaults and package version remain unchanged.
 - Executable checks for Python examples across the README and documentation,
   with isolated page state, plot rendering and report JSON round-trips. Binary
   workflow tests cover subset-dependent continuity corrections, subgroup tests,
@@ -35,6 +39,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Fixed
 
+- Hartung-Knapp residual variance is stable under large common effect offsets;
+  weights and residual degrees of freedom are applied before squaring to avoid
+  intermediate overflow. Tau-squared inconsistency calculations no longer
+  overflow an intermediate product when the typical sampling variance is finite.
 - Documentation examples now provide their inputs, preserve the intended result
   types, use declared contrast levels and valid ratio-scale plot references.
 - Validation documentation now lists Begg fixture regeneration and trim-and-fill

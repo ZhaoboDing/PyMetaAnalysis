@@ -6,6 +6,12 @@ particular review or replace external statistical review.
 
 ## Validation layers
 
+The [core inference review packet](reviews/core-inference.md) maps pooling,
+heterogeneity, HK, prediction and Q-profile formulas to tests and pinned R
+references. Its 24 deterministic datasets include explicit QP search limits
+and native truncation signs; independent formula tests cover numerical boundaries.
+This evidence remains pending external statistical sign-off.
+
 ### Closed-form and hand calculations
 
 Unit tests compare common-effect estimates, weights, confidence intervals,
@@ -167,6 +173,7 @@ root:
 
 ```console
 Rscript tests/reference/generate_generic_metafor.R
+Rscript tests/reference/generate_core_inference_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_correlation_metafor.R
