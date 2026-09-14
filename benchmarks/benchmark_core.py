@@ -74,6 +74,22 @@ def _cases(studies: int) -> dict[str, Callable[[], object]]:
             model="random",
             tau2_method="REML",
         ),
+        "binary_or_mh_common": lambda: ma.meta_binary(
+            event_treat=event_treat,
+            n_treat=n_treat,
+            event_control=event_control,
+            n_control=n_control,
+            measure="OR",
+            method="MH",
+        ),
+        "binary_or_peto_common": lambda: ma.meta_binary(
+            event_treat=event_treat,
+            n_treat=n_treat,
+            event_control=event_control,
+            n_control=n_control,
+            measure="OR",
+            method="Peto",
+        ),
         "continuous_smd_random_reml": lambda: ma.meta_continuous(
             mean_treat=mean_treat,
             sd_treat=sd_treat,

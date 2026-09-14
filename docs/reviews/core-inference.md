@@ -60,7 +60,7 @@ intervals. The fixture preserves R's empty-set status and an independently
 calculated Q(0) empty-set criterion. R predictions at k=2 are deliberately not
 requested because the Python public contract does not offer that interval.
 
-The generator enforces R 4.6.1, metafor 5.0-1 and jsonlite 2.0.0. It passes and
+The generator enforces R 4.6.1, metafor 5.0.1 and jsonlite 2.0.0. It passes and
 records PM `tol=1e-12`, REML `threshold=1e-12`, and QP `tol=1e-12`; each iterative
 algorithm gets `maxiter=1000`. QP additionally uses `tau2.max=100000`. Python
 fits and QP comparisons explicitly use `atol=1e-12`; this does not change public

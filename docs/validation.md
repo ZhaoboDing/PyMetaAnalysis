@@ -12,6 +12,12 @@ references. Its 24 deterministic datasets include explicit QP search limits
 and native truncation signs; independent formula tests cover numerical boundaries.
 This evidence remains pending external statistical sign-off.
 
+The [sparse binary review packet](reviews/sparse-binary.md) maps study-level
+OR/RR/RD, MH OR/RR/RD and Peto formulas to exact rational oracles and 28 studies
+in six pinned-R case families. It records correction/exclusion policies and the
+intentional raw-RD difference. This evidence also remains pending external
+statistical sign-off.
+
 ### Closed-form and hand calculations
 
 Unit tests compare common-effect estimates, weights, confidence intervals,
@@ -59,6 +65,10 @@ Property-based and targeted tests check invariants such as:
   formal empty confidence sets;
 - empty or zero-total Mantel-Haenszel inputs raise domain errors before any
   non-finite intermediate value is formed;
+- MH and Peto remain finite across strata separated by roughly 307 orders of
+  magnitude when the model-scale estimate and variance are representable;
+  exact rational formulas check estimates, SEs, weights and Peto Q without
+  relying on another float implementation;
 - Meta-regression is invariant to row order and moderator centering; changing a
   categorical reference preserves fitted values, residual heterogeneity, and
   joint tests;
@@ -116,6 +126,7 @@ The current fixture families cover:
 | --- | --- |
 | `generic_metafor.json` | Common effects, DL/PM/REML random effects, Q-profile heterogeneity intervals, HK variants including a two-study `t_1` case, and HTS/HK-PR prediction intervals |
 | `binary_metafor.json` | OR/RR/RD study effects, IV pooling, uncorrected and explicitly corrected MH pooling/heterogeneity, Sato-Greenland-Robins MH RD variance, Peto study effects/pooling/O-minus-E heterogeneity, sparse tables |
+| `sparse_binary_review_metafor.json` | Six deterministic no-zero, single-zero, double-boundary, unequal-arm, opposing-effect and large-count datasets; OR/RR/RD study effects, raw/corrected MH fits, and Peto study effects/pooling/O-minus-E heterogeneity |
 | `continuous_metafor.json` | MD and exact-corrected SMD effects and pooled fits |
 | `correlation_metafor.json` | Fisher's z effects, `1 / (n - 3)` variances, common and REML fits, weights, and back-transformation |
 | `workflow_metafor.json` | Common subgroups, random subgroup Q-profile intervals, random singleton fallback, leave-one-out, and cumulative common/random fits |

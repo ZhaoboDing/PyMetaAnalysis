@@ -1,4 +1,4 @@
-# Regenerate trimfill_metafor.json with R 4.6.1, metafor 5.0-1, jsonlite 2.0.0.
+# Regenerate trimfill_metafor.json with R 4.6.1, metafor 5.0.1, jsonlite 2.0.0.
 # From the repository root:
 # Rscript tests/reference/generate_trimfill_metafor.R [optional-output-path]
 library(jsonlite)

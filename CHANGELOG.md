@@ -8,6 +8,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- A sparse-binary review packet with exact rational MH/Peto formula oracles and
+  28 studies in six deterministic pinned-R case families, covering OR/RR/RD
+  study effects, raw and explicitly corrected MH fits, Peto pooling and
+  O-minus-E heterogeneity. Independent M3/M6 review remains pending.
 - A core pooling/inference review packet with 24 deterministic pinned-R datasets,
   216 random fits, Q-profile search-limit evidence and independent boundary
   oracles. ADR 0008 now proposes retaining normal inference, pending independent
@@ -39,6 +43,10 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Fixed
 
+- Mantel-Haenszel OR/RR and Peto pooling now preserve valid contributions from
+  strata separated by extreme count scales. Per-stratum scaling, log-domain
+  sums and an algebraically positive MH RR variance numerator prevent false
+  zero-cross-product, zero-information and non-positive-variance errors.
 - Hartung-Knapp residual variance is stable under large common effect offsets;
   weights and residual degrees of freedom are applied before squaring to avoid
   intermediate overflow. Tau-squared inconsistency calculations no longer
