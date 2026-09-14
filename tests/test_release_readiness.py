@@ -144,6 +144,8 @@ def test_core_benchmark_smoke(tmp_path: Path) -> None:
     assert set(payload["cases"]) == {
         "generic_random_reml",
         "binary_rr_random_reml",
+        "binary_or_mh_common",
+        "binary_or_peto_common",
         "continuous_smd_random_reml",
         "correlation_random_reml",
         "meta_regression_multivariable_reml",

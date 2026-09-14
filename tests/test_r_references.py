@@ -29,6 +29,7 @@ def _load_reference(filename: str) -> dict[str, Any]:
 
 GENERIC = _load_reference("generic_metafor.json")
 BINARY = _load_reference("binary_metafor.json")
+SPARSE_BINARY_REVIEW = _load_reference("sparse_binary_review_metafor.json")
 CONTINUOUS = _load_reference("continuous_metafor.json")
 WORKFLOW = _load_reference("workflow_metafor.json")
 META_REGRESSION = _load_reference("meta_regression_metafor.json")
@@ -96,6 +97,7 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
     fixtures = [
         GENERIC,
         BINARY,
+        SPARSE_BINARY_REVIEW,
         CONTINUOUS,
         CORRELATION,
         WORKFLOW,
@@ -103,7 +105,6 @@ def test_reference_fixtures_record_a_consistent_r_environment() -> None:
         SMALL_STUDY_EFFECTS,
         BEGG_RANKTEST,
         TRIMFILL,
-        BEGG_RANKTEST,
     ]
 
     assert {fixture["generated_by"] for fixture in fixtures} == {"R metafor"}

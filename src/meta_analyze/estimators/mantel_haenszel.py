@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.special import logsumexp
 from scipy.stats import norm
 
 from ..exceptions import (
@@ -76,47 +77,93 @@ def fit_mantel_haenszel(
         )
 
     cell_scale = float(np.max(cells))
-    scaled_a = a / cell_scale
-    scaled_b = b / cell_scale
-    scaled_c = c / cell_scale
-    scaled_d = d / cell_scale
+    row_scale = np.maximum.reduce(tables)
+    relative_scale = row_scale / cell_scale
+    with np.errstate(under="ignore"):
+        scaled_a = a / row_scale
+        scaled_b = b / row_scale
+        scaled_c = c / row_scale
+        scaled_d = d / row_scale
     total = scaled_a + scaled_b + scaled_c + scaled_d
     n1 = scaled_a + scaled_b
     n2 = scaled_c + scaled_d
+    with np.errstate(divide="ignore"):
+        log_cell_scale = float(np.log(cell_scale))
+        log_relative_scale = np.log(row_scale) - log_cell_scale
+        log_a = np.log(scaled_a)
+        log_b = np.log(scaled_b)
+        log_c = np.log(scaled_c)
+        log_d = np.log(scaled_d)
+        log_total = np.log(total)
+        log_n1 = np.log(n1)
+        log_n2 = np.log(n2)
     if normalized_measure == "OR":
-        r = float(np.sum(scaled_a * scaled_d / total))
-        s = float(np.sum(scaled_b * scaled_c / total))
-        if not np.isfinite(r) or not np.isfinite(s) or r <= 0.0 or s <= 0.0:
+        log_r = float(logsumexp(log_relative_scale + log_a + log_d - log_total))
+        log_s = float(logsumexp(log_relative_scale + log_b + log_c - log_total))
+        if not np.isfinite(log_r) or not np.isfinite(log_s):
             raise InvalidStudyDataError(
                 "The exact Mantel-Haenszel OR is undefined because its pooled "
                 "cross-product is zero; set a positive mh_continuity_correction."
             )
 
-        e = float(np.sum((scaled_a + scaled_d) * scaled_a * scaled_d / total**2))
-        f = float(np.sum((scaled_a + scaled_d) * scaled_b * scaled_c / total**2))
-        g = float(np.sum((scaled_b + scaled_c) * scaled_a * scaled_d / total**2))
-        h = float(np.sum((scaled_b + scaled_c) * scaled_b * scaled_c / total**2))
-        pooled = r / s
-        pooled_variance = 0.5 * (e / r**2 + (f + g) / (r * s) + h / s**2) / cell_scale
-        scaled_weights = scaled_b * scaled_c / total
+        with np.errstate(divide="ignore"):
+            log_ad_sum = np.log(scaled_a + scaled_d)
+            log_bc_sum = np.log(scaled_b + scaled_c)
+        log_e = float(
+            logsumexp(log_relative_scale + log_ad_sum + log_a + log_d - 2.0 * log_total)
+        )
+        log_f = float(
+            logsumexp(log_relative_scale + log_ad_sum + log_b + log_c - 2.0 * log_total)
+        )
+        log_g = float(
+            logsumexp(log_relative_scale + log_bc_sum + log_a + log_d - 2.0 * log_total)
+        )
+        log_h = float(
+            logsumexp(log_relative_scale + log_bc_sum + log_b + log_c - 2.0 * log_total)
+        )
+        log_variance = float(
+            np.log(0.5)
+            + logsumexp(
+                [
+                    log_e - 2.0 * log_r,
+                    np.logaddexp(log_f, log_g) - log_r - log_s,
+                    log_h - 2.0 * log_s,
+                ]
+            )
+            - log_cell_scale
+        )
+        with np.errstate(over="ignore", under="ignore"):
+            pooled_variance = float(np.exp(log_variance))
+        estimate = log_r - log_s
+        log_weights = log_relative_scale + log_b + log_c - log_total
+        weights = scaled_b * scaled_c / total * row_scale
     elif normalized_measure == "RR":
-        r = float(np.sum(scaled_a * n2 / total))
-        s = float(np.sum(scaled_c * n1 / total))
-        if not np.isfinite(r) or not np.isfinite(s) or r <= 0.0 or s <= 0.0:
+        log_r = float(logsumexp(log_relative_scale + log_a + log_n2 - log_total))
+        log_s = float(logsumexp(log_relative_scale + log_c + log_n1 - log_total))
+        if not np.isfinite(log_r) or not np.isfinite(log_s):
             raise InvalidStudyDataError(
                 "The exact Mantel-Haenszel RR is undefined because the pooled "
                 "event total is zero; set a positive mh_continuity_correction."
             )
 
-        p = float(
-            np.sum(
-                (n1 * n2 * (scaled_a + scaled_c) - scaled_a * scaled_c * total)
-                / total**2
+        # Algebraically positive expansion of
+        # n1*n2*(a+c) - a*c*(n1+n2), avoiding cancellation.
+        log_p = float(
+            logsumexp(
+                np.concatenate(
+                    (
+                        log_relative_scale + log_a + log_d + log_n1 - 2.0 * log_total,
+                        log_relative_scale + log_b + log_c + log_n2 - 2.0 * log_total,
+                    )
+                )
             )
         )
-        pooled = r / s
-        pooled_variance = p / (r * s) / cell_scale
-        scaled_weights = scaled_c * n1 / total
+        log_variance = log_p - log_r - log_s - log_cell_scale
+        with np.errstate(over="ignore", under="ignore"):
+            pooled_variance = float(np.exp(log_variance))
+        estimate = log_r - log_s
+        log_weights = log_relative_scale + log_c + log_n1 - log_total
+        weights = scaled_c * n1 / total * row_scale
     else:
         # The MH risk difference is the arm-size-weighted mean of the raw
         # study risk differences. All arithmetic below uses counts divided by
@@ -124,7 +171,13 @@ def fit_mantel_haenszel(
         # divided by cell_scale once to restore the original count scale.
         treat_fraction = n1 / total
         control_fraction = n2 / total
-        scaled_weights = n1 * control_fraction
+        local_a = scaled_a
+        local_c = scaled_c
+        scaled_a = local_a * relative_scale
+        scaled_c = local_c * relative_scale
+        scaled_n1 = n1 * relative_scale
+        scaled_n2 = n2 * relative_scale
+        scaled_weights = scaled_n1 * control_fraction
         weight_sum = float(np.sum(scaled_weights))
         if not np.isfinite(weight_sum) or weight_sum <= 0.0:
             raise InvalidStudyDataError(
@@ -138,12 +191,13 @@ def fit_mantel_haenszel(
             np.sum(
                 scaled_c * treat_fraction**2
                 - scaled_a * control_fraction**2
-                + treat_fraction * control_fraction * (n2 - n1) / 2.0
+                + treat_fraction * control_fraction * (scaled_n2 - scaled_n1) / 2.0
             )
         )
         binomial_component = float(
             np.sum(
-                scaled_a * (n2 - scaled_c) / total + scaled_c * (n1 - scaled_a) / total
+                relative_scale
+                * (local_a * (n2 - local_c) / total + local_c * (n1 - local_a) / total)
             )
             / 2.0
         )
@@ -152,8 +206,22 @@ def fit_mantel_haenszel(
             / weight_sum**2
             / cell_scale
         )
+        estimate = pooled
 
-    if not np.isfinite(pooled_variance) or pooled_variance <= 0.0:
+    if normalized_measure != "RD":
+        log_weight_sum = float(logsumexp(log_weights))
+        with np.errstate(under="ignore"):
+            normalized_weights = np.exp(log_weights - log_weight_sum)
+    else:
+        weight_sum = float(np.sum(scaled_weights))
+        weights = scaled_weights * cell_scale
+        normalized_weights = scaled_weights / weight_sum
+
+    if (
+        not np.isfinite(estimate)
+        or not np.isfinite(pooled_variance)
+        or pooled_variance <= 0.0
+    ):
         if normalized_measure == "RD":
             raise InvalidStudyDataError(
                 "Mantel-Haenszel RD produced a non-positive sampling variance "
@@ -165,13 +233,13 @@ def fit_mantel_haenszel(
         raise InvalidStudyDataError(
             "Mantel-Haenszel produced a non-positive sampling variance."
         )
-    weight_sum = float(np.sum(scaled_weights))
-    if not np.isfinite(weight_sum) or weight_sum <= 0.0:
+    if np.any(~np.isfinite(weights)) or not np.isfinite(
+        float(np.sum(normalized_weights))
+    ):
         raise InvalidStudyDataError(
             "Mantel-Haenszel study weights have a non-positive sum."
         )
 
-    estimate = pooled if normalized_measure == "RD" else float(np.log(pooled))
     standard_error = float(np.sqrt(pooled_variance))
     critical_value = float(norm.ppf(0.5 + float(confidence_level) / 2.0))
     margin = critical_value * standard_error
@@ -180,6 +248,6 @@ def fit_mantel_haenszel(
         standard_error=standard_error,
         ci_low=estimate - margin,
         ci_high=estimate + margin,
-        weights=scaled_weights * cell_scale,
-        normalized_weights=scaled_weights / weight_sum,
+        weights=np.asarray(weights, dtype=np.float64),
+        normalized_weights=np.asarray(normalized_weights, dtype=np.float64),
     )

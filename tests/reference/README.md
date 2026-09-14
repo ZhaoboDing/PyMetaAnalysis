@@ -13,6 +13,7 @@ the repository root:
 Rscript tests/reference/generate_generic_metafor.R
 Rscript tests/reference/generate_core_inference_metafor.R
 Rscript tests/reference/generate_binary_metafor.R
+Rscript tests/reference/generate_sparse_binary_review_metafor.R
 Rscript tests/reference/generate_continuous_metafor.R
 Rscript tests/reference/generate_correlation_metafor.R
 Rscript tests/reference/generate_workflow_metafor.R
@@ -59,7 +60,7 @@ degree of freedom.
 `core_inference_metafor.json` expands the intercept-only review to 24 deterministic
 datasets (k=2/3/5/10, balanced/unbalanced variances, identical/low/high-spread
 effects), each with nine random fits, a common fit and Q-profile bounds. The
-generator requires R 4.6.1, metafor 5.0-1 and jsonlite 2.0.0, with explicit
+generator requires R 4.6.1, metafor 5.0.1 and jsonlite 2.0.0, with explicit
 1e-12 solver controls and QP `tau2.max=100000`. It preserves native empty-set
 status and default-search bounds/signs: four cases exceed R's default upper
 search limit, whose numeric value alone is not a confidence endpoint.
@@ -76,6 +77,14 @@ plus uncorrected and explicitly corrected common-effect Mantel-Haenszel fits
 and Peto study effects, pooling, weights, and O-minus-E heterogeneity.
 Its RD MH references exercise the Sato-Greenland-Robins sampling variance for
 both ordinary and sparse tables.
+
+`sparse_binary_review_metafor.json` expands the M3/M6 review input to 28 studies
+in six deterministic case families: no-zero, single-zero, double-zero/double-all,
+unequal-arm, opposing-effect and large-count data. It records OR/RR/RD study
+effects, raw and explicitly corrected MH fits, and Peto study effects, pooling,
+weights and O-minus-E heterogeneity. Its generator enforces R 4.6.1,
+metafor 5.0.1 and jsonlite 2.0.0. Exact rational and extreme-scale validation
+are described in the [sparse binary packet](../../docs/reviews/sparse-binary.md).
 
 `correlation_metafor.json` covers Fisher's r-to-z transformation, its
 `1 / (n - 3)` sampling variance, common-effect pooling, REML random-effects

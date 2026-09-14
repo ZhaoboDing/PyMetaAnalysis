@@ -64,6 +64,7 @@ nav:
           - Road to 1.0: roadmap-1.0.md
           - Independent statistical review: statistical-review.md
           - Core inference review packet: reviews/core-inference.md
+          - Sparse binary review packet: reviews/sparse-binary.md
           - Proposed compatibility policy: compatibility.md
           - Release process: releasing.md
           - Decisions:

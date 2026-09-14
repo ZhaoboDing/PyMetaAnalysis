@@ -31,6 +31,11 @@ pooling, heterogeneity, HK, prediction and Q-profile evidence, including new
 boundary references and numerical corrections. It remains pending independent
 review and does not constitute sign-off for either of the first two packets.
 
+The [sparse binary packet](reviews/sparse-binary.md) prepares the M3/M6 evidence
+for study OR/RR/RD, MH OR/RR/RD and Peto. It adds exact rational formulas,
+six deterministic pinned-R datasets, extreme-scale corrections and an explicit
+record of the raw-RD difference. Independent sign-off remains pending.
+
 For every packet, copy the following record into a review PR or a committed
 review report. Do not mark a packet accepted with blank evidence fields.
 
@@ -124,7 +129,7 @@ The following changes start batch B; they do not close the formal review gates.
 | C14–C15: correlations | Tests cross-check Egger/Begg/trim-and-fill on Fisher's z and reject binary-only tests; document the transform required for generic meta-regression |
 | C16–C17: warnings / observations | Retain outcome-specific wording and existing supported behavior; no speculative refactor |
 
-For zero-residual HK regression, direct R checks with `metafor` 5.0-1
+For zero-residual HK regression, direct R checks with `metafor` 5.0.1
 confirmed zero covariance and unavailable joint Wald inference. Exact rational
 oracles validate the extreme-weight pooling cases where double-precision R
 calculations are not an appropriate sole reference. See

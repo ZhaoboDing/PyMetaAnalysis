@@ -114,6 +114,13 @@ HK and inconsistency fixes, and a concrete proposed default-CI recommendation.
 Independent sign-off and the regression-specific default review remain open;
 normal inference and version metadata are unchanged.
 
+The [sparse binary batch](reviews/sparse-binary.md) prepares M3/M6 with a
+formula/evidence map, 28 studies in six pinned-R case families, exact rational
+oracles, correction/exclusion checks, and finite extreme-scale fixes for MH and
+Peto. It records the intentional raw-RD heterogeneity difference explicitly.
+Independent sign-off remains open; formulas, defaults and version metadata are
+unchanged.
+
 Publish 0.10.0 only after its method/default decisions and API freeze have been
 accepted. Remind the maintainer before changing version metadata; use a separate
 release PR. An absent external reviewer leaves the relevant gates open.
