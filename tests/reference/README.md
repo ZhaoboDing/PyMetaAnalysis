@@ -117,7 +117,11 @@ Cook's distances, and DFBETAS for numeric, categorical, and multivariable
 models. `meta_regression_collinearity_metafor.json` covers term VIF plus
 grouped categorical-moderator GVIF/GSIF for common and REML fits.
 `meta_regression_contrasts_metafor.json` covers individual and joint explicit
-linear hypotheses for normal and Hartung-Knapp inference.
+linear hypotheses for normal and Hartung-Knapp inference. All four regression
+generators enforce R 4.6.1, metafor 5.0.1 and jsonlite 2.0.0. The
+[Meta-regression review packet](../../docs/reviews/meta-regression.md) maps the
+fixtures to formulas, tolerances, exact numerical oracles, intentional
+no-intercept differences, and pending sign-off.
 `small_study_effects_metafor.json` covers the classical Egger regression test
 with standard error as predictor and multiplicative residual dispersion.
 `begg_ranktest_metafor.json` covers the Begg-Mazumdar Kendall rank-correlation

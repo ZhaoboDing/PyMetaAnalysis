@@ -65,6 +65,7 @@ nav:
           - Independent statistical review: statistical-review.md
           - Core inference review packet: reviews/core-inference.md
           - Sparse binary review packet: reviews/sparse-binary.md
+          - Meta-regression review packet: reviews/meta-regression.md
           - Proposed compatibility policy: compatibility.md
           - Release process: releasing.md
           - Decisions:

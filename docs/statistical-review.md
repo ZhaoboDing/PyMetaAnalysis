@@ -36,6 +36,12 @@ for study OR/RR/RD, MH OR/RR/RD and Peto. It adds exact rational formulas,
 six deterministic pinned-R datasets, extreme-scale corrections and an explicit
 record of the raw-RD difference. Independent sign-off remains pending.
 
+The [Meta-regression packet](reviews/meta-regression.md) prepares the M4/M6
+evidence for design encoding, generalized tau-squared, normal/HK inference,
+prediction, deletion, collinearity, and contrasts. It adds exact and
+reparameterization boundary oracles and makes the no-intercept software
+differences explicit. Independent sign-off remains pending.
+
 For every packet, copy the following record into a review PR or a committed
 review report. Do not mark a packet accepted with blank evidence fields.
 

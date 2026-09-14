@@ -313,7 +313,7 @@ def normalize_meta_regression_data(
         )
     if not intercept and categorical:
         raise InvalidStudyDataError(
-            "intercept=False is only supported with numeric moderators in version 0.3."
+            "intercept=False is only supported with numeric moderators."
         )
 
     # Use the existing validation path while postponing missing-value rejection
@@ -478,7 +478,16 @@ def normalize_meta_regression_data(
             f"Meta-regression requires k > p; got {k} included studies and {p} "
             "model coefficients."
         )
-    rank = int(np.linalg.matrix_rank(design))
+    column_maxima = np.max(np.abs(design), axis=0)
+    _, column_exponents = np.frexp(column_maxima)
+    column_scales = np.ldexp(np.ones_like(column_maxima), column_exponents - 1)
+    scaled_design = np.divide(
+        design,
+        column_scales,
+        out=np.zeros_like(design),
+        where=column_scales > 0.0,
+    )
+    rank = int(np.linalg.matrix_rank(scaled_design))
     if rank != p:
         raise InvalidStudyDataError(
             f"Meta-regression design matrix is rank deficient (rank {rank}, p={p})."

@@ -177,8 +177,13 @@ def _condition_tables(
     included = studies["included"].to_numpy(dtype=np.bool_, copy=True)
     variance = studies.loc[included, "variance"].to_numpy(dtype=np.float64, copy=True)
     design = result._design_matrix_view()[included]
-    weights = 1.0 / (variance + result.tau2)
-    weighted_design = np.sqrt(weights)[:, np.newaxis] * design
+    denominator = variance + result.tau2
+    relative_weights = float(np.min(denominator)) / denominator
+    design_maxima = np.max(np.abs(design), axis=0)
+    _, design_exponents = np.frexp(design_maxima)
+    design_scales = np.ldexp(np.ones_like(design_maxima), design_exponents - 1)
+    scaled_design = design / design_scales
+    weighted_design = np.sqrt(relative_weights)[:, np.newaxis] * scaled_design
     column_norms = np.linalg.norm(weighted_design, axis=0)
     if np.any(column_norms == 0.0):  # pragma: no cover - full rank checked at fit
         raise InvalidStudyDataError(

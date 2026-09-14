@@ -121,6 +121,14 @@ Peto. It records the intentional raw-RD heterogeneity difference explicitly.
 Independent sign-off remains open; formulas, defaults and version metadata are
 unchanged.
 
+The [Meta-regression batch](reviews/meta-regression.md) prepares M4/M6 with a
+formula/evidence map spanning fits, inference, prediction, deletion,
+collinearity and contrasts. It pins all four regression generators and adds an
+exact generalized-DL oracle plus extreme precision, moderator-unit,
+effect-location and contrast-row invariants. Independent sign-off remains open;
+the no-intercept REML/QE differences are explicit review inputs and defaults
+remain unchanged.
+
 Publish 0.10.0 only after its method/default decisions and API freeze have been
 accepted. Remind the maintainer before changing version metadata; use a separate
 release PR. An absent external reviewer leaves the relevant gates open.

@@ -8,6 +8,11 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Added
 
+- A Meta-regression review packet covering design encoding, generalized
+  DL/PM/REML, normal/HK inference, prediction, deletion diagnostics,
+  collinearity and contrasts. Exact generalized-DL and equivalent-
+  parameterization tests supplement four fixed-version R fixture families;
+  independent M4/M6 review remains pending.
 - A sparse-binary review packet with exact rational MH/Peto formula oracles and
   28 studies in six deterministic pinned-R case families, covering OR/RR/RD
   study effects, raw and explicitly corrected MH fits, Peto pooling and
@@ -43,6 +48,12 @@ Changes planned for the next release accumulate under `Unreleased`.
 
 ### Fixed
 
+- Meta-regression now uses power-of-two column scaling and weighted QR geometry,
+  preserving representable fits across extreme moderator units. Positive
+  projection-trace evaluation prevents generalized-DL division by zero under
+  extreme precision imbalance, and canonical effect anchoring preserves
+  residual heterogeneity after large common offsets. Linear contrasts now
+  retain inference under extreme nonzero row scaling.
 - Mantel-Haenszel OR/RR and Peto pooling now preserve valid contributions from
   strata separated by extreme count scales. Per-stratum scaling, log-domain
   sums and an algebraically positive MH RR variance numerator prevent false

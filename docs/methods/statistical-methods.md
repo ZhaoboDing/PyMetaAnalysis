@@ -419,9 +419,14 @@ P = W - W X B X' W
 residual df = k - p
 ```
 
-The implementation uses stable linear solves rather than forming an explicit
-matrix inverse. A rank-deficient design or `k <= p` is rejected; terms are not
-silently removed and a pseudo-inverse is not used.
+The implementation power-of-two scales design columns, uses a weighted QR
+solve, and returns coefficients and covariance in the supplied moderator
+units. This makes rank checks and fitted results invariant to representable
+positive changes of units without silently changing the user-visible design.
+For a design containing a constant column, residual calculations first anchor
+effects on a canonical observed value so a large common location does not erase
+residual geometry. A rank-deficient design or `k <= p` is rejected; terms are
+not silently removed and a pseudo-inverse is not used.
 
 ### Residual tau-squared
 
@@ -450,6 +455,14 @@ bracketed scalar root; a non-positive equation at zero returns the boundary.
 Residual tau-squared requires `k-p > 0`. A positive root remains an interior
 solution regardless of its size relative to the numerical tolerance. Failure
 raises `ConvergenceError` without estimator fallback.
+
+Generalized DL and REML need `trace(P(t))`, which can be much smaller than the
+two matrix traces in its usual subtractive expression. Internally this is
+evaluated as the positive sum `sum(w_i * (1-h_i))`; high-leverage complements
+use determinant ratios so precision imbalances do not cancel the residual
+information. The REML equation is divided by this positive trace before its
+final subtraction. These are algebraic rescalings and do not change an
+estimating-equation root.
 
 ### Coefficient and moderator inference
 

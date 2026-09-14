@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import exp, fsum, log
 
 import numpy as np
 from numpy.typing import NDArray
@@ -61,7 +62,12 @@ class _PrecisionGeometry:
     denominator: NDArray[np.float64]
     variance_scale: float
     relative_weights: NDArray[np.float64]
-    gram: NDArray[np.float64]
+    scaled_design: NDArray[np.float64]
+    weighted_design: NDArray[np.float64]
+    row_order: NDArray[np.int64]
+    column_scales: NDArray[np.float64]
+    orthonormal_design: NDArray[np.float64]
+    upper_triangular: NDArray[np.float64]
     inverse_gram: NDArray[np.float64]
     covariance: NDArray[np.float64]
 
@@ -97,24 +103,71 @@ def _precision_geometry(
         )
     variance_scale = float(np.min(denominator))
     relative_weights = variance_scale / denominator
-    weighted_design = relative_weights[:, np.newaxis] * design_matrix
-    gram = design_matrix.T @ weighted_design
+    if np.any(relative_weights == 0.0):
+        raise InvalidStudyDataError(
+            "Variance ratio is too large to represent all relative weights."
+        )
+    column_maxima = np.max(np.abs(design_matrix), axis=0)
+    if np.any(~np.isfinite(column_maxima)) or np.any(column_maxima <= 0.0):
+        raise InvalidStudyDataError(
+            "Meta-regression design columns must have finite positive scales."
+        )
+    _, column_exponents = np.frexp(column_maxima)
+    column_scales = np.ldexp(np.ones_like(column_maxima), column_exponents - 1)
+    scaled_design = design_matrix / column_scales
+    if np.linalg.matrix_rank(scaled_design) != scaled_design.shape[1]:
+        raise InvalidStudyDataError("Meta-regression design matrix is rank deficient.")
+    sort_keys = tuple(
+        [
+            scaled_design[:, position]
+            for position in reversed(range(scaled_design.shape[1]))
+        ]
+        + [-relative_weights]
+    )
+    row_order = np.lexsort(sort_keys).astype(np.int64, copy=False)
+    ordered_design = scaled_design[row_order]
+    ordered_weights = relative_weights[row_order]
+    weighted_design = np.sqrt(ordered_weights)[:, np.newaxis] * ordered_design
     try:
-        inverse_gram = np.linalg.solve(gram, np.eye(gram.shape[0]))
+        orthonormal_design, upper_triangular = np.linalg.qr(
+            weighted_design, mode="reduced"
+        )
+        inverse_upper = np.linalg.solve(
+            upper_triangular, np.eye(upper_triangular.shape[0])
+        )
     except (
         np.linalg.LinAlgError
     ) as error:  # pragma: no cover - rank checked at boundary
         raise InvalidStudyDataError(
             "Meta-regression design matrix could not be solved stably."
         ) from error
+    inverse_gram = inverse_upper @ inverse_upper.T
     inverse_gram = 0.5 * (inverse_gram + inverse_gram.T)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        inverse_scales = 1.0 / column_scales
+        covariance = (
+            variance_scale
+            * inverse_gram
+            * inverse_scales[:, np.newaxis]
+            * inverse_scales[np.newaxis, :]
+        )
+    if np.any(~np.isfinite(covariance)):
+        raise InvalidStudyDataError(
+            "Meta-regression coefficient covariance is not representable as "
+            "finite floats."
+        )
     return _PrecisionGeometry(
         denominator=denominator,
         variance_scale=variance_scale,
         relative_weights=relative_weights,
-        gram=gram,
+        scaled_design=scaled_design,
+        weighted_design=weighted_design,
+        row_order=row_order,
+        column_scales=column_scales,
+        orthonormal_design=orthonormal_design,
+        upper_triangular=upper_triangular,
         inverse_gram=inverse_gram,
-        covariance=variance_scale * inverse_gram,
+        covariance=covariance,
     )
 
 
@@ -135,10 +188,24 @@ def _weighted_solution(
     tau2: float,
 ) -> _WeightedSolution:
     geometry = _precision_geometry(variance, design_matrix, tau2)
+    constant_columns = np.flatnonzero(
+        np.all(design_matrix == design_matrix[0, :], axis=0)
+        & (design_matrix[0, :] != 0.0)
+    )
+    anchor_position = int(constant_columns[0]) if constant_columns.size else None
+    effect_anchor = (
+        float(effect[geometry.row_order[0]]) if anchor_position is not None else 0.0
+    )
+    centered_effect = effect - effect_anchor
     try:
-        coefficients = np.linalg.solve(
-            geometry.gram,
-            design_matrix.T @ (geometry.relative_weights * effect),
+        ordered_centered_effect = centered_effect[geometry.row_order]
+        scaled_coefficients = np.linalg.solve(
+            geometry.upper_triangular,
+            geometry.orthonormal_design.T
+            @ (
+                np.sqrt(geometry.relative_weights[geometry.row_order])
+                * ordered_centered_effect
+            ),
         )
     except (
         np.linalg.LinAlgError
@@ -146,9 +213,38 @@ def _weighted_solution(
         raise InvalidStudyDataError(
             "Meta-regression design matrix could not be solved stably."
         ) from error
+    try:
+        ordered_design = geometry.scaled_design[geometry.row_order]
+        ordered_weights = geometry.relative_weights[geometry.row_order]
+        normal_gram = ordered_design.T @ (
+            ordered_weights[:, np.newaxis] * ordered_design
+        )
+        normal_coefficients = np.linalg.solve(
+            normal_gram,
+            ordered_design.T @ (ordered_weights * ordered_centered_effect),
+        )
+    except np.linalg.LinAlgError:
+        pass
+    else:
+        normal_residuals = centered_effect - (
+            geometry.scaled_design @ normal_coefficients
+        )
+        if np.all(normal_residuals == 0.0):
+            scaled_coefficients = normal_coefficients
 
-    fitted_values = design_matrix @ coefficients
-    residuals = effect - fitted_values
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        coefficients = scaled_coefficients / geometry.column_scales
+    if anchor_position is not None:
+        coefficients[anchor_position] += (
+            effect_anchor / design_matrix[0, anchor_position]
+        )
+    if np.any(~np.isfinite(coefficients)):
+        raise InvalidStudyDataError(
+            "Meta-regression coefficients are not representable as finite floats."
+        )
+    centered_fitted_values = geometry.scaled_design @ scaled_coefficients
+    fitted_values = centered_fitted_values + effect_anchor
+    residuals = centered_effect - centered_fitted_values
     with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
         precision_weights = 1.0 / geometry.denominator
     if np.any(~np.isfinite(precision_weights)) or np.any(precision_weights <= 0.0):
@@ -156,31 +252,33 @@ def _weighted_solution(
             "Sampling variances are too small for finite precision weights."
         )
     normalized = geometry.relative_weights / float(np.sum(geometry.relative_weights))
-    leverage = geometry.relative_weights * np.einsum(
-        "ij,jk,ik->i", design_matrix, geometry.inverse_gram, design_matrix
+    ordered_leverage = np.einsum(
+        "ij,ij->i",
+        geometry.orthonormal_design,
+        geometry.orthonormal_design,
     )
+    leverage = np.empty_like(ordered_leverage)
+    leverage[geometry.row_order] = np.clip(ordered_leverage, 0.0, 1.0)
     with np.errstate(over="ignore", invalid="ignore"):
-        q_scaled = float(np.dot(geometry.relative_weights, residuals * residuals))
+        scaled_residuals = np.sqrt(geometry.relative_weights) * residuals
+        q_scaled = float(np.dot(scaled_residuals, scaled_residuals))
         q = float(q_scaled / geometry.variance_scale)
     if np.isnan(q):
         raise InvalidStudyDataError(
             "The weighted residual sum of squares is undefined."
         )
 
-    squared_weight_crossproduct = design_matrix.T @ (
-        (geometry.relative_weights * geometry.relative_weights)[:, np.newaxis]
-        * design_matrix
-    )
-    trace_relative_p = float(
-        np.sum(geometry.relative_weights)
-        - np.trace(geometry.inverse_gram @ squared_weight_crossproduct)
+    trace_relative_p = _stable_projection_trace(
+        geometry.relative_weights[geometry.row_order],
+        geometry.scaled_design[geometry.row_order],
+        geometry.weighted_design,
+        geometry.upper_triangular,
+        np.clip(ordered_leverage, 0.0, 1.0),
     )
     with np.errstate(over="ignore", invalid="ignore"):
+        weighted_residuals = geometry.relative_weights * residuals
         weighted_square_residual_scaled = float(
-            np.dot(
-                geometry.relative_weights * geometry.relative_weights,
-                residuals * residuals,
-            )
+            np.dot(weighted_residuals, weighted_residuals)
         )
     return _WeightedSolution(
         coefficients=coefficients,
@@ -198,6 +296,55 @@ def _weighted_solution(
     )
 
 
+def _stable_projection_trace(
+    relative_weights: NDArray[np.float64],
+    scaled_design: NDArray[np.float64],
+    weighted_design: NDArray[np.float64],
+    upper_triangular: NDArray[np.float64],
+    leverage: NDArray[np.float64],
+) -> float:
+    """Return ``sum(w_i * (1-h_i))`` without global cancellation."""
+
+    complements = 1.0 - leverage
+    high_leverage = np.flatnonzero(leverage > 0.5)
+    if high_leverage.size:
+        diagonal = np.abs(np.diag(upper_triangular))
+        if np.any(diagonal <= 0.0):
+            raise InvalidStudyDataError(
+                "Meta-regression precision geometry is not positive definite."
+            )
+        log_determinant = 2.0 * fsum(log(value) for value in diagonal)
+        for position in high_leverage:
+            retained = np.arange(len(relative_weights)) != position
+            retained_design = weighted_design[retained]
+            if (
+                np.linalg.matrix_rank(scaled_design[retained])
+                != retained_design.shape[1]
+            ):
+                complements[position] = 0.0
+                continue
+            _, retained_upper = np.linalg.qr(retained_design, mode="reduced")
+            retained_diagonal = np.abs(np.diag(retained_upper))
+            if np.any(retained_diagonal <= 0.0):
+                complements[position] = 0.0
+                continue
+            retained_log_determinant = 2.0 * fsum(
+                log(value) for value in retained_diagonal
+            )
+            log_complement = retained_log_determinant - log_determinant
+            complements[position] = (
+                0.0
+                if log_complement < log(np.finfo(np.float64).tiny)
+                else min(1.0, exp(log_complement))
+            )
+    trace = fsum((relative_weights * np.clip(complements, 0.0, 1.0)).tolist())
+    if not np.isfinite(trace) or trace <= 0.0:
+        raise InvalidStudyDataError(
+            "Precision ratios are too extreme to retain positive residual information."
+        )
+    return trace
+
+
 def _find_upper_bound(
     function: Callable[[float], float],
     *,
@@ -205,8 +352,17 @@ def _find_upper_bound(
     max_expansions: int,
 ) -> tuple[float, int]:
     upper = max(float(initial), np.finfo(np.float64).tiny)
+    if not np.isfinite(upper):
+        raise ConvergenceError(
+            "Could not construct a finite meta-regression tau-squared bracket."
+        )
     for expansion in range(max_expansions + 1):
-        value = function(upper)
+        try:
+            value = function(upper)
+        except InvalidStudyDataError as error:
+            raise ConvergenceError(
+                "Could not bracket a finite meta-regression tau-squared solution."
+            ) from error
         if np.isfinite(value) and value <= 0.0:
             return upper, expansion
         upper *= 4.0
@@ -248,6 +404,10 @@ def estimate_meta_regression_tau2(
             (at_zero.q_scaled - residual_df * at_zero.variance_scale)
             / at_zero.trace_p_scaled,
         )
+        if not np.isfinite(value):
+            raise InvalidStudyDataError(
+                "DL meta-regression tau-squared is not representable as a finite float."
+            )
         return Tau2Estimate(value, "DL", True, 0, value == 0.0)
 
     if normalized_method == "PM":
@@ -260,16 +420,17 @@ def estimate_meta_regression_tau2(
 
         def equation(tau2: float) -> float:
             solution = _weighted_solution(effect, variance, design_matrix, tau2)
-            return 0.5 * (
-                solution.weighted_square_residual_scaled
-                - solution.variance_scale * solution.trace_p_scaled
+            quadratic = (
+                solution.weighted_square_residual_scaled / solution.trace_p_scaled
             )
+            return 0.5 * (quadratic - solution.variance_scale)
 
     at_boundary = equation(0.0)
     if at_boundary <= 0.0:
         return Tau2Estimate(0.0, normalized_method, True, 0, True)
 
-    sample_variance = float(np.var(effect, ddof=1))
+    with np.errstate(over="ignore", invalid="ignore"):
+        sample_variance = float(np.var(effect, ddof=1))
     initial = max(sample_variance, float(np.max(variance)))
     upper, expansions = _find_upper_bound(
         equation, initial=initial, max_expansions=max_iter
