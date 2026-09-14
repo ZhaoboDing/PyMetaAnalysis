@@ -45,7 +45,10 @@ numeric_result = result
 ```
 
 Numeric moderators are used exactly as supplied. PyMetaAnalysis does not
-center, scale, transform, or impute them automatically.
+center, scale, transform, or impute them automatically. The numerical solver
+uses an internal power-of-two column scaling and converts coefficients and
+covariance back to the supplied units; this does not change the model or the
+reported design matrix.
 
 ## Encode categorical moderators explicitly
 

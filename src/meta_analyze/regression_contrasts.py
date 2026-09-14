@@ -243,7 +243,10 @@ def _normalize_rhs(
 
 def _validate_full_row_rank(matrix: NDArray[np.float64]) -> None:
     contrast_count = matrix.shape[0]
-    rank = int(np.linalg.matrix_rank(matrix))
+    row_maxima = np.max(np.abs(matrix), axis=1)
+    _, row_exponents = np.frexp(row_maxima)
+    row_scales = np.ldexp(np.ones_like(row_maxima), row_exponents - 1)
+    rank = int(np.linalg.matrix_rank(matrix / row_scales[:, np.newaxis]))
     if rank != contrast_count:
         raise InvalidStudyDataError(
             "Contrast matrix must have full row rank for a joint test; "
@@ -272,26 +275,39 @@ def meta_regression_contrast(
     coefficient_covariance = result.coefficient_covariance.to_numpy(
         dtype=np.float64, copy=True
     )
-    contrast_estimates = matrix @ estimates
-    contrast_covariance = matrix @ coefficient_covariance @ matrix.T
-    contrast_covariance = 0.5 * (contrast_covariance + contrast_covariance.T)
-    variances = np.diag(contrast_covariance)
-    zero_covariance = bool(np.all(contrast_covariance == 0.0))
-    if not zero_covariance and np.any(variances <= 0.0):
+    row_maxima = np.max(np.abs(matrix), axis=1)
+    _, row_exponents = np.frexp(row_maxima)
+    row_scales = np.ldexp(np.ones_like(row_maxima), row_exponents - 1)
+    scaled_matrix = matrix / row_scales[:, np.newaxis]
+    scaled_contrast_estimates = scaled_matrix @ estimates
+    contrast_estimates = row_scales * scaled_contrast_estimates
+    scaled_contrast_covariance = (
+        scaled_matrix @ coefficient_covariance @ scaled_matrix.T
+    )
+    scaled_contrast_covariance = 0.5 * (
+        scaled_contrast_covariance + scaled_contrast_covariance.T
+    )
+    scaled_variances = np.diag(scaled_contrast_covariance)
+    zero_covariance = bool(np.all(scaled_contrast_covariance == 0.0))
+    if not zero_covariance and np.any(scaled_variances <= 0.0):
         raise InvalidStudyDataError(
             "Contrast covariance must have positive diagonal entries."
         )
-    standard_errors = np.sqrt(variances)
+    scaled_standard_errors = np.sqrt(scaled_variances)
+    standard_errors = row_scales * scaled_standard_errors
     differences = contrast_estimates - rhs_values
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+        scaled_rhs_values = rhs_values / row_scales
+        scaled_differences = scaled_contrast_estimates - scaled_rhs_values
     statistics = np.divide(
-        differences,
-        standard_errors,
-        out=np.full_like(differences, np.nan),
-        where=standard_errors > 0.0,
+        scaled_differences,
+        scaled_standard_errors,
+        out=np.full_like(scaled_differences, np.nan),
+        where=scaled_standard_errors > 0.0,
     )
-    nonzero_with_zero_se = (standard_errors == 0.0) & (differences != 0.0)
+    nonzero_with_zero_se = (scaled_standard_errors == 0.0) & (scaled_differences != 0.0)
     statistics[nonzero_with_zero_se] = (
-        np.sign(differences[nonzero_with_zero_se]) * np.inf
+        np.sign(scaled_differences[nonzero_with_zero_se]) * np.inf
     )
     confidence_level = result.method.confidence_level
     alpha = 1.0 - confidence_level
@@ -307,9 +323,9 @@ def meta_regression_contrast(
         dfs = np.full(len(contrast_names), float(result.residual_df))
         pvalues = 2.0 * t.sf(np.abs(statistics), df=result.residual_df)
         critical = float(t.ppf(1.0 - alpha / 2.0, df=result.residual_df))
-    margin = critical * standard_errors
+    margin = row_scales * critical * scaled_standard_errors
 
-    wald = _wald_statistic(differences, contrast_covariance)
+    wald = _wald_statistic(scaled_differences, scaled_contrast_covariance)
     contrast_count = len(contrast_names)
     if result.method.inference_method == "normal":
         joint_test = LinearContrastTestResult(

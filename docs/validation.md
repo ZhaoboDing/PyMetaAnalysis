@@ -69,15 +69,18 @@ Property-based and targeted tests check invariants such as:
   magnitude when the model-scale estimate and variance are representable;
   exact rational formulas check estimates, SEs, weights and Peto Q without
   relying on another float implementation;
-- Meta-regression is invariant to row order and moderator centering; changing a
-  categorical reference preserves fitted values, residual heterogeneity, and
-  joint tests;
+- Meta-regression is invariant to row order, moderator centering, representable
+  positive unit changes through `1e100`, and large exactly representable effect
+  offsets; changing a categorical reference preserves fitted values, residual
+  heterogeneity, and joint tests. Generalized DL has an exact rational oracle
+  through a `1e300` precision ratio;
 - Meta-regression VIF/GVIF is invariant to positive moderator rescaling and row
   order; weighted condition indices match an independent singular-value
   decomposition and coefficient variance proportions sum to one;
 - Explicit linear contrasts match direct matrix calculations, preserve
-  scientifically equivalent hypotheses across category-reference and unit
-  changes, and reject ambiguous or rank-deficient contrast specifications;
+  scientifically equivalent hypotheses across category-reference, unit, and
+  contrast-row changes through factors of `1e200`, and reject ambiguous or
+  rank-deficient contrast specifications;
 - Riley Meta-regression prediction intervals are symmetric around the fitted
   effect, preserve mean-effect inference, use one fewer residual degree of
   freedom than the default rule, and remain wider at the zero-tau-squared
@@ -143,7 +146,11 @@ The current fixture families cover:
 Meta-regression is additionally covered by hand-calculated weighted least
 squares, generalized tau-squared score equations, intercept-only equivalence
 with the independently validated pooling path, inference covariance checks,
-and encoding invariants.
+and encoding invariants. Exact rational generalized-DL tests exercise projection
+traces too small for subtractive float arithmetic; power-of-two moderator and
+contrast rescaling plus large effect offsets check equivalent fitted geometry.
+See the [Meta-regression review packet](reviews/meta-regression.md) for the
+formula map, finding disposition, tolerances, and pending review scope.
 
 The no-intercept `metafor` fixtures validate coefficients, covariance, fitted
 values, residuals, weights, leverage, the moderator test, and default and Riley
@@ -158,8 +165,10 @@ intercept but changes a through-origin model; the fixture also records
 `rma.uni`'s default no-intercept estimate for auditability.
 
 Every artifact records the R and `jsonlite` versions plus the applicable
-`metafor` or `meta` version used to produce it. Method-specific numerical
-tolerances distinguish closed-form from iterative comparisons.
+`metafor` or `meta` version used to produce it. The four Meta-regression
+generators now enforce R 4.6.1, `metafor` 5.0.1, and `jsonlite` 2.0.0 before
+generation. Method-specific numerical tolerances distinguish closed-form from
+iterative comparisons.
 
 Trim-and-fill comparisons use `rtol=5e-13, atol=5e-15` for common-effect
 statistics and missing-count uncertainty, and `rtol=2e-10, atol=2e-11` for

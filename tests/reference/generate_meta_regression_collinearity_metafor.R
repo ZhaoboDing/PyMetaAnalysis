@@ -4,6 +4,13 @@
 library(jsonlite)
 library(metafor)
 
+required_r <- "4.6.1"
+required_metafor <- "5.0.1"
+required_jsonlite <- "2.0.0"
+stopifnot(as.character(getRversion()) == required_r)
+stopifnot(as.character(packageVersion("metafor")) == required_metafor)
+stopifnot(as.character(packageVersion("jsonlite")) == required_jsonlite)
+
 args <- commandArgs(trailingOnly = TRUE)
 output <- if (length(args) >= 1) args[[1]] else {
   "tests/reference/meta_regression_collinearity_metafor.json"
